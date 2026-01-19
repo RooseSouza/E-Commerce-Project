@@ -8,11 +8,10 @@ connectDB();
 const app = express();
 app.use(express.json());
 
-// Routes
+app.use(express.urlencoded({ extended: true }));
+
+// routes
 app.use("/api/users", require("./routes/userRoutes"));
-app.use("/api/products", require("./routes/productRoutes"));
-app.use("/api/orders", require("./routes/orderRoutes"));
-app.use("/api/categories", require("./routes/categoryRoutes"));
 
 
 // Predefined Local Market Categories
