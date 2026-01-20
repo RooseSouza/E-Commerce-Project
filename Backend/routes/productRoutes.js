@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const Product = require("../models/product");
+const Category = require("../models/category");
 const { protect, authorize } = require("../middleware/authMiddleware");
 
 
@@ -19,8 +20,8 @@ router.post("/", protect, authorize("vendor"), async (req, res) => {
     }
 
     // Find category by name
-    const category = await Category.findOne({ name: categoryName });
-    if (!category) {
+     const category = await Category.findOne({ name: categoryName });
+    if (!Category) {
       return res.status(400).json({ message: "Invalid category selected" });
     }
 

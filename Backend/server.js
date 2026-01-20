@@ -1,8 +1,7 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./database/db");
-const category = require("./models/category");
-
+const Category = require("./models/category");
 
 dotenv.config();
 
@@ -14,8 +13,7 @@ app.use(express.urlencoded({ extended: true }));
 // routes
 app.use("/api/users", require("./routes/userRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));
-
-
+app.use("/api/products", require("./routes/productRoutes"));
 
 
 // Predefined Local Market Categories
@@ -41,9 +39,9 @@ const predefinedCategories = [
 const seedCategories = async () => {
   try {
     for (let cat of predefinedCategories) {
-      const exists = await category.findOne({ name: cat.name });
+      const exists = await Category.findOne({ name: cat.name });
       if (!exists) {
-        await new category(cat).save();
+        await new Category(cat).save();
         console.log(`category "${cat.name}" added`);
       }
     }
@@ -52,18 +50,10 @@ const seedCategories = async () => {
   }
 };
 
-
-const startServer = async () => {
-  await connectDB();
-  await seedCategories();
-}
-
-/* Seed categories after DB connection
-connectDB().then(() => seedCategories());*/
-
+connectDB().then(() => {
+  seedCategories();
+});
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () =>
   console.log(`Server running on port ${PORT}`)
 );
-
-startServer();
