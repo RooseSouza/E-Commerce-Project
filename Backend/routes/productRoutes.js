@@ -62,6 +62,24 @@ router.get("/my-products", protect, authorize("vendor"), async (req, res) => {
 });
 
 /**
+ * @route   GET /api/products
+ * @desc    Get ALL products (Customer/User)
+ * @access  Public
+ */
+router.get("/", async (req, res) => {
+  try {
+    const products = await Product.find()
+      .populate("categoryId", "name")
+      .populate("vendorId", "name");
+
+    res.json(products);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+
+/**
  * @route   GET /api/products/:id
  * @desc    Vendor gets SINGLE product (only his)
  * @access  Vendor
