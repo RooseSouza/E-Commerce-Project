@@ -12,7 +12,7 @@ exports.makePayment = async (req, res) => {
 
     const payment = await Payment.create({
       orderId,
-      paymentStatus: "Success"
+      paymentStatus: "success"
     });
 
     order.status = "confirmed";
