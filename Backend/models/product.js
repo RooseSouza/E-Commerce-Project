@@ -22,21 +22,26 @@ const productSchema = new mongoose.Schema({
     required: true
   },
 
-  image: {
-    type: String
-  },
-
-  stock: {
-    type: Number,
-    required: true,
-    default: 0
-  },
-
   vendorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: "User",
     required: true
   },
+
+  stock: {
+    quantity: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    unit: {
+      type: String,
+      enum: ["piece", "kg", "g", "litre", "ml", "pack"],
+      required: true
+    }
+  },
+
+  image: String,
 
   createdAt: {
     type: Date,
@@ -44,4 +49,4 @@ const productSchema = new mongoose.Schema({
   }
 });
 
-module.exports = mongoose.model("product", productSchema);
+module.exports = mongoose.model("Product", productSchema);
