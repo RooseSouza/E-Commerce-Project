@@ -1,3 +1,4 @@
+// routes/orderRoutes.js
 const express = require("express");
 const router = express.Router();
 const Order = require("../models/order");
@@ -7,7 +8,7 @@ const { protect } = require("../middleware/authMiddleware");
 
 /**
  * @route   POST /api/orders
- * @desc    Place order from cart
+ * @desc    Place order (splits by vendor)
  * @access  User
  */
 router.post("/", protect, async (req, res) => {
@@ -18,53 +19,76 @@ router.post("/", protect, async (req, res) => {
       return res.status(400).json({ message: "Address is required" });
     }
 
-    // 1. Fetch cart
-    const cart = await Cart.findOne({ userId: req.user._id });
+    // 1. Get user's cart
+    const cart = await Cart.findOne({ userId: req.user._id })
+      .populate("items.productId");
 
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    let totalAmount = 0;
-    let vendorId = null;
+    /**
+     * 2. Group cart items by vendor
+     * {
+     *   vendorId1: [items...],
+     *   vendorId2: [items...]
+     * }
+     */
+    const vendorMap = {};
 
-    // 2. Build order items
-    const orderItems = [];
+    cart.items.forEach(item => {
+      const vendorId = item.productId.vendorId.toString();
 
-    for (const item of cart.items) {
-      const product = await Product.findById(item.productId);
-
-      if (!product) {
-        return res.status(404).json({ message: "Product not found" });
+      if (!vendorMap[vendorId]) {
+        vendorMap[vendorId] = [];
       }
 
-      vendorId = product.vendorId; // fetched via product
-      totalAmount += item.price * item.quantity;
-
-      orderItems.push({
-        productId: item.productId,
-        quantity: item.quantity,
-        price: item.price // snapshot from cart
-      });
-    }
-
-    // 3. Create order
-    const order = await Order.create({
-      userId: req.user._id,
-      vendorId,
-      items: orderItems,
-      totalAmount,
-      address,
-      status: "placed"
+      vendorMap[vendorId].push(item);
     });
+
+    const createdOrders = [];
+
+    // 3. Create one order per vendor
+    for (const vendorId in vendorMap) {
+      const items = vendorMap[vendorId];
+
+      let subtotal = 0;
+
+      const orderItems = items.map(item => {
+        subtotal += item.quantity * item.price;
+        return {
+          productId: item.productId._id,
+          quantity: item.quantity,
+          price: item.price
+        };
+      });
+
+      const tax = Math.round(subtotal * 0.05); // 5% tax
+      const deliveryCharge = subtotal >= 499 ? 0 : 40;
+      const totalAmount = subtotal + tax + deliveryCharge;
+
+      const order = await Order.create({
+        userId: req.user._id,
+        vendorId,
+        items: orderItems,
+        subtotal,
+        tax,
+        deliveryCharge,
+        totalAmount,
+        address,
+        status: "placed"
+      });
+
+      createdOrders.push(order);
+    }
 
     // 4. Clear cart
     cart.items = [];
     await cart.save();
 
     res.status(201).json({
-      message: "Order placed successfully",
-      order
+      message: "Orders placed successfully",
+      orders: createdOrders
     });
 
   } catch (error) {
