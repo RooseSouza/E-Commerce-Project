@@ -1,5 +1,6 @@
 const express = require("express");
 const router = express.Router();
+const upload = require("../middleware/upload");
 
 const {
   addProduct,
@@ -15,7 +16,7 @@ const { protect, authorize } = require("../middleware/authMiddleware");
 /**
  * Vendor adds product
  */
-router.post("/", protect, authorize("vendor"), addProduct);
+router.post("/", protect, authorize("vendor"), upload.single("image"),addProduct);
 
 /**
  * Vendor gets his products
