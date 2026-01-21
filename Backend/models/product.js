@@ -39,10 +39,25 @@ const productSchema = new mongoose.Schema({
     required: true
   },
 
+  stock: {
+    quantity: {
+      type: Number,
+      required: true,
+      min: 0
+    },
+    unit: {
+      type: String,
+      enum: ["piece", "kg", "g", "litre", "ml", "pack"],
+      required: true
+    }
+  },
+
+  image: String,
+
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
 
-module.exports = mongoose.model("product", productSchema);
+module.exports = mongoose.model("Product", productSchema);

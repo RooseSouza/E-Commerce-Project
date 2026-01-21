@@ -2,41 +2,41 @@ const Product = require("../models/product");
 const Category = require("../models/category");
 const cloudinary = require("../config/cloudinary");
 
-/**
- * Vendor adds a new product
- */
+// Vendor adds product
 exports.addProduct = async (req, res) => {
   try {
-    const { name, description, price, categoryName, stock } = req.body;
+    const { name, description, price, categoryName, stockQuantity,
+      stockUnit } = req.body;
 
     // Check required fields
-    if (!name || !description || !price || !categoryName) {
+    if (!name || !description || !price || !categoryName || stockQuantity === undefined ||
+      !stockUnit) {
       return res.status(400).json({ message: "Please provide all required fields" });
     }
 
-    // Find category by name
     const category = await Category.findOne({ name: categoryName });
     if (!category) {
       return res.status(400).json({ message: "Invalid category selected" });
     }
 
-    // Create product
-    const product = new Product({
+    const product = await Product.create({
       name,
       description,
       price,
       categoryId: category._id,
       image: req.file ? req.file.path : "",
-      stock,
-      vendorId: req.user._id
+      vendorId: req.user._id,
+      stock: {
+        quantity: stockQuantity,
+        unit: stockUnit
+      }
     });
 
-    await product.save();
-
     const populatedProduct = await Product.findById(product._id)
-      .populate("categoryId", "name");
+      .populate("categoryId", "name")
+      .populate("vendorId", "name");
 
-    res.status(200).json({
+    res.status(201).json({
       message: "Product added successfully",
       product: populatedProduct
     });
@@ -45,10 +45,7 @@ exports.addProduct = async (req, res) => {
   }
 };
 
-
-/**
- * Vendor gets ALL his products
- */
+// Vendor gets own products
 exports.getMyProducts = async (req, res) => {
   try {
     const products = await Product.find({ vendorId: req.user._id })
@@ -60,10 +57,7 @@ exports.getMyProducts = async (req, res) => {
   }
 };
 
-
-/**
- * Get ALL products (Public)
- */
+// User gets all products
 exports.getAllProducts = async (req, res) => {
   try {
     const products = await Product.find()
@@ -76,11 +70,8 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
-
-/**
- * Vendor gets SINGLE product
- */
-exports.getSingleProduct = async (req, res) => {
+// Vendor gets single product
+exports.getProductById = async (req, res) => {
   try {
     const product = await Product.findOne({
       _id: req.params.id,
@@ -149,10 +140,7 @@ exports.updateProduct = async (req, res) => {
   }
 };
 
-
-/**
- * Vendor deletes SINGLE product
- */
+// Vendor deletes product
 exports.deleteProduct = async (req, res) => {
   try {
     const deletedProduct = await Product.findOneAndDelete({

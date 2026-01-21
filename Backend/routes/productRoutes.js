@@ -6,7 +6,7 @@ const {
   addProduct,
   getMyProducts,
   getAllProducts,
-  getSingleProduct,
+  getProductById,
   updateProduct,
   deleteProduct
 } = require("../controllers/productController");
@@ -31,7 +31,7 @@ router.get("/", getAllProducts);
 /**
  * Vendor gets single product
  */
-router.get("/:id", protect, authorize("vendor"), getSingleProduct);
+router.get("/:id", protect, authorize("vendor"), getProductById);
 
 /**
  * Vendor updates product
