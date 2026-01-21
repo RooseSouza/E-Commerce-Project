@@ -1,30 +1,17 @@
 const Product = require("../models/product");
 const Category = require("../models/category");
+const cloudinary = require("../config/cloudinary");
 
 // Vendor adds product
 exports.addProduct = async (req, res) => {
   try {
-    const {
-      name,
-      description,
-      price,
-      categoryName,
-      image,
-      stockQuantity,
-      stockUnit
-    } = req.body;
+    const { name, description, price, categoryName, stockQuantity,
+      stockUnit } = req.body;
 
-    if (
-      !name ||
-      !description ||
-      !price ||
-      !categoryName ||
-      stockQuantity === undefined ||
-      !stockUnit
-    ) {
-      return res.status(400).json({
-        message: "All fields including stock quantity and unit are required"
-      });
+    // Check required fields
+    if (!name || !description || !price || !categoryName || stockQuantity === undefined ||
+      !stockUnit) {
+      return res.status(400).json({ message: "Please provide all required fields" });
     }
 
     const category = await Category.findOne({ name: categoryName });
@@ -37,7 +24,7 @@ exports.addProduct = async (req, res) => {
       description,
       price,
       categoryId: category._id,
-      image,
+      image: req.file ? req.file.path : "",
       vendorId: req.user._id,
       stock: {
         quantity: stockQuantity,
@@ -103,24 +90,50 @@ exports.getProductById = async (req, res) => {
   }
 };
 
-// Vendor updates product
+
+/**
+ * Vendor updates SINGLE product
+ */
+
+
 exports.updateProduct = async (req, res) => {
   try {
-    const updatedProduct = await Product.findOneAndUpdate(
-      { _id: req.params.id, vendorId: req.user._id },
-      req.body,
-      { new: true }
-    );
+    const product = await Product.findOne({
+      _id: req.params.id,
+      vendorId: req.user._id
+    });
 
-    if (!updatedProduct) {
+    if (!product) {
       return res.status(403).json({
         message: "You can update only your own product"
       });
     }
 
+    // Update allowed fields only
+    if (req.body.name) product.name = req.body.name;
+    if (req.body.description) product.description = req.body.description;
+    if (req.body.price) product.price = req.body.price;
+    if (req.body.stock) product.stock = req.body.stock;
+
+    // If new image uploaded
+    if (req.file) {
+      // Delete old image from Cloudinary
+      if (product.image?.public_id) {
+        await cloudinary.uploader.destroy(product.image.public_id);
+      }
+
+      // Save new image
+      product.image = {
+        url: req.file.path,
+        public_id: req.file.filename
+      };
+    }
+
+    await product.save();
+
     res.json({
       message: "Product updated successfully",
-      updatedProduct
+      product
     });
   } catch (error) {
     res.status(500).json({ error: error.message });
