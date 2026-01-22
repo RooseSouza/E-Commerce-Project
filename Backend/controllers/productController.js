@@ -24,7 +24,10 @@ exports.addProduct = async (req, res) => {
       description,
       price,
       categoryId: category._id,
-      image: req.file ? req.file.path : "",
+      image: {
+        url: req.file.path,
+        public_id: req.file.filename
+      },
       vendorId: req.user._id,
       stock: {
         quantity: stockQuantity,
