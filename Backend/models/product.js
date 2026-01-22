@@ -52,7 +52,11 @@ const productSchema = new mongoose.Schema({
     }
   },
 
-  image: String,
+    isActive: {
+    type: Boolean,
+    default: true
+  },
+
 
   createdAt: {
     type: Date,

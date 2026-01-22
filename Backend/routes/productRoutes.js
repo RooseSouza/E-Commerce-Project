@@ -8,7 +8,8 @@ const {
   getAllProducts,
   getProductById,
   updateProduct,
-  deleteProduct
+  deleteProduct,
+  toggleProductStatus 
 } = require("../controllers/productController");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -37,6 +38,9 @@ router.get("/:id", protect, authorize("vendor"), getProductById);
  * Vendor updates product
  */
 router.put("/:id", protect, authorize("vendor"), updateProduct);
+
+// Vendor enable / disable product
+router.put("/:id/toggle-status", protect, authorize("vendor"), toggleProductStatus);
 
 /**
  * Vendor deletes product

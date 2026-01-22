@@ -25,9 +25,10 @@ exports.addProduct = async (req, res) => {
       price,
       categoryId: category._id,
       image: {
-        url: req.file.path,
-        public_id: req.file.filename
+      url: req.file.path,        // Cloudinary secure_url
+      public_id: req.file.filename // Cloudinary public_id
       },
+
       vendorId: req.user._id,
       stock: {
         quantity: stockQuantity,
@@ -60,10 +61,11 @@ exports.getMyProducts = async (req, res) => {
   }
 };
 
-// User gets all products
+// Users get all active products
+
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find()
+    const products = await Product.find({ isActive: true })
       .populate("categoryId", "name")
       .populate("vendorId", "name");
 
@@ -112,20 +114,34 @@ exports.updateProduct = async (req, res) => {
       });
     }
 
-    // Update allowed fields only
     if (req.body.name) product.name = req.body.name;
     if (req.body.description) product.description = req.body.description;
-    if (req.body.price) product.price = req.body.price;
-    if (req.body.stock) product.stock = req.body.stock;
 
-    // If new image uploaded
+    if (req.body.price !== undefined) {
+      product.price = req.body.price;
+    }
+
+    if (req.body.stockQuantity !== undefined) {
+      product.stock.quantity = req.body.stockQuantity;
+    }
+
+      // AUTO ENABLE / DISABLE BASED ON STOCK
+      if (req.body.stockQuantity === 0) {
+        product.isActive = false;
+      } else {
+        product.isActive = true;
+      }
+    
+
+    if (req.body.stockUnit) {
+      product.stock.unit = req.body.stockUnit;
+    }
+
     if (req.file) {
-      // Delete old image from Cloudinary
       if (product.image?.public_id) {
         await cloudinary.uploader.destroy(product.image.public_id);
       }
 
-      // Save new image
       product.image = {
         url: req.file.path,
         public_id: req.file.filename
@@ -142,6 +158,31 @@ exports.updateProduct = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+// maunal disable or enable product
+exports.toggleProductStatus = async (req, res) => {
+  try {
+    const product = await Product.findOne({
+      _id: req.params.id,
+      vendorId: req.user._id
+    });
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    product.isActive = !product.isActive;
+    await product.save();
+
+    res.json({
+      message: `Product ${product.isActive ? "activated" : "disabled"} successfully`,
+      isActive: product.isActive
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 
 // Vendor deletes product
 exports.deleteProduct = async (req, res) => {
