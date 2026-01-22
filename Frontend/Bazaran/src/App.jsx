@@ -5,6 +5,7 @@ import Home from './pages/Home'
 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
 import UserProvider from './context/userContext'
+import VendorDashboard from './pages/VendorDashboard'
 
 const App = () => {
   return (
@@ -16,7 +17,8 @@ const App = () => {
             <Route path="/" element={<Root />} />
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
-             <Route path="/home" element={<Home />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/vendor-dashboard" element={<VendorDashboard />} />
           </Routes>
         </Router>
       </div>

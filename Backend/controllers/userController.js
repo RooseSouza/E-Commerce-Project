@@ -1,27 +1,28 @@
 const User = require("../models/user");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const { OAuth2Client } = require("google-auth-library");
 
+// Google client for verifying token
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+// Validate email
 const isValidEmail = (email) => {
-  const emailRegex =
-    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
 };
 
 // Generate JWT
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: "7d"
-  });
+  return jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: "7d" });
 };
 
 // REGISTER
 exports.registerUser = async (req, res) => {
   try {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, phone } = req.body;
 
-    // Basic validations
-    if (!name || !email || !password) {
+    if (!name || !email || !password || !phone) {
       return res.status(400).json({ message: "All fields are required" });
     }
 
@@ -30,9 +31,11 @@ exports.registerUser = async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res.status(400).json({
-        message: "Password must be at least 6 characters"
-      });
+      return res.status(400).json({ message: "Password must be at least 6 characters" });
+    }
+
+    if (!/^[0-9]{10}$/.test(phone)) {
+      return res.status(400).json({ message: "Phone number must be 10 digits" });
     }
 
     const userExists = await User.findOne({ email });
@@ -47,7 +50,8 @@ exports.registerUser = async (req, res) => {
       name,
       email,
       password: hashedPassword,
-      role
+      role,
+      phone,
     });
 
     res.status(201).json({
@@ -55,13 +59,13 @@ exports.registerUser = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id)
+      phone: user.phone,
+      token: generateToken(user._id),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
-
 
 // LOGIN
 exports.loginUser = async (req, res) => {
@@ -91,23 +95,20 @@ exports.loginUser = async (req, res) => {
       name: user.name,
       email: user.email,
       role: user.role,
-      token: generateToken(user._id)
+      token: generateToken(user._id),
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 };
 
+// GOOGLE LOGIN
 exports.googleLogin = async (req, res) => {
   try {
     const { name, email, googleId } = req.body;
 
     if (!email || !googleId) {
       return res.status(400).json({ message: "Invalid Google data" });
-    }
-
-    if (!isValidEmail(email)) {
-      return res.status(400).json({ message: "Invalid email format" });
     }
 
     let user = await User.findOne({ email });
@@ -117,20 +118,37 @@ exports.googleLogin = async (req, res) => {
         name,
         email,
         googleId,
-        provider: "google"
       });
     }
 
-    res.json({
-      _id: user._id,
-      name: user.name,
-      email: user.email,
-      role: user.role,
-      token: generateToken(user._id)
+    // generate JWT
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+
+    res.status(200).json({
+      token,
+      user,
     });
+
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error("GOOGLE LOGIN ERROR:", error);
+    res.status(500).json({ message: "Google login failed" });
   }
 };
 
 
+
+// Get logged-in user info
+exports.getMe = async (req, res) => {
+  try {
+    const user = await User.findById(req.user._id).select("-password");
+    if (!user) return res.status(404).json({ message: "User not found" });
+
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: "Failed to fetch user info" });
+  }
+};
