@@ -169,7 +169,7 @@ exports.getMyProfile = async (req, res) => {
     name:
       user.name ||
       `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-      "Not provided",
+      "Not provided!",
     email: user.email,
     phone: user.phone
   },
