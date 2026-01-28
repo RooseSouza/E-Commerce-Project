@@ -5,22 +5,22 @@ const LongCardsSection = () => {
   const cardsData = [
     {
       id: 1,
-      image: 'https://plus.unsplash.com/premium_photo-1671245156908-61e26926cef9?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      title: 'The Goan Flowers',
-      subtitle: 'From the flowers of beds',
+      image: 'https://images.unsplash.com/photo-1590671909091-43ff144014fe?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGluZGlhbiUyMHN3ZWV0c3xlbnwwfHwwfHx8MA%3D%3D',
+      title: 'Tradiotional sweets',
+      subtitle: 'From the best makers',
       discount: 'Sale 70%'
     },
     {
       id: 2,
-      image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=400&h=500&fit=crop',
-      title: 'Artisan Crafts',
-      subtitle: 'Handmade with passion',
+      image: 'https://images.unsplash.com/photo-1669130865741-b5b7e236dd6f?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8aW5kaWFuJTIwbWVkaWNpbmVzfGVufDB8fDB8fHww',
+      title: 'local Vegitables',
+      subtitle: 'grown with care',
       discount: 'Up to 60%'
     },
     {
       id: 3,
-      image: 'https://images.unsplash.com/photo-1655149588581-49191c89e470?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
-      title: 'Wooden Wonders',
+      image: 'https://images.unsplash.com/photo-1768729340689-9d4b7c7141a9?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MzZ8fGluZGlhbiUyMGhlcmJzfGVufDB8fDB8fHww',
+      title: 'Wellness mixtures',
       subtitle: 'Premium quality items',
       discount: 'Sale 50%'
     },

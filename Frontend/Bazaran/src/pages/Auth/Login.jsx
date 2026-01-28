@@ -5,6 +5,7 @@ import loginImage from "../../assets/img4.jpg";
 import Logo from "../../assets/logo1.png";
 import { useGoogleLogin } from "@react-oauth/google";
 import axios from "axios";
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 
 const Login = () => {
@@ -38,7 +39,7 @@ const Login = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/users/login", {
+      const response = await fetch(`${API_BASE}/api/users/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -97,7 +98,7 @@ const Login = () => {
 
       // 2️⃣ Send to backend
       const res = await axios.post(
-        "http://localhost:5000/api/users/google",
+        `${API_BASE}/api/users/google`,
         {
           name: googleUser.data.name,
           email: googleUser.data.email,

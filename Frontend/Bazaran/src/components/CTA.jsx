@@ -1,4 +1,5 @@
 import React, { useState } from 'react'
+import imgBanner from '../assets/img1.jpg'
 
 const CTA = () => {
   const [formData, setFormData] = useState({
@@ -31,7 +32,7 @@ const CTA = () => {
       <div
         className="absolute inset-0 bg-cover bg-center"
         style={{
-          backgroundImage: 'url(https://images.unsplash.com/photo-1588590294888-042cd70261ba?w=1400&h=400&fit=crop)',
+          backgroundImage: `url(${imgBanner})`,
         }}
       >
         {/* Dark Overlay */}
