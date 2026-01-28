@@ -44,7 +44,7 @@ const Signup = () => {
           email: formData.email,
           password: formData.password,
           phone: formData.phone,
-          role: selectedRole, // send role to backend
+          role: formData.role, // send role to backend
         }),
       });
 
