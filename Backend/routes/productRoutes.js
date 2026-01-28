@@ -9,7 +9,8 @@ const {
   getProductById,
   updateProduct,
   deleteProduct,
-  toggleProductStatus 
+  searchProducts,
+  toggleProductStatus
 } = require("../controllers/productController");
 
 const { protect, authorize } = require("../middleware/authMiddleware");
@@ -28,6 +29,12 @@ router.get("/my-products", protect, authorize("vendor"), getMyProducts);
  * Get all products (Public)
  */
 router.get("/", getAllProducts);
+
+/**
+ * User searches for a product
+ */
+router.get("/search", searchProducts);
+
 
 /**
  * Vendor gets single product

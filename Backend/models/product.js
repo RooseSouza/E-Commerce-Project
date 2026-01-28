@@ -52,16 +52,26 @@ const productSchema = new mongoose.Schema({
     }
   },
 
-    isActive: {
+  tags: [
+    {
+      type: String,
+      lowercase: true,
+      trim: true
+    }
+  ],
+
+  isActive: {
     type: Boolean,
     default: true
   },
-
 
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+/* Index for faster search */
+productSchema.index({ name: "text", tags: "text" });
 
 module.exports = mongoose.model("Product", productSchema);

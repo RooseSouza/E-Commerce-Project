@@ -17,15 +17,21 @@ const userSchema = new mongoose.Schema({
   },
   password: {
     type: String,
-    required: true,
+    required: function () {
+      return !this.googleId; // required ONLY for normal login
+    },
   },
   role: {
     type: String,
     enum: ["user", "vendor", "admin"],
     default: "user",
   },
-  phone: String,
-  address: String,
+  phone: {
+    type: String,
+    required: function () {
+      return !this.googleId; // required ONLY for normal login
+    },
+  },
   createdAt: {
     type: Date,
     default: Date.now,

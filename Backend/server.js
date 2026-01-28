@@ -1,11 +1,18 @@
 const express = require("express");
 const dotenv = require("dotenv");
 const connectDB = require("./database/db");
+const cors = require("cors");
 const Category = require("./models/category");
 
 dotenv.config();
 
 const app = express();
+
+app.use(cors({
+  origin: "http://localhost:5173",
+  credentials: true
+}));
+
 app.use(express.json());
 
 app.use(express.urlencoded({ extended: true }));
@@ -20,11 +27,10 @@ app.use("/api/categories", require("./routes/categoryRoutes"));
 
 
 
+
 // Predefined Local Market Categories
 const predefinedCategories = [
   { name: "Dairy", description: "Milk, cheese, butter, yogurt" },
-  { name: "Fruits", description: "Fresh and seasonal fruits" },
-  { name: "Vegetables", description: "Fresh vegetables" },
   { name: "Bakery", description: "Bread, cakes, pastries" },
   { name: "Beverages", description: "Juices, soft drinks, tea, coffee" },
   { name: "Snacks", description: "Chips, namkeen, chocolates" },
@@ -35,9 +41,16 @@ const predefinedCategories = [
   { name: "Personal Care", description: "Soap, shampoo, toothpaste, skincare" },
   { name: "Household Items", description: "Cleaning products, kitchen supplies" },
   { name: "Frozen Foods", description: "Frozen vegetables, ready-to-eat items" },
-  { name: "Organic Products", description: "Organic fruits, vegetables, and grains" },
-  { name: "Snacks & Sweets", description: "Mithai, biscuits, chocolates" }
+  { name: "Sweets", description: "Mithai, biscuits, chocolates" },
+  { name: "Fresh Produce", description: "Farm fresh fruits and vegetables" },
+  { name: "Goan Delicacies", description: "Traditional Goan food products" },
+  { name: "Handicraft and Arts", description: "Handmade crafts and artwork" },
+  { name: "Home Decors", description: "Decorative items for home" },
+  { name: "Fashion", description: "Clothing and fashion accessories" },
+  { name: "Metal and Wood", description: "Metal and wooden handmade products" },
+  { name: "Wellness and Organic", description: "Wellness, ayurvedic and organic items" }
 ];
+
 
 // Function to seed categories
 const seedCategories = async () => {
