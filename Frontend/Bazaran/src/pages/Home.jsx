@@ -13,31 +13,31 @@ const Home = () => {
   const featuredProducts = [
     {
       id: 1,
-      name: 'Traditional Goan Bebinca',
-      price: 450,
-      originalPrice: 600,
-      image: 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=60'
+      name: 'Goan Clay Cooking Pot (Kundlem)',
+      price: 550,
+      originalPrice: 750,
+      image: 'https://images.pexels.com/photos/33947401/pexels-photo-33947401.jpeg'
     },
     {
       id: 2,
-      name: 'Handmade Crochet Top',
+      name: 'Handmade Crochet top',
       price: 1200,
       originalPrice: 1800,
-      image: 'https://images.unsplash.com/photo-1619250907248-1bfef461c31b?w=600&auto=format&fit=crop&q=60'
+      image: 'https://images.pexels.com/photos/7585263/pexels-photo-7585263.jpeg'
     },
     {
       id: 3,
-      name: 'Pure Kokum Extract',
-      price: 350,
-      originalPrice: 450,
-      image: 'https://images.unsplash.com/photo-1543362906-ac1b4f87e9c9?w=600&auto=format&fit=crop&q=60'
+      name: 'Traditional Brass Lamp (Samai)',
+      price: 1250,
+      originalPrice: 1800,
+      image: 'https://images.pexels.com/photos/34705732/pexels-photo-34705732.jpeg'
     },
     {
       id: 4,
       name: 'Coconut Shell Bowl Set',
       price: 599,
       originalPrice: 999,
-      image: 'https://images.unsplash.com/photo-1603199892358-c03b31b87820?w=600&auto=format&fit=crop&q=60'
+      image: 'https://images.pexels.com/photos/34876038/pexels-photo-34876038.jpeg'
     }
   ]
 

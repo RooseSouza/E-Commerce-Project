@@ -1,6 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
-import Logo from '../assets/logo1.png'
+import Logo from '../assets/logo2.png'
 
 const Footer = () => {
   const [email, setEmail] = useState('')
@@ -17,13 +17,13 @@ const Footer = () => {
   }
 
   return (
-    <footer className="bg-amber-900 text-white pt-12 pb-6">
+    <footer className="bg-orange-500 text-white pt-12 pb-6">
       <div className="max-w-7xl mx-auto px-4">
         {/* Main Footer Content */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* Logo and Social Media */}
-          <div className="lg:col-span-1">
-                       <img src={`${Logo}`} alt="Logo" className="h-12 w-auto" />
+          <div className="lg:col-span-1 ">
+                       <img src={`${Logo}`} alt="Logo" className="h-12 w-auto mb-5" />
             {/* Social Media Icons */}
             <div className="flex gap-4">
               <a href="#" className="hover:text-amber-200 transition-colors text-lg">
