@@ -1,21 +1,42 @@
-import React, { useEffect, useState } from "react";
-import ProfileHeader from "../components/ProfileHeader";
-import ProfileStats from "../components/ProfileStats";
-import AddressList from "../components/AddressList";
-import RecentOrders from "../components/RecentOrders";
-import ProfileSettings from "../components/ProfileSettings";
+import React, { useState, useContext, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { UserContext } from '../context/userContext';
+import Navbar from '../components/Navbar';
+import Footer from '../components/Footer';
+import ProfileHeader from '../components/ProfileHeader';
+import ProfileStats from '../components/ProfileStats';
+import AddressList from '../components/AddressList';
+import RecentOrders from '../components/RecentOrders';
+import ProfileSettings from '../components/ProfileSettings';
 
 const UserProfile = () => {
+  const navigate = useNavigate();
+  const { user: contextUser, clearUser } = useContext(UserContext);
+
+  // Mock user data - replace with actual context/API data
   const [user, setUser] = useState({
     name: "",
     email: "",
     phone: "",
   });
 
-  const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalSpent: 0,
-    memberSince: "",
+  useEffect(() => {
+    if (contextUser) {
+      const names = contextUser.name ? contextUser.name.split(' ') : ['User'];
+      setUser(prev => ({
+        ...prev,
+        firstName: names[0],
+        lastName: names.slice(1).join(' ') || '',
+        email: contextUser.email,
+        phone: contextUser.phone || prev.phone
+      }));
+    }
+  }, [contextUser]);
+
+  const [stats] = useState({
+    totalOrders: 12,
+    totalSpent: 45250,
+    memberSince: '2024'
   });
 
   const [addresses, setAddresses] = useState([]);
@@ -111,7 +132,8 @@ const UserProfile = () => {
   const handleChangePassword = () => alert("Change password");
   const handleLogout = () => {
     localStorage.removeItem("token");
-    alert("Logged out");
+    clearUser();
+    navigate("/login");
   };
   const handleDeleteAccount = () => alert("Delete account");
 
@@ -124,8 +146,11 @@ const UserProfile = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Navbar />
+      <div className="flex-1 py-8 px-4">
+        <div className="max-w-6xl mx-auto">
+        {/* Profile Header */}
         <ProfileHeader user={user} onEditClick={handleEditProfile} />
         <ProfileStats stats={stats} />
 
@@ -147,6 +172,8 @@ const UserProfile = () => {
           />
         </div>
       </div>
+      </div>
+      <Footer />
     </div>
   );
 };

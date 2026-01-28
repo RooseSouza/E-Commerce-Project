@@ -1,13 +1,24 @@
 import React from 'react';
+import { useNavigate } from 'react-router-dom';
 
 const ItemCard = ({ product }) => {
-  const handleAddToCart = () => {
+  const navigate = useNavigate();
+
+  const handleAddToCart = (e) => {
+    e.stopPropagation();
     // TODO: Implement add to cart functionality
     console.log('Added to cart:', product);
   };
 
+  const handleCardClick = () => {
+    navigate(`/product/${product.id}`);
+  };
+
   return (
-    <div className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow">
+    <div 
+      onClick={handleCardClick}
+      className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow cursor-pointer"
+    >
       <div className="relative w-full h-48 bg-gray-200">
         <img 
           src={product.image} 

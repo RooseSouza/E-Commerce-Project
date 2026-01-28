@@ -50,34 +50,8 @@ const Navbar = () => {
           <div className="w-full px-4">
             <div className="flex items-center h-16">
               {/* Logo */}
-              <img src={`${Logo}`} alt="Logo" className="h-12 w-auto" />
-              {/* Center Navigation */}
-              <div className="hidden justify-center md:flex items-center gap-8 flex-1">
-                <Link
-                  to="/home"
-                  className="text-gray-700 hover:text-orange-500 font-medium transition"
-                >
-                  Home
-                </Link>
-                <Link
-                  to="/products"
-                  className="text-gray-700 hover:text-orange-500 font-medium transition"
-                >
-                  Products
-                </Link>
-                <Link
-                  to="/vendors"
-                  className="text-gray-700 hover:text-orange-500 font-medium transition"
-                >
-                  Vendors
-                </Link>
-                <Link
-                  to="/about"
-                  className="text-gray-700 hover:text-orange-500 font-medium transition"
-                >
-                  About
-                </Link>
-              </div>
+              <img src={Logo} alt="Logo" className="h-12 w-auto" />
+             
 
               {/* Right Side Icons */}
               <div className="flex items-center gap-4 ml-auto">
@@ -133,6 +107,7 @@ const Navbar = () => {
                 {/* Cart Icon */}
                 <Link
                   to="/cart"
+                  aria-label="Cart"
                   className="relative text-gray-700 hover:text-orange-500 transition"
                 >
                   <svg
