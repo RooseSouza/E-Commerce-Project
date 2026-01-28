@@ -42,6 +42,7 @@ app.use("/api/categories", require("./routes/categoryRoutes"));
 
 
 
+
 // Predefined Local Market Categories
 const predefinedCategories = [
   { name: "Dairy", description: "Milk, cheese, butter, yogurt" },
