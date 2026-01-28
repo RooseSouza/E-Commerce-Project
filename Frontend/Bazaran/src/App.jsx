@@ -2,6 +2,9 @@ import React from 'react'
 import Login from './pages/Auth/Login'
 import Signup from './pages/Auth/Signup'
 import Home from './pages/Home'
+import Cart from './pages/Cart'
+import ProductDetails from './pages/ProductDetails'
+import UserProfile from './pages/UserProfile'
 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
 import UserProvider from './context/userContext'
@@ -9,18 +12,21 @@ import UserProvider from './context/userContext'
 const App = () => {
   return (
     <div className='App'>
-    <UserProvider>
-      <div>
-        <Router>
-          <Routes>
-            <Route path="/" element={<Root />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-             <Route path="/home" element={<Home />} />
-          </Routes>
-        </Router>
-      </div>
-    </UserProvider>
+      <UserProvider>
+        <div>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Root />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/signup" element={<Signup />} />
+              <Route path="/home" element={<Home />} />
+               <Route path="/product" element={<ProductDetails />} />
+              <Route path="/cart" element={<Cart />} />
+              <Route path="/profile" element={<UserProfile />} />
+            </Routes>
+          </Router>
+        </div>
+      </UserProvider>
 
     </div>
   )

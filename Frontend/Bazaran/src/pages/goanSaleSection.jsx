@@ -25,7 +25,7 @@ const GoanSaleSection = () => {
       name: 'Woven Basket',
       price: 899,
       originalPrice: 1799,
-      image: 'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=300&h=300&fit=crop'
+      image: 'https://images.unsplash.com/photo-1626037235530-fe56de7d6459?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8d292ZW4lMjBiYXNrZXR8ZW58MHx8MHx8fDA%3D'
     },
     {
       id: 4,
