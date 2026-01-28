@@ -20,18 +20,19 @@ const RecentOrders = ({ orders, onViewOrder }) => {
             <tbody>
               {orders.slice(0, 5).map((order) => (
                 <tr key={order.id} className="border-b border-gray-100 hover:bg-gray-50">
-                  <td className="py-3 px-4 text-gray-700">#{order.id}</td>
+                  <h4 className="font-semibold">{order.orderName}</h4>
+                  <p className="text-sm text-gray-500">{order.productName}</p>
+
                   <td className="py-3 px-4 text-gray-700">
                     {new Date(order.date).toLocaleDateString()}
                   </td>
                   <td className="py-3 px-4 text-gray-700 font-medium">₹{order.amount}</td>
                   <td className="py-3 px-4">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                      order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
-                      order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
-                      'bg-yellow-100 text-yellow-800'
-                    }`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
+                        order.status === 'Processing' ? 'bg-blue-100 text-blue-800' :
+                          order.status === 'Cancelled' ? 'bg-red-100 text-red-800' :
+                            'bg-yellow-100 text-yellow-800'
+                      }`}>
                       {order.status}
                     </span>
                   </td>

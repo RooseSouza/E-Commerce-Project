@@ -80,13 +80,24 @@ const UserProfile = () => {
         });
 
         /* ✅ ORDERS */
-        const formattedOrders = data.orders.map((order) => ({
-          id: order._id,
-          date: new Date(order.createdAt).toISOString().split("T")[0],
-          amount: order.totalAmount,
-          status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
-          phone: order.address?.phone || "Not provided",
-        }));
+        const formattedOrders = data.orders.map((order, index) => {
+          const dateObj = new Date(order.createdAt);
+
+          const formattedDate = `${String(dateObj.getDate()).padStart(2, "0")}/${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}/${dateObj.getFullYear()}`;
+
+          return {
+            id: order._id, // keep for internal use
+            orderName: `Order #${index + 1}`,
+            productName:
+              order.items?.[0]?.product?.name || "Product name not available",
+            date: formattedDate,
+            amount: order.totalAmount,
+            status:
+              order.status.charAt(0).toUpperCase() + order.status.slice(1),
+          };
+        });
 
         setOrders(formattedOrders);
 
@@ -150,28 +161,28 @@ const UserProfile = () => {
       <Navbar />
       <div className="flex-1 py-8 px-4">
         <div className="max-w-6xl mx-auto">
-        {/* Profile Header */}
-        <ProfileHeader user={user} onEditClick={handleEditProfile} />
-        <ProfileStats stats={stats} />
+          {/* Profile Header */}
+          <ProfileHeader user={user} onEditClick={handleEditProfile} />
+          <ProfileStats stats={stats} />
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2">
-            <RecentOrders orders={orders} onViewOrder={handleViewOrder} />
-            <AddressList
-              addresses={addresses}
-              onEdit={handleEditAddress}
-              onDelete={handleDeleteAddress}
-              onAddNew={handleAddAddress}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2">
+              <RecentOrders orders={orders} onViewOrder={handleViewOrder} />
+              <AddressList
+                addresses={addresses}
+                onEdit={handleEditAddress}
+                onDelete={handleDeleteAddress}
+                onAddNew={handleAddAddress}
+              />
+            </div>
+
+            <ProfileSettings
+              onChangePassword={handleChangePassword}
+              onLogout={handleLogout}
+              onDeleteAccount={handleDeleteAccount}
             />
           </div>
-
-          <ProfileSettings
-            onChangePassword={handleChangePassword}
-            onLogout={handleLogout}
-            onDeleteAccount={handleDeleteAccount}
-          />
         </div>
-      </div>
       </div>
       <Footer />
     </div>
