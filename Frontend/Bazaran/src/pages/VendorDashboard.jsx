@@ -11,7 +11,7 @@ const ProfessionalVendorDashboard = () => {
     name: "",
     description: "",
     price: "",
-    categoryName: "",
+    categoryId: "",
     stockQuantity: "",
     stockUnit: "piece",
     image: null,
@@ -22,6 +22,7 @@ const ProfessionalVendorDashboard = () => {
 
   const token = localStorage.getItem("token");
 
+  // Fetch categories
   const fetchCategories = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/categories");
@@ -32,14 +33,12 @@ const ProfessionalVendorDashboard = () => {
     }
   };
 
+  // Fetch vendor products
   const fetchProducts = async () => {
     try {
-      const res = await axios.get(
-        "http://localhost:5000/api/products/my-products",
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await axios.get("http://localhost:5000/api/products/my-products", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setProducts(res.data.products || res.data || []);
     } catch (err) {
       console.error(err);
@@ -47,6 +46,7 @@ const ProfessionalVendorDashboard = () => {
     }
   };
 
+  // Fetch logged-in vendor info
   const fetchVendor = async () => {
     try {
       const res = await axios.get("http://localhost:5000/api/users/me", {
@@ -58,102 +58,71 @@ const ProfessionalVendorDashboard = () => {
     }
   };
 
-  // Fetch vendor info
   useEffect(() => {
     if (!token) return;
-
     fetchVendor();
     fetchCategories();
     fetchProducts();
   }, [token]);
 
-  const handleChange = (e) => {
-    setFormData({ ...formData, [e.target.name]: e.target.value });
-  };
+  // Form handlers
+  const handleChange = (e) => setFormData({ ...formData, [e.target.name]: e.target.value });
+  const handleFileChange = (e) => setFormData({ ...formData, image: e.target.files[0] });
 
-  const handleFileChange = (e) => {
-    setFormData({ ...formData, image: e.target.files[0] });
-  };
-
+  // Add or Update product
   const handleSubmit = async (e) => {
-  e.preventDefault();
-
-  if (!formData.image && !editingProductId) {
-    setMessage("Please upload an image");
-    return;
-  }
-
-  try {
-    setLoading(true);
-    setMessage("");
-
-    const data = new FormData();
-
-    Object.keys(formData).forEach((key) => {
-      if (formData[key] !== null && formData[key] !== undefined) {
-        data.append(key, formData[key]);
-      }
-    });
-
-    if (editingProductId) {
-      await axios.put(
-        `http://localhost:5000/api/products/${editingProductId}`,
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-    } else {
-      await axios.post(
-        "http://localhost:5000/api/products",
-        data,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    e.preventDefault();
+    if (!formData.image && !editingProductId) {
+      setMessage("Please upload an image");
+      return;
     }
+    try {
+      setLoading(true);
+      setMessage("");
+      const data = new FormData();
+      Object.keys(formData).forEach((key) => {
+        if (formData[key] !== null && formData[key] !== undefined) {
+          data.append(key, formData[key]);
+        }
+      });
 
-    setMessage(editingProductId ? "Product updated!" : "Product added!");
+      if (editingProductId) {
+        await axios.put(`http://localhost:5000/api/products/${editingProductId}`, data, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      } else {
+        await axios.post("http://localhost:5000/api/products", data, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+      }
 
-    setFormData({
-      name: "",
-      description: "",
-      price: "",
-      categoryId: "",
-      stockQuantity: "",
-      stockUnit: "piece",
-      image: null,
-    });
+      setMessage(editingProductId ? "Product updated!" : "Product added!");
+      setFormData({
+        name: "",
+        description: "",
+        price: "",
+        categoryId: "",
+        stockQuantity: "",
+        stockUnit: "piece",
+        image: null,
+      });
+      setEditingProductId(null);
+      fetchProducts();
+      setActiveTab("products");
+    } catch (error) {
+      console.error(error);
+      setMessage(error.response?.data?.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    setEditingProductId(null);
-    fetchProducts();
-    setActiveTab("products");
-  } catch (error) {
-    console.error(error);
-    setMessage(error.response?.data?.message || "Something went wrong");
-  } finally {
-    setLoading(false);
-  }
-};
-
+  // Open edit modal
   const handleEdit = (product) => {
     setEditingProductId(product._id);
-    setFormData({
-      name: product.name || "",
-      description: product.description || "",
-      price: product.price || "",
-      categoryId: product.categoryId?._id || "", // ✅ ID, not name
-      stockQuantity: product.stock?.quantity || "",
-      stockUnit: product.stock?.unit || "piece",
-      image: null,
-    });
-    setActiveTab("add");
   };
 
+  // Delete product
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
     try {
@@ -167,17 +136,16 @@ const ProfessionalVendorDashboard = () => {
     }
   };
 
+  // Toggle product active/disable
   const handleToggle = async (product) => {
     try {
       await axios.put(
         `http://localhost:5000/api/products/${product._id}/toggle-status`,
         {},
-        { headers: { Authorization: `Bearer ${token}` } },
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setProducts(
-        products.map((p) =>
-          p._id === product._id ? { ...p, isActive: !p.isActive } : p,
-        ),
+        products.map((p) => (p._id === product._id ? { ...p, isActive: !p.isActive } : p))
       );
     } catch (err) {
       console.error(err);
@@ -189,6 +157,147 @@ const ProfessionalVendorDashboard = () => {
     window.location.href = "/login";
   };
 
+  // -------------------
+  // Edit Product Modal
+  // -------------------
+  const EditProductModal = ({ product, categories, onClose, onSave }) => {
+    const [formDataModal, setFormDataModal] = useState({
+      name: product.name,
+      description: product.description,
+      price: product.price,
+      categoryId: product.categoryId._id,
+      stockQuantity: product.stock.quantity,
+      stockUnit: product.stock.unit,
+      image: null,
+    });
+    const [loadingModal, setLoadingModal] = useState(false);
+
+    const handleChangeModal = (e) =>
+      setFormDataModal({ ...formDataModal, [e.target.name]: e.target.value });
+    const handleFileChangeModal = (e) =>
+      setFormDataModal({ ...formDataModal, image: e.target.files[0] });
+
+    const handleSubmitModal = async (e) => {
+      e.preventDefault();
+      try {
+        setLoadingModal(true);
+        const data = new FormData();
+        Object.keys(formDataModal).forEach((key) => {
+          if (formDataModal[key] !== null) data.append(key, formDataModal[key]);
+        });
+
+        await axios.put(
+          `http://localhost:5000/api/products/${product._id}`,
+          data,
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+
+        onSave();
+        onClose();
+      } catch (err) {
+        console.error(err);
+        alert(err.response?.data?.message || "Update failed");
+      } finally {
+        setLoadingModal(false);
+      }
+    };
+
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white p-6 rounded shadow max-w-lg w-full relative">
+          <button
+            className="absolute top-2 right-2 text-gray-500 hover:text-gray-800"
+            onClick={onClose}
+          >
+            ✕
+          </button>
+
+          <h2 className="text-xl font-bold mb-4">Edit Product</h2>
+
+          <form className="space-y-3" onSubmit={handleSubmitModal}>
+            <input
+              type="text"
+              name="name"
+              value={formDataModal.name}
+              onChange={handleChangeModal}
+              placeholder="Product Name"
+              className="w-full border p-2 rounded"
+              required
+            />
+            <textarea
+              name="description"
+              value={formDataModal.description}
+              onChange={handleChangeModal}
+              placeholder="Description"
+              className="w-full border p-2 rounded"
+              rows={3}
+              required
+            />
+            <input
+              type="number"
+              name="price"
+              value={formDataModal.price}
+              onChange={handleChangeModal}
+              placeholder="Price"
+              className="w-full border p-2 rounded"
+              required
+            />
+            <select
+              name="categoryId"
+              value={formDataModal.categoryId}
+              onChange={handleChangeModal}
+              className="w-full border p-2 rounded"
+              required
+            >
+              <option value="">Select Category</option>
+              {categories.map((cat) => (
+                <option key={cat._id} value={cat._id}>
+                  {cat.name}
+                </option>
+              ))}
+            </select>
+            <div className="flex gap-2">
+              <input
+                type="number"
+                name="stockQuantity"
+                value={formDataModal.stockQuantity}
+                onChange={handleChangeModal}
+                placeholder="Stock Quantity"
+                className="flex-1 border p-2 rounded"
+                min="0"
+                required
+              />
+              <select
+                name="stockUnit"
+                value={formDataModal.stockUnit}
+                onChange={handleChangeModal}
+                className="flex-1 border p-2 rounded"
+              >
+                <option value="piece">Piece</option>
+                <option value="kg">Kg</option>
+                <option value="g">Gram</option>
+                <option value="litre">Litre</option>
+                <option value="ml">ML</option>
+                <option value="pack">Pack</option>
+              </select>
+            </div>
+            <input type="file" onChange={handleFileChangeModal} />
+
+            <button
+              type="submit"
+              className="w-full bg-blue-600 text-white p-2 rounded hover:bg-blue-700"
+            >
+              {loadingModal ? "Updating..." : "Update Product"}
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  };
+
+  // -------------------
+  // Main Return
+  // -------------------
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
@@ -197,23 +306,24 @@ const ProfessionalVendorDashboard = () => {
         <nav className="flex-1 p-4 space-y-2">
           <button
             onClick={() => setActiveTab("add")}
-            className={`flex items-center gap-2 p-2 w-full rounded hover:bg-gray-200 ${activeTab === "add" ? "bg-gray-200 font-semibold" : ""}`}
+            className={`flex items-center gap-2 p-2 w-full rounded hover:bg-gray-200 ${
+              activeTab === "add" ? "bg-gray-200 font-semibold" : ""
+            }`}
           >
             <FiPlusSquare /> Add Product
           </button>
           <button
             onClick={() => setActiveTab("products")}
-            className={`flex items-center gap-2 p-2 w-full rounded hover:bg-gray-200 ${activeTab === "products" ? "bg-gray-200 font-semibold" : ""}`}
+            className={`flex items-center gap-2 p-2 w-full rounded hover:bg-gray-200 ${
+              activeTab === "products" ? "bg-gray-200 font-semibold" : ""
+            }`}
           >
             <FiBox /> My Products
           </button>
         </nav>
         <div className="p-4 border-t flex items-center justify-between">
           <span className="text-sm">{vendor.name}</span>
-          <button
-            onClick={handleLogout}
-            className="text-red-500 hover:text-red-700"
-          >
+          <button onClick={handleLogout} className="text-red-500 hover:text-red-700">
             <FiLogOut />
           </button>
         </div>
@@ -221,6 +331,7 @@ const ProfessionalVendorDashboard = () => {
 
       {/* Main Content */}
       <main className="flex-1 p-6 overflow-y-auto">
+        {/* Add Product Form */}
         {activeTab === "add" && (
           <div className="bg-white p-6 shadow rounded max-w-3xl mx-auto">
             <h2 className="text-2xl font-bold mb-4">
@@ -270,12 +381,11 @@ const ProfessionalVendorDashboard = () => {
                   required
                 >
                   <option value="">Select Category</option>
-                  {Array.isArray(categories) &&
-                    categories.map((cat) => (
-                      <option key={cat._id} value={cat._id}>
-                        {cat.name}
-                      </option>
-                    ))}
+                  {categories.map((cat) => (
+                    <option key={cat._id} value={cat._id}>
+                      {cat.name}
+                    </option>
+                  ))}
                 </select>
               </div>
               <div className="flex gap-4">
@@ -305,53 +415,38 @@ const ProfessionalVendorDashboard = () => {
               </div>
               <div>
                 <label className="block mb-1 font-medium">Product Image</label>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFileChange}
-                  className="w-full"
-                />
+                <input type="file" accept="image/*" onChange={handleFileChange} className="w-full" />
               </div>
               <button
                 type="submit"
                 className="w-full bg-blue-600 text-white font-semibold p-2 rounded hover:bg-blue-700"
               >
-                {loading
-                  ? "Processing..."
-                  : editingProductId
-                    ? "Update Product"
-                    : "Add Product"}
+                {loading ? "Processing..." : editingProductId ? "Update Product" : "Add Product"}
               </button>
             </form>
           </div>
         )}
 
+        {/* Products List */}
         {activeTab === "products" && (
           <div>
             <h2 className="text-2xl font-bold mb-4">My Products</h2>
             {products.length === 0 && <p>No products found.</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {products.map((product) => (
-                <div
-                  key={product._id}
-                  className="bg-white shadow rounded p-4 flex flex-col"
-                >
+                <div key={product._id} className="bg-white shadow rounded p-4 flex flex-col">
                   <img
                     src={product.image.url}
                     alt={product.name}
                     className="w-full h-40 object-cover mb-2 rounded"
                   />
                   <h3 className="font-bold text-lg">{product.name}</h3>
-                  <p className="text-gray-500">
-                    Category: {product.categoryId.name}
-                  </p>
+                  <p className="text-gray-500">Category: {product.categoryId.name}</p>
                   <p className="text-gray-500">Price: ${product.price}</p>
                   <p className="text-gray-500">
                     Stock: {product.stock.quantity} {product.stock.unit}
                   </p>
-                  <p
-                    className={`mb-2 font-medium ${product.isActive ? "text-green-600" : "text-red-600"}`}
-                  >
+                  <p className={`mb-2 font-medium ${product.isActive ? "text-green-600" : "text-red-600"}`}>
                     Status: {product.isActive ? "Active" : "Disabled"}
                   </p>
                   <div className="mt-auto flex gap-2">
@@ -377,6 +472,16 @@ const ProfessionalVendorDashboard = () => {
                 </div>
               ))}
             </div>
+
+            {/* Edit Product Modal */}
+            {editingProductId && (
+              <EditProductModal
+                product={products.find((p) => p._id === editingProductId)}
+                categories={categories}
+                onClose={() => setEditingProductId(null)}
+                onSave={fetchProducts}
+              />
+            )}
           </div>
         )}
       </main>
