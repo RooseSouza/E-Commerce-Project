@@ -192,19 +192,33 @@ const Signup = () => {
 
             {/* Role Input */}
             <div className="relative">
-              <select
-                name="role"
-                value={formData.role}
-                onChange={handleInputChange}
-                required
-                className="w-full px-4 py-3 rounded-full border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent placeholder-gray-400"
-              >
-                <option value="" disabled>
-                  Select Role
-                </option>
-                <option value="user">User</option>
-                <option value="vendor">Vendor</option>
-              </select>
+              <div className="role-selector">
+                <label
+                  className={`role-option ${formData.role === "vendor" ? "active" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="vendor"
+                    checked={formData.role === "vendor"}
+                    onChange={handleInputChange}
+                  />
+                  I am a Seller
+                </label>
+
+                <label
+                  className={`role-option ${formData.role === "user" ? "active" : ""}`}
+                >
+                  <input
+                    type="radio"
+                    name="role"
+                    value="user"
+                    checked={formData.role === "user"}
+                    onChange={handleInputChange}
+                  />
+                  I am a Buyer
+                </label>
+              </div>
             </div>
 
             {/* Error Message */}
