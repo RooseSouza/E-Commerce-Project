@@ -1,144 +1,150 @@
-import React, { useState } from 'react';
-import ProfileHeader from '../components/ProfileHeader';
-import ProfileStats from '../components/ProfileStats';
-import AddressList from '../components/AddressList';
-import RecentOrders from '../components/RecentOrders';
-import ProfileSettings from '../components/ProfileSettings';
+import React, { useEffect, useState } from "react";
+import ProfileHeader from "../components/ProfileHeader";
+import ProfileStats from "../components/ProfileStats";
+import AddressList from "../components/AddressList";
+import RecentOrders from "../components/RecentOrders";
+import ProfileSettings from "../components/ProfileSettings";
 
 const UserProfile = () => {
-  // Mock user data - replace with actual context/API data
   const [user, setUser] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+91 9876543210'
+    name: "",
+    email: "",
+    phone: "",
   });
 
-  const [stats] = useState({
-    totalOrders: 12,
-    totalSpent: 45250,
-    memberSince: '2024'
+  const [stats, setStats] = useState({
+    totalOrders: 0,
+    totalSpent: 0,
+    memberSince: "",
   });
 
-  const [addresses, setAddresses] = useState([
-    {
-      type: 'Home',
-      street: '123 Main Street',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      zipCode: '560001',
-      country: 'India'
-    },
-    {
-      type: 'Work',
-      street: '456 Business Plaza',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      zipCode: '560034',
-      country: 'India'
-    }
-  ]);
+  const [addresses, setAddresses] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [orders] = useState([
-    {
-      id: 'ORD001',
-      date: '2026-01-20',
-      amount: 5999,
-      status: 'Delivered'
-    },
-    {
-      id: 'ORD002',
-      date: '2026-01-18',
-      amount: 2450,
-      status: 'Processing'
-    },
-    {
-      id: 'ORD003',
-      date: '2026-01-15',
-      amount: 8750,
-      status: 'Delivered'
-    },
-    {
-      id: 'ORD004',
-      date: '2026-01-10',
-      amount: 3200,
-      status: 'Cancelled'
-    },
-    {
-      id: 'ORD005',
-      date: '2026-01-05',
-      amount: 6100,
-      status: 'Delivered'
-    }
-  ]);
+  useEffect(() => {
+    const fetchProfileData = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
-  const handleEditProfile = () => {
-    alert('Edit profile modal would open here');
-  };
+        const response = await fetch(
+          `${import.meta.env.VITE_API_BASE}/api/users/me/profile`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
 
-  const handleEditAddress = (index) => {
-    alert(`Edit address ${index} would open here`);
-  };
+        if (!response.ok) throw new Error("Failed to fetch profile");
 
-  const handleDeleteAddress = (index) => {
+        const data = await response.json();
+
+        /* ✅ USER */
+        const fallbackPhone =
+          data.user.phone || data.orders?.[0]?.address?.phone || "Not provided";
+
+        setUser({
+          name: data.user.name || "",
+          email: data.user.email || "",
+          phone: fallbackPhone,
+        });
+
+        /* ✅ STATS */
+        setStats({
+          totalOrders: data.stats.totalOrders,
+          totalSpent: data.stats.totalSpent,
+          memberSince: data.stats.memberSince,
+        });
+
+        /* ✅ ORDERS */
+        const formattedOrders = data.orders.map((order) => ({
+          id: order._id,
+          date: new Date(order.createdAt).toISOString().split("T")[0],
+          amount: order.totalAmount,
+          status: order.status.charAt(0).toUpperCase() + order.status.slice(1),
+          phone: order.address?.phone || "Not provided",
+        }));
+
+        setOrders(formattedOrders);
+
+        /* ✅ ADDRESSES (WITH PHONE) */
+        const extractedAddresses = data.orders
+          .map((order) => {
+            if (!order.address) return null;
+
+            return {
+              ...order.address,
+              phone: order.address.phone || "Not provided",
+            };
+          })
+          .filter(Boolean);
+
+        /* ✅ REMOVE DUPLICATES */
+        const uniqueAddresses = Array.from(
+          new Map(
+            extractedAddresses.map((addr) => [
+              `${addr.street}-${addr.zip}-${addr.phone}`,
+              addr,
+            ]),
+          ).values(),
+        );
+
+        setAddresses(uniqueAddresses);
+      } catch (err) {
+        console.error("Profile fetch error:", err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProfileData();
+  }, []);
+
+  const handleEditProfile = () => alert("Edit profile modal would open here");
+  const handleEditAddress = (index) => alert(`Edit address ${index}`);
+  const handleDeleteAddress = (index) =>
     setAddresses(addresses.filter((_, i) => i !== index));
-  };
-
-  const handleAddAddress = () => {
-    alert('Add address modal would open here');
-  };
-
-  const handleViewOrder = (orderId) => {
-    alert(`View order ${orderId} details`);
-  };
-
-  const handleChangePassword = () => {
-    alert('Change password modal would open here');
-  };
-
+  const handleAddAddress = () => alert("Add address modal");
+  const handleViewOrder = (id) => alert(`View order ${id}`);
+  const handleChangePassword = () => alert("Change password");
   const handleLogout = () => {
-    alert('User logged out');
-    // Implement actual logout logic
+    localStorage.removeItem("token");
+    alert("Logged out");
   };
+  const handleDeleteAccount = () => alert("Delete account");
 
-  const handleDeleteAccount = () => {
-    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      alert('Account deletion logic would be executed here');
-    }
-  };
+  if (loading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        Loading profile...
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
-        {/* Profile Header */}
         <ProfileHeader user={user} onEditClick={handleEditProfile} />
-
-        {/* Statistics */}
         <ProfileStats stats={stats} />
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            {/* Recent Orders */}
             <RecentOrders orders={orders} onViewOrder={handleViewOrder} />
-
-            {/* Addresses */}
-            <AddressList 
-              addresses={addresses} 
+            <AddressList
+              addresses={addresses}
               onEdit={handleEditAddress}
               onDelete={handleDeleteAddress}
               onAddNew={handleAddAddress}
             />
           </div>
 
-          {/* Sidebar - Settings */}
-          <div>
-            <ProfileSettings 
-              onChangePassword={handleChangePassword}
-              onLogout={handleLogout}
-              onDeleteAccount={handleDeleteAccount}
-            />
-          </div>
+          <ProfileSettings
+            onChangePassword={handleChangePassword}
+            onLogout={handleLogout}
+            onDeleteAccount={handleDeleteAccount}
+          />
         </div>
       </div>
     </div>
