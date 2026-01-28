@@ -13,36 +13,36 @@ const Home = () => {
   const featuredProducts = [
     {
       id: 1,
-      name: 'Premium Wooden artwork',
-      price: 2499,
-      originalPrice: 4999,
-      image: 'https://plus.unsplash.com/premium_photo-1677785617433-031ab653c59c?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTd8fGluZGlhbiUyMHdvb2RlbiUyMGl0ZW1zfGVufDB8fDB8fHww'
+      name: 'Traditional Goan Bebinca',
+      price: 450,
+      originalPrice: 600,
+      image: 'https://images.unsplash.com/photo-1621303837174-89787a7d4729?w=600&auto=format&fit=crop&q=60'
     },
     {
       id: 2,
-      name: 'Decorative earings',
-      price: 1599,
-      originalPrice: 3199,
-      image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=300&h=300&fit=crop'
+      name: 'Handmade Crochet Top',
+      price: 1200,
+      originalPrice: 1800,
+      image: 'https://images.unsplash.com/photo-1619250907248-1bfef461c31b?w=600&auto=format&fit=crop&q=60'
     },
     {
       id: 3,
-      name: 'Decorative Lantern',
-      price: 899,
-      originalPrice: 1799,
-      image: 'https://images.unsplash.com/photo-1666594948915-3b8d490ff9eb?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8aW5kaWFuJTIwbGFudGVybnxlbnwwfHwwfHx8MA%3D%3D'
+      name: 'Pure Kokum Extract',
+      price: 350,
+      originalPrice: 450,
+      image: 'https://images.unsplash.com/photo-1543362906-ac1b4f87e9c9?w=600&auto=format&fit=crop&q=60'
     },
     {
       id: 4,
-      name: 'Sanguem bashi',
-      price: 1299,
-      originalPrice: 2599,
-      image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=300&h=300&fit=crop'
+      name: 'Coconut Shell Bowl Set',
+      price: 599,
+      originalPrice: 999,
+      image: 'https://images.unsplash.com/photo-1603199892358-c03b31b87820?w=600&auto=format&fit=crop&q=60'
     }
   ]
 
   return (
-    <div className="bg-gray-50 min-h-screen">
+    <div className="bg-white min-h-screen">
       {/* Header Section - Navbar + Carousel */}
       <section className="w-full">
         <Header />

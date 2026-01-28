@@ -1,0 +1,50 @@
+import React from 'react';
+
+const AddressList = ({ addresses, onEdit, onDelete, onAddNew }) => {
+  return (
+    <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
+        <h2 className="text-2xl font-bold text-gray-800">Saved Addresses</h2>
+        <button
+          onClick={onAddNew}
+          className="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded-md transition-colors text-sm"
+        >
+          + Add Address
+        </button>
+      </div>
+
+      {addresses && addresses.length > 0 ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {addresses.map((address, index) => (
+            <div key={index} className="border border-gray-200 rounded-lg p-4">
+              <p className="font-semibold text-gray-800 mb-2">{address.type || 'Address'}</p>
+              <p className="text-gray-700 text-sm mb-1">{address.street}</p>
+              <p className="text-gray-700 text-sm mb-1">
+                {address.city}, {address.state} {address.zipCode}
+              </p>
+              <p className="text-gray-700 text-sm mb-3">{address.country}</p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onEdit(index)}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => onDelete(index)}
+                  className="text-red-600 hover:text-red-700 text-sm font-medium"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      ) : (
+        <p className="text-gray-600 text-center py-8">No addresses saved yet</p>
+      )}
+    </div>
+  );
+};
+
+export default AddressList;

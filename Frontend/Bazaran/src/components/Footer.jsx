@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import { Link } from 'react-router-dom'
+import Logo from '../assets/logo1.png'
 
 const Footer = () => {
   const [email, setEmail] = useState('')
@@ -22,13 +23,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-8 mb-8">
           {/* Logo and Social Media */}
           <div className="lg:col-span-1">
-            <Link to="/" className="flex items-center gap-2 mb-6">
-              <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center">
-                <span className="text-amber-900 font-bold text-lg">B</span>
-              </div>
-              <span className="text-2xl font-bold">BAZARAN</span>
-            </Link>
-            
+                       <img src={`${Logo}`} alt="Logo" className="h-12 w-auto" />
             {/* Social Media Icons */}
             <div className="flex gap-4">
               <a href="#" className="hover:text-amber-200 transition-colors text-lg">
@@ -55,24 +50,20 @@ const Footer = () => {
             <ul className="space-y-2">
               <li>
                 <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 1
+                  Articles
                 </Link>
               </li>
               <li>
                 <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 2
+                 Blogs
                 </Link>
               </li>
               <li>
                 <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 3
+                  Goan Stories
                 </Link>
               </li>
-              <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 4
-                </Link>
-              </li>
+             
             </ul>
           </div>
 
@@ -81,23 +72,23 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 1
+                <Link to="/" className="hover:text-amber-200 transition-colors text-sm">
+                  Home
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 2
+                <Link to="/products" className="hover:text-amber-200 transition-colors text-sm">
+                  Shop Products
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 3
+                <Link to="/vendors" className="hover:text-amber-200 transition-colors text-sm">
+                  Our Vendors
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 4
+                <Link to="/about" className="hover:text-amber-200 transition-colors text-sm">
+                  About Us
                 </Link>
               </li>
             </ul>
@@ -108,23 +99,23 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4">Customer service</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 1
+                <Link to="/contact" className="hover:text-amber-200 transition-colors text-sm">
+                  Contact Us
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 2
+                <Link to="/faq" className="hover:text-amber-200 transition-colors text-sm">
+                  FAQ
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 3
+                <Link to="/shipping" className="hover:text-amber-200 transition-colors text-sm">
+                  Shipping Policy
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Link 4
+                <Link to="/returns" className="hover:text-amber-200 transition-colors text-sm">
+                  Returns & Refunds
                 </Link>
               </li>
             </ul>

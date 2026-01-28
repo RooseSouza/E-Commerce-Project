@@ -4,23 +4,23 @@ const FeaturedBannerSection = () => {
   const bannerItems = [
     {
       id: 1,
-      image: 'https://images.unsplash.com/photo-1590080876-e7de9e7cc9a5?w=600&h=400&fit=crop',
-      title: 'The Goan Flowers',
-      subtitle: 'From the flowers of beds',
+      image: 'https://images.unsplash.com/photo-1765077613984-87e023a96501?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8c2VhJTIwc2hlbGwlMjBhcnRzfGVufDB8fDB8fHww',
+      title: 'Coastal Shell Art',
+      subtitle: 'Treasures from the sea',
       size: 'large' // Left side large card
     },
     {
       id: 2,
-      image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=500&h=300&fit=crop',
-      title: 'The Goan Flowers',
-      subtitle: 'From the flowers of beds',
+      image: 'https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcQcuAQZM1BOJKlh3yCu0FLZD4D7YEpBDzL_vQ&s',
+      title: 'Goan Delicacies',
+      subtitle: 'Sweets & Savories',
       size: 'small' // Top right small card
     },
     {
       id: 3,
-      image: 'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=500&h=300&fit=crop',
-      title: 'The Goan Flowers',
-      subtitle: 'From the flowers of beds',
+      image: 'https://images.unsplash.com/photo-1611692478827-a99d664c3715?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8Y29jb251dCUyMHNoZWxsJTIwYXJ0fGVufDB8fDB8fHww',
+      title: 'Coconut Decor',
+      subtitle: 'Sustainable Living',
       size: 'small' // Bottom right small card
     }
   ]
