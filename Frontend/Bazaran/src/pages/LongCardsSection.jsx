@@ -5,7 +5,7 @@ const LongCardsSection = () => {
   const cardsData = [
     {
       id: 1,
-      image: 'https://images.unsplash.com/photo-1590080876-e7de9e7cc9a5?w=400&h=500&fit=crop',
+      image: 'https://plus.unsplash.com/premium_photo-1671245156908-61e26926cef9?q=80&w=1974&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       title: 'The Goan Flowers',
       subtitle: 'From the flowers of beds',
       discount: 'Sale 70%'
@@ -19,7 +19,7 @@ const LongCardsSection = () => {
     },
     {
       id: 3,
-      image: 'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=400&h=500&fit=crop',
+      image: 'https://images.unsplash.com/photo-1655149588581-49191c89e470?q=80&w=2070&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D',
       title: 'Wooden Wonders',
       subtitle: 'Premium quality items',
       discount: 'Sale 50%'
@@ -40,7 +40,7 @@ const LongCardsSection = () => {
     },
     {
       id: 6,
-      image: 'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=400&h=500&fit=crop',
+      image: 'https://media.assettype.com/gomantaktimes/2025-03-01/wi7zkri7/IMG1970.jpg',
       title: 'Cultural Heritage',
       subtitle: 'Traditional crafts',
       discount: 'Sale 75%'
