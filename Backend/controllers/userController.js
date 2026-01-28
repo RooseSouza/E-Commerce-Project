@@ -165,18 +165,21 @@ exports.getMyProfile = async (req, res) => {
     const memberSince = new Date(user.createdAt).getFullYear();
 
     res.json({
-      user: {
-        name: user.name,
-        email: user.email,
-        phone: user.phone
-      },
-      stats: {
-        totalOrders,
-        totalSpent,
-        memberSince
-      },
-      orders
-    });
+  user: {
+    name:
+      user.name ||
+      `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
+      "Not provided",
+    email: user.email,
+    phone: user.phone
+  },
+  stats: {
+    totalOrders,
+    totalSpent,
+    memberSince
+  },
+  orders
+});
   } catch (error) {
     console.error(error);
     res.status(500).json({ message: "Server error" });
