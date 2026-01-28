@@ -9,7 +9,7 @@ dotenv.config();
 const app = express();
 
 app.use(cors({
-  origin: "https://bazaran.vercel.app",
+  origin: ['http://localhost:5173', 'https://bazaran.vercel.app'],
   credentials: true
 }));
 
