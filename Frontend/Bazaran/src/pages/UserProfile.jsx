@@ -182,7 +182,7 @@ const handleEditProfile = () => alert("Edit profile modal would open here");
             <ProfileSettings
               onChangePassword={handleChangePassword}
               onLogout={handleLogout}
-              onDeleteAccount={handleDeleteAccount}
+              //onDeleteAccount={handleDeleteAccount}
             />
           </div>
         </div>
