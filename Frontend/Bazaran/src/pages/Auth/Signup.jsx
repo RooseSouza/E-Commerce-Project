@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../../context/userContext";
 import SignUpImage from "../../assets/img3.jpg";
 import Logo from "../../assets/logo1.png";
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const Signup = () => {
   const navigate = useNavigate();
@@ -35,7 +36,7 @@ const Signup = () => {
     setError("");
 
     try {
-      const response = await fetch("http://localhost:5000/api/users/register", {
+      const response = await fetch(`${API_BASE}/api/users/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
