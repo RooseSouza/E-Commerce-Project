@@ -40,7 +40,7 @@ const LongCardsSection = () => {
     },
     {
       id: 6,
-      image: 'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=400&h=500&fit=crop',
+      image: 'https://media.assettype.com/gomantaktimes/2025-03-01/wi7zkri7/IMG1970.jpg',
       title: 'Cultural Heritage',
       subtitle: 'Traditional crafts',
       discount: 'Sale 75%'

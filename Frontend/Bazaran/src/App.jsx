@@ -8,6 +8,7 @@ import UserProfile from './pages/UserProfile'
 
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
 import UserProvider from './context/userContext'
+import VendorDashboard from './pages/VendorDashboard'
 
 const App = () => {
   return (
@@ -44,7 +45,7 @@ const Root = () => {
 
   return isAuthenticated ?
     (
-      <Navigate to="/login" />
+      <Navigate to="/home" />
     ) :
     (
       <Navigate to="/home" />
