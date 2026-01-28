@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import { FiLogOut, FiPlusSquare, FiBox } from "react-icons/fi";
 
+const API_BASE = import.meta.env.VITE_API_BASE;
+
 const ProfessionalVendorDashboard = () => {
   const [vendor, setVendor] = useState({});
   const [products, setProducts] = useState([]);
@@ -24,7 +26,7 @@ const ProfessionalVendorDashboard = () => {
 
   const fetchCategories = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/categories");
+      const res = await axios.get(`${API_BASE}/api/categories`);
       setCategories(res.data.categories || res.data || []);
     } catch (err) {
       console.error(err);
@@ -35,7 +37,7 @@ const ProfessionalVendorDashboard = () => {
   const fetchProducts = async () => {
     try {
       const res = await axios.get(
-        "http://localhost:5000/api/products/my-products",
+        `${API_BASE}/api/products/my-products`,
         {
           headers: { Authorization: `Bearer ${token}` },
         },
@@ -49,7 +51,7 @@ const ProfessionalVendorDashboard = () => {
 
   const fetchVendor = async () => {
     try {
-      const res = await axios.get("http://localhost:5000/api/users/me", {
+      const res = await axios.get(`${API_BASE}/api/users/me`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setVendor(res.data);
@@ -97,7 +99,7 @@ const ProfessionalVendorDashboard = () => {
 
     if (editingProductId) {
       await axios.put(
-        `http://localhost:5000/api/products/${editingProductId}`,
+        `${API_BASE}/api/products/${editingProductId}`,
         data,
         {
           headers: {
@@ -107,7 +109,7 @@ const ProfessionalVendorDashboard = () => {
       );
     } else {
       await axios.post(
-        "http://localhost:5000/api/products",
+        `${API_BASE}/api/products`,
         data,
         {
           headers: {
@@ -157,7 +159,7 @@ const ProfessionalVendorDashboard = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Are you sure?")) return;
     try {
-      await axios.delete(`http://localhost:5000/api/products/${id}`, {
+      await axios.delete(`${API_BASE}/api/products/${id}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       setMessage("Product deleted successfully");
@@ -170,7 +172,7 @@ const ProfessionalVendorDashboard = () => {
   const handleToggle = async (product) => {
     try {
       await axios.put(
-        `http://localhost:5000/api/products/${product._id}/toggle-status`,
+        `${API_BASE}/api/products/${product._id}/toggle-status`,
         {},
         { headers: { Authorization: `Bearer ${token}` } },
       );
