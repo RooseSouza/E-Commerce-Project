@@ -76,12 +76,6 @@ const ProfessionalVendorDashboard = () => {
 
   // Add or Update product
   const handleSubmit = async (e) => {
-<<<<<<< HEAD
-    e.preventDefault();
-    if (!formData.image && !editingProductId) {
-      setMessage("Please upload an image");
-      return;
-=======
   e.preventDefault();
 
   if (!formData.image && !editingProductId) {
@@ -121,7 +115,6 @@ const ProfessionalVendorDashboard = () => {
           },
         }
       );
->>>>>>> ea78873732996be7cc87a6807d2c13777ed6086b
     }
     try {
       setLoading(true);
