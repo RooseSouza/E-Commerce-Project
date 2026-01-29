@@ -122,10 +122,19 @@ const UserProfile = () => {
   }, []);
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    clearUser();
-    navigate("/login");
-  };
+  // remove auth token
+  localStorage.removeItem("token");
+
+  // clear user from context
+  clearUser();
+
+  // OPTIONAL: clear any cached user data
+  sessionStorage.clear();
+
+  // redirect to homepage as guest
+  navigate("/", { replace: true });
+};
+
 
   if (loading) {
     return (
