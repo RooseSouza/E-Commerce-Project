@@ -82,8 +82,10 @@ const UserProfile = () => {
   };
 
   /* ✅ ADD ADDRESS */
-  const handleAddAddress = async (addressData) => {
+ const handleAddAddress = async (addressData) => {
+  try {
     const token = localStorage.getItem("token");
+
     const res = await fetch(
       `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
       {
@@ -97,11 +99,20 @@ const UserProfile = () => {
     );
 
     const data = await res.json();
-    if (!res.ok) return { errors: data.errors };
+
+    if (!res.ok) {
+      return { errors: data.errors || { general: "Failed to add address" } };
+    }
 
     setAddresses(data.addresses);
     setShowAddAddress(false);
-  };
+    return null;
+  } catch (err) {
+    return {
+      errors: { general: "Server error. Please try again." },
+    };
+  }
+};
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -109,7 +120,19 @@ const UserProfile = () => {
     navigate("/login", { replace: true });
   };
 
-  if (loading) return <div className="p-10">Loading...</div>;
+  if (loading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium">
+          Loading your profile...
+        </p>
+      </div>
+    </div>
+  );
+}
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">

@@ -31,21 +31,20 @@ router.post("/me/address", protect, async (req, res) => {
 
     const errors = {};
 
-    if (!name?.trim()) errors.name = "Name is required";
+    if (!name) errors.name = "Name is required";
     if (!/^[0-9]{10}$/.test(phone)) errors.phone = "Phone must be 10 digits";
-    if (!houseNumber?.trim()) errors.houseNumber = "House number required";
-    if (!street?.trim()) errors.street = "Street required";
-    if (!city?.trim()) errors.city = "City required";
-    if (!state?.trim()) errors.state = "State required";
-    if (!/^[0-9]{6}$/.test(String(zip)))
-      errors.zip = "Zip must be 6 digits";
-    if (!country?.trim()) errors.country = "Country required";
+    if (!houseNumber) errors.houseNumber = "House number required";
+    if (!street) errors.street = "Street required";
+    if (!city) errors.city = "City required";
+    if (!state) errors.state = "State required";
+    if (!/^[0-9]{6}$/.test(zip)) errors.zip = "Zip must be 6 digits";
+    if (!country) errors.country = "Country required";
 
     if (Object.keys(errors).length > 0) {
       return res.status(400).json({ errors });
     }
 
-    const user = await User.findById(req.user.id);
+    const user = req.user;
 
     user.addresses.push({
       name,
@@ -54,7 +53,7 @@ router.post("/me/address", protect, async (req, res) => {
       street,
       city,
       state,
-      zip,
+      zip: Number(zip), // ✅ IMPORTANT (schema expects Number)
       country,
     });
 
@@ -62,7 +61,7 @@ router.post("/me/address", protect, async (req, res) => {
 
     res.json({ addresses: user.addresses });
   } catch (err) {
-    console.error(err);
+    console.error("Add address error:", err);
     res.status(500).json({
       errors: { general: "Failed to add address" },
     });
