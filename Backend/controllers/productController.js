@@ -1,7 +1,7 @@
 const Product = require("../models/product");
 const Category = require("../models/category");
 const cloudinary = require("../config/cloudinary");
-
+const mongoose = require("mongoose");
 // Vendor adds product
 exports.addProduct = async (req, res) => {
   try {
@@ -143,80 +143,85 @@ exports.getProductById = async (req, res) => {
 
 exports.updateProduct = async (req, res) => {
   try {
-    const product = await Product.findOne({
-      _id: req.params.id,
-      vendorId: req.user._id,
-    });
+    // 🔍 Debug (keep for now)
+    console.log("REQ BODY:", req.body);
+    console.log("REQ FILES:", req.files);
 
-    if (!product) {
-      return res.status(403).json({
-        message: "You can update only your own product",
-      });
+    const updateData = {};
+
+    // -------- BASIC FIELDS --------
+    if (req.body.name !== undefined) {
+      updateData.name = req.body.name;
     }
 
-    /* ---------- BASIC FIELDS ---------- */
-    if (req.body?.name !== undefined) {
-      product.name = req.body.name;
+    if (req.body.description !== undefined) {
+      updateData.description = req.body.description;
     }
 
-    if (req.body?.description !== undefined) {
-      product.description = req.body.description;
+    if (req.body.price !== undefined) {
+      const price = Number(req.body.price);
+      if (!isNaN(price)) updateData.price = price;
     }
 
-    if (req.body?.price !== undefined && req.body.price !== "") {
-      product.price = Number(req.body.price);
-    }
-
-    /* ---------- STOCK SAFETY ---------- */
-    if (!product.stock) {
-      product.stock = { quantity: 0, unit: "pcs" };
-    }
-
-    if (req.body?.stockQuantity !== undefined && req.body.stockQuantity !== "") {
+    // -------- STOCK --------
+    if (req.body.stockQuantity !== undefined) {
       const qty = Number(req.body.stockQuantity);
-
       if (!isNaN(qty)) {
-        product.stock.quantity = qty;
-        product.isActive = qty > 0;
+        updateData["stock.quantity"] = qty;
+        updateData.isActive = qty > 0; // auto enable/disable
       }
     }
 
-    if (req.body?.stockUnit) {
-      product.stock.unit = req.body.stockUnit;
+    if (req.body.stockUnit) {
+      updateData["stock.unit"] = req.body.stockUnit;
     }
 
-    /* ---------- TAGS (string or array safe) ---------- */
-    if (req.body?.tags) {
-      if (Array.isArray(req.body.tags)) {
-        product.tags = req.body.tags.map(tag =>
-          tag.trim().toLowerCase()
-        );
-      } else {
-        product.tags = req.body.tags
-          .split(",")
-          .map(tag => tag.trim().toLowerCase());
-      }
+    // -------- CATEGORY --------
+    if (
+      req.body.categoryId &&
+      mongoose.Types.ObjectId.isValid(req.body.categoryId)
+    ) {
+      updateData.categoryId = req.body.categoryId;
     }
 
-    /* ---------- IMAGE ---------- */
-    if (req.file) {
-      if (product.image?.public_id) {
-        await cloudinary.uploader.destroy(product.image.public_id);
+    // -------- IMAGE --------
+    if (req.files && req.files.length > 0) {
+      const file = req.files[0];
+
+      // remove old image
+      const oldProduct = await Product.findById(req.params.id);
+      if (oldProduct?.image?.public_id) {
+        await cloudinary.uploader.destroy(oldProduct.image.public_id);
       }
 
-      product.image = {
-        url: req.file.path,
-        public_id: req.file.filename,
+      updateData.image = {
+        url: file.path,
+        public_id: file.filename,
       };
     }
 
-    await product.save();
+    // -------- UPDATE --------
+    const updatedProduct = await Product.findOneAndUpdate(
+      { _id: req.params.id, vendorId: req.user._id },
+      { $set: updateData },
+      {
+        new: true,
+        runValidators: true,
+      }
+    )
+      .populate("categoryId", "name")
+      .populate("vendorId", "name");
+
+    if (!updatedProduct) {
+      return res.status(404).json({
+        message: "Product not found or not authorized",
+      });
+    }
 
     res.status(200).json({
       message: "Product updated successfully",
-      product,
+      product: updatedProduct,
     });
-
   } catch (error) {
     console.error("UPDATE PRODUCT ERROR:", error);
     res.status(500).json({
@@ -235,70 +240,17 @@ exports.toggleProductStatus = async (req, res) => {
     });
 
     if (!product) {
-      return res.status(403).json({
-        message: "You can update only your own product"
-      });
-    }
-
-    if (req.body.name) product.name = req.body.name;
-    if (req.body.description) product.description = req.body.description;
-
-    if (req.body.price !== undefined) {
-      product.price = req.body.price;
-    }
-
-    if (req.body.stockQuantity !== undefined) {
-      product.stock.quantity = req.body.stockQuantity;
-    }
-
-      // AUTO ENABLE / DISABLE BASED ON STOCK
-      if (req.body.stockQuantity === 0) {
-        product.isActive = false;
-      } else {
-        product.isActive = true;
-      }
-    
-
-    if (req.body.stockUnit) {
-      product.stock.unit = req.body.stockUnit;
-    }
-
-    if (req.file) {
-      if (product.image?.public_id) {
-        await cloudinary.uploader.destroy(product.image.public_id);
-      }
-
-      product.image = {
-        url: req.file.path,
-        public_id: req.file.filename
-      };
-    }
-
-    product.isActive = !product.isActive;
-    await product.save();
-
-    res.json({
-      message: `Product ${product.isActive ? "activated" : "disabled"} successfully`,
-      isActive: product.isActive
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// maunal disable or enable product
-exports.toggleProductStatus = async (req, res) => {
-  try {
-    const product = await Product.findOne({
-      _id: req.params.id,
-      vendorId: req.user._id
-    });
-
-    if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
 
-    product.isActive = !product.isActive;
+    // 🔹 AUTO DISABLE IF STOCK = 0
+    if (product.stock?.quantity === 0) {
+      product.isActive = false;
+    } else {
+      // 🔹 MANUAL TOGGLE
+      product.isActive = !product.isActive;
+    }
+
     await product.save();
 
     res.json({
@@ -309,7 +261,6 @@ exports.toggleProductStatus = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
-
 
 // Vendor deletes product
 exports.deleteProduct = async (req, res) => {

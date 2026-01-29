@@ -44,8 +44,14 @@ router.get("/:id", protect, authorize("vendor"), getProductById);
 /**
  * Vendor updates product
  */
-router.put("/:id", protect, authorize("vendor"), updateProduct);
 
+router.put(
+  "/:id",
+  protect,
+  authorize("vendor"),
+  upload.single("image"),
+  updateProduct
+);
 // Vendor enable / disable product
 router.put("/:id/toggle-status", protect, authorize("vendor"), toggleProductStatus);
 

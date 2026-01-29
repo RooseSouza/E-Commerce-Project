@@ -5,7 +5,6 @@ import ProductList from "./ProductList.jsx";
 import AddProductForm from "./AddProductForm.jsx";
 import EditProductModal from "./EditProductModal.jsx";
 
-
 const API_BASE = import.meta.env.VITE_API_BASE;
 
 const VendorDashboard = () => {
@@ -14,7 +13,7 @@ const VendorDashboard = () => {
   const [vendor, setVendor] = useState({});
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [view, setView] = useState("list"); 
+  const [view, setView] = useState("list");
   const [editProduct, setEditProduct] = useState(null);
 
   const authHeader = { Authorization: `Bearer ${token}` };
@@ -45,13 +44,19 @@ const VendorDashboard = () => {
   const handleDelete = async (id) => {
     if (!window.confirm("Delete product?")) return;
     await axios.delete(`${API_BASE}/api/products/${id}`, { headers: authHeader });
-    fetchProducts();
+    setProducts(prev => prev.filter(p => p._id !== id));
   };
 
   const handleToggle = async (id) => {
     await axios.put(`${API_BASE}/api/products/${id}/toggle-status`, {}, { headers: authHeader });
     fetchProducts();
   };
+
+  const handleProductUpdated = (updatedProduct) => {
+  setProducts(prev =>
+    prev.map(p => p._id === updatedProduct._id ? updatedProduct : p)
+  );
+};
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -60,35 +65,30 @@ const VendorDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-    
-    <Sidebar
-  
-  vendor={vendor}
-  setView={setView}
-  handleLogout={handleLogout}
-/>
-
+      <Sidebar
+        vendor={vendor}
+        setView={setView}
+        handleLogout={handleLogout}
+      />
 
       <main className="flex-1 p-6 overflow-y-auto">
-  
-          {view === "add" && (
-  <AddProductForm
-    categories={categories}
-    token={token}
-    fetchProducts={fetchProducts}
-    onClose={() => setView("list")}
-  />
-)}
+        {view === "add" && (
+          <AddProductForm
+            categories={categories}
+            token={token}
+            fetchProducts={fetchProducts}
+            onClose={() => setView("list")}
+          />
+        )}
 
-{view === "list" && (
-  <ProductList
-    products={products}
-    onEdit={setEditProduct}
-    onDelete={handleDelete}
-    onToggle={handleToggle}
-  />
-)}
-
+        {view === "list" && (
+          <ProductList
+            products={products}
+            onEdit={setEditProduct}
+            onDelete={handleDelete}
+            onToggle={handleToggle}
+          />
+        )}
 
         {editProduct && (
           <EditProductModal
@@ -96,7 +96,7 @@ const VendorDashboard = () => {
             categories={categories}
             token={token}
             onClose={() => setEditProduct(null)}
-            onUpdated={fetchProducts}
+            onUpdated={handleProductUpdated}  
           />
         )}
       </main>

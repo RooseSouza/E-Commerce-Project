@@ -59,9 +59,12 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
         <div className="flex gap-2">
           <input name="stockQuantity" type="number" onChange={handleChange} required placeholder="Qty" className="border p-2 flex-1" />
           <select name="stockUnit" onChange={handleChange} className="border p-2 flex-1">
-            <option value="piece">Piece</option>
-            <option value="kg">Kg</option>
-            <option value="g">Gram</option>
+          <option value="piece">piece</option>
+          <option value="kg">kg</option>
+          <option value="g">g</option>
+          <option value="litre">litre</option>
+          <option value="ml">ml</option>
+          <option value="pack">pack</option>
           </select>
         </div>
 
