@@ -116,7 +116,7 @@ const UserProfile = () => {
 
   /* ✅ DELETE ADDRESS */
   const handleDeleteAddress = async (index) => {
-  if (!window.confirm("Are you sure you want to delete this address???")) return;
+  if (!window.confirm("Are you sure you want to delete this address?")) return;
 
   try {
     const token = localStorage.getItem("token");

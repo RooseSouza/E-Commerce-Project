@@ -46,12 +46,8 @@ const AddressList = ({ addresses, onEdit, onDelete, onAddNew }) => {
                 </button>
 
                 <button
-                  onClick={() => {
-                    const ok = window.confirm(
-                      "Are you sure you want to delete this address?"
-                    );
-                    if (ok) onDelete(index);
-                  }}
+                  type="button"
+                  onClick={() => onDelete(index)}
                   className="text-red-600 hover:text-red-700 font-medium"
                 >
                   Delete
@@ -61,9 +57,7 @@ const AddressList = ({ addresses, onEdit, onDelete, onAddNew }) => {
           ))}
         </div>
       ) : (
-        <p className="text-gray-600 text-center py-8">
-          No addresses saved yet
-        </p>
+        <p className="text-gray-600 text-center py-8">No addresses saved yet</p>
       )}
     </div>
   );
