@@ -1,4 +1,4 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import Header from '../components/Header'
 import ItemCard from '../components/itemcard'
 import GoanSaleSection from './goanSaleSection'
@@ -7,39 +7,37 @@ import FeaturedBannerSection from '../components/FeaturedBannerSection'
 import CTAproducts from './CTAproducts'
 import FeaturesSection from '../components/FeaturesSection'
 import Footer from '../components/Footer'
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const Home = () => {
   // Featured products data
-  const featuredProducts = [
-    {
-      id: 1,
-      name: 'Goan Clay Cooking Pot (Kundlem)',
-      price: 550,
-      originalPrice: 750,
-      image: 'https://images.pexels.com/photos/33947401/pexels-photo-33947401.jpeg'
-    },
-    {
-      id: 2,
-      name: 'Handmade Crochet top',
-      price: 1200,
-      originalPrice: 1800,
-      image: 'https://images.pexels.com/photos/7585263/pexels-photo-7585263.jpeg'
-    },
-    {
-      id: 3,
-      name: 'Traditional Brass Lamp (Samai)',
-      price: 1250,
-      originalPrice: 1800,
-      image: 'https://images.pexels.com/photos/34705732/pexels-photo-34705732.jpeg'
-    },
-    {
-      id: 4,
-      name: 'Coconut Shell Bowl Set',
-      price: 599,
-      originalPrice: 999,
-      image: 'https://images.pexels.com/photos/34876038/pexels-photo-34876038.jpeg'
+  const [featuredProducts, setFeaturedProducts] = useState([])
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        // Fetch products from the backend
+        // Ensure your backend is running on this port and the route is correct (e.g., /api/products)
+        const response = await fetch(`${API_BASE}/api/products`)
+        const data = await response.json()
+
+        // Map the backend data to the format expected by ItemCard
+        const mappedProducts = data.slice(0, 4).map((product) => ({
+          id: product._id,
+          name: product.name,
+          price: product.price,
+          originalPrice: Math.round(product.price * 1.2), // Simulating original price as it's not in backend
+          image: product.image?.url || 'https://via.placeholder.com/300'
+        }))
+
+        setFeaturedProducts(mappedProducts)
+      } catch (error) {
+        console.error('Error fetching products:', error)
+      }
     }
-  ]
+
+    fetchProducts()
+  }, [])
 
   return (
     <div className="bg-white min-h-screen">

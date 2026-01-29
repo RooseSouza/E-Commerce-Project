@@ -7,6 +7,7 @@ const {
   getMyProducts,
   getAllProducts,
   getProductById,
+  getSingleProduct,
   updateProduct,
   deleteProduct,
   searchProducts,
@@ -34,6 +35,11 @@ router.get("/", getAllProducts);
  * User searches for a product
  */
 router.get("/search", searchProducts);
+
+/**
+ * User gets single product details (Public)
+ */
+router.get("/detail/:id", getSingleProduct);
 
 
 /**
