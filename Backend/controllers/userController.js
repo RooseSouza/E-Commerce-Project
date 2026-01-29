@@ -32,11 +32,15 @@ exports.registerUser = async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
     }
 
     if (!/^[0-9]{10}$/.test(phone)) {
-      return res.status(400).json({ message: "Phone number must be 10 digits" });
+      return res
+        .status(400)
+        .json({ message: "Phone number must be 10 digits" });
     }
 
     const userExists = await User.findOne({ email });
@@ -74,7 +78,9 @@ exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
 
     if (!isValidEmail(email)) {
@@ -123,17 +129,14 @@ exports.googleLogin = async (req, res) => {
     }
 
     // generate JWT
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.status(200).json({
       token,
       user,
     });
-
   } catch (error) {
     console.error("GOOGLE LOGIN ERROR:", error);
     res.status(500).json({ message: "Google login failed" });
@@ -157,7 +160,7 @@ exports.getMyProfile = async (req, res) => {
     const totalOrders = orders.length;
     const totalSpent = orders.reduce(
       (sum, order) => sum + order.totalAmount,
-      0
+      0,
     );
 
     const memberSince = new Date(user.createdAt).getFullYear();
@@ -183,18 +186,33 @@ exports.getMyProfile = async (req, res) => {
 
 exports.updateMe = async (req, res) => {
   try {
-    const userId = req.user.id; // comes from auth middleware
-
+    const userId = req.user.id;
     const { name, email, phone } = req.body;
+
+    /* ---------- VALIDATIONS ---------- */
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // Phone validation (10 digits)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ message: "Invalid phone number" });
+    }
+
+    /* ---------- UPDATE ---------- */
+    const existingUser = await User.findOne({ email, _id: { $ne: userId } });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already in use" });
+    }
 
     const updatedUser = await User.findByIdAndUpdate(
       userId,
-      {
-        name,
-        email,
-        phone,
-      },
-      { new: true, runValidators: true }
+      { name, email, phone },
+      { new: true, runValidators: true },
     ).select("-password");
 
     if (!updatedUser) {
@@ -203,7 +221,7 @@ exports.updateMe = async (req, res) => {
 
     res.json(updatedUser);
   } catch (error) {
-    console.error("Update profile error:", error);
+    console.error("Profile update error:", error);
     res.status(500).json({ message: "Server error" });
   }
 };
