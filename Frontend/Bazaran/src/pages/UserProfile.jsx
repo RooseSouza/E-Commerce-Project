@@ -32,7 +32,7 @@ const UserProfile = () => {
   /* ✅ CONTEXT USER (fallback only) */
   useEffect(() => {
     if (contextUser) {
-      setUser(prev => ({
+      setUser((prev) => ({
         ...prev,
         name: contextUser.name || prev.name,
         email: contextUser.email || prev.email,
@@ -54,7 +54,7 @@ const UserProfile = () => {
               Authorization: `Bearer ${token}`,
               "Content-Type": "application/json",
             },
-          }
+          },
         );
 
         if (!response.ok) throw new Error("Failed to fetch profile");
@@ -62,15 +62,10 @@ const UserProfile = () => {
         const data = await response.json();
 
         /* ✅ USER */
-        const fallbackPhone =
-          data.user.phone ||
-          data.orders?.[0]?.address?.phone ||
-          "Not provided";
-
         setUser({
           name: data.user.name || "",
           email: data.user.email || "",
-          phone: fallbackPhone,
+          phone: data.user.phone || "Not provided",
         });
 
         /* ✅ STATS */
@@ -85,7 +80,7 @@ const UserProfile = () => {
           const dateObj = new Date(order.createdAt);
 
           const formattedDate = `${String(dateObj.getDate()).padStart(2, "0")}/${String(
-            dateObj.getMonth() + 1
+            dateObj.getMonth() + 1,
           ).padStart(2, "0")}/${dateObj.getFullYear()}`;
 
           return {
@@ -103,24 +98,13 @@ const UserProfile = () => {
         setOrders(formattedOrders);
 
         /* ✅ ADDRESSES */
-        const extractedAddresses = data.orders
-          .map(order =>
-            order.address
-              ? { ...order.address, phone: order.address.phone || "Not provided" }
-              : null
-          )
-          .filter(Boolean);
-
-        const uniqueAddresses = Array.from(
-          new Map(
-            extractedAddresses.map(addr => [
-              `${addr.street}-${addr.zip}-${addr.phone}`,
-              addr,
-            ])
-          ).values()
+        /* ✅ ADDRESSES FROM USER COLLECTION */
+        setAddresses(
+          data.user.addresses?.map((addr) => ({
+            ...addr,
+            phone: addr.phone || "Not provided",
+          })) || [],
         );
-
-        setAddresses(uniqueAddresses);
       } catch (err) {
         console.error("Profile fetch error:", err);
       } finally {
@@ -131,7 +115,7 @@ const UserProfile = () => {
     fetchProfileData();
   }, []);
 
-const handleEditProfile = () => alert("Edit profile modal would open here");
+  const handleEditProfile = () => alert("Edit profile modal would open here");
   const handleEditAddress = (index) => alert(`Edit address ${index}`);
   const handleDeleteAddress = (index) =>
     setAddresses(addresses.filter((_, i) => i !== index));
@@ -139,16 +123,16 @@ const handleEditProfile = () => alert("Edit profile modal would open here");
   const handleViewOrder = (id) => alert(`View order ${id}`);
   const handleChangePassword = () => alert("Change password");
   const handleLogout = () => {
-  // 1. Remove auth data
-  localStorage.removeItem("token");
-  localStorage.removeItem("user"); // if you store user info
+    // 1. Remove auth data
+    localStorage.removeItem("token");
+    localStorage.removeItem("user"); // if you store user info
 
-  // 2. Clear app state (context / redux)
-  clearUser(); // your context reset function
+    // 2. Clear app state (context / redux)
+    clearUser(); // your context reset function
 
-  // 3. Redirect to homepage (logged-out view)
-  navigate("/login", { replace: true });
-};
+    // 3. Redirect to homepage (logged-out view)
+    navigate("/login", { replace: true });
+  };
 
   if (loading) {
     return (

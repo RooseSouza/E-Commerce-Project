@@ -145,46 +145,42 @@ exports.getMyProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // 1. Fetch user
     const user = await User.findById(userId).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 2. Fetch orders
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+    const orders = await Order.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate("items.productId", "name");
 
-    // 3. Stats
     const totalOrders = orders.length;
     const totalSpent = orders.reduce(
       (sum, order) => sum + order.totalAmount,
       0
     );
 
-    // 4. Member since
     const memberSince = new Date(user.createdAt).getFullYear();
 
     res.json({
-  user: {
-    name:
-      user.name ||
-      `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-      "Not provided!",
-    email: user.email,
-    phone: user.phone
-  },
-  stats: {
-    totalOrders,
-    totalSpent,
-    memberSince
-  },
-  orders
-});
-  } catch (error) {
-    console.error(error);
+      user: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        addresses: user.addresses, // ✅ IMPORTANT
+      },
+      stats: {
+        totalOrders,
+        totalSpent,
+        memberSince,
+      },
+      orders,
+    });
+  } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 };
+
 
 
 
