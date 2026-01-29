@@ -9,41 +9,36 @@ exports.placeOrder = async (req, res) => {
     const userId = req.user._id;
     const { address } = req.body;
 
-    if (!address) {
-      return res.status(400).json({ message: "Address is required" });
+    if (!address || !address.houseNumber) {
+      return res.status(400).json({ message: "Complete address is required" });
     }
 
     const user = await User.findById(userId);
-    if (!user) {
-      return res.status(404).json({ message: "User not found" });
-    }
 
-    // 🔁 Check for duplicate address
-    let savedAddress = user.addresses.find(
-      (addr) =>
-        addr.street === address.street &&
-        addr.city === address.city &&
-        addr.zip === address.zip &&
-        addr.phone === address.phone
+    // 🔍 Check if same address already exists
+    let existingAddress = user.addresses.find(
+      (a) =>
+        a.houseNumber === address.houseNumber &&
+        a.street === address.street &&
+        a.city === address.city &&
+        a.zip === address.zip
     );
 
-    // ➕ Add new address if not found
-    if (!savedAddress) {
+    if (!existingAddress) {
       user.addresses.push(address);
       await user.save();
-      savedAddress = user.addresses[user.addresses.length - 1];
+      existingAddress = user.addresses[user.addresses.length - 1];
     }
 
-    const addressId = savedAddress._id;
+    const addressId = existingAddress._id;
 
     const cart = await Cart.findOne({ userId }).populate("items.productId");
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // 🧩 Group items by vendor
     const vendorMap = {};
-    cart.items.forEach((item) => {
+    cart.items.forEach(item => {
       const vendorId = item.productId.vendorId.toString();
       if (!vendorMap[vendorId]) vendorMap[vendorId] = [];
       vendorMap[vendorId].push(item);
@@ -52,16 +47,14 @@ exports.placeOrder = async (req, res) => {
     const createdOrders = [];
 
     for (const vendorId in vendorMap) {
-      const items = vendorMap[vendorId];
       let subtotal = 0;
       const orderItems = [];
 
-      for (const item of items) {
+      for (const item of vendorMap[vendorId]) {
         const product = await Product.findById(item.productId._id);
-        if (!product || product.stock.quantity < item.quantity) {
-          return res.status(400).json({
-            message: `Product ${product?.name || ""} is out of stock`,
-          });
+
+        if (product.stock.quantity < item.quantity) {
+          return res.status(400).json({ message: "Out of stock" });
         }
 
         product.stock.quantity -= item.quantity;
@@ -84,7 +77,7 @@ exports.placeOrder = async (req, res) => {
         vendorId,
         items: orderItems,
         totalAmount,
-        addressId,
+        addressId, // ✅ ONLY ID STORED
         status: "placed",
       });
 
@@ -94,12 +87,9 @@ exports.placeOrder = async (req, res) => {
     cart.items = [];
     await cart.save();
 
-    res.status(201).json({
-      message: "Orders placed successfully",
-      orders: createdOrders,
-    });
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: error.message });
+    res.status(201).json({ message: "Order placed", orders: createdOrders });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: err.message });
   }
 };
