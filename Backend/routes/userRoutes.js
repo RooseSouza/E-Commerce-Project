@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
 const { getMyProfile } = require("../controllers/userController");
+const { updateMe } = require("../controllers/userController");
 
 const {
   registerUser,
@@ -18,5 +19,7 @@ router.post("/google", googleLogin); // Google login route
 // Protected route
 router.get("/me", protect, getMe);
 router.get("/me/profile", protect, getMyProfile);
+
+router.put("/me", protect, updateMe);
 
 module.exports = router;

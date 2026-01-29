@@ -181,8 +181,32 @@ exports.getMyProfile = async (req, res) => {
   }
 };
 
+exports.updateMe = async (req, res) => {
+  try {
+    const userId = req.user.id; // comes from auth middleware
 
+    const { name, email, phone } = req.body;
 
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      {
+        name,
+        email,
+        phone,
+      },
+      { new: true, runValidators: true }
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("Update profile error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 // Get logged-in user info
 exports.getMe = async (req, res) => {
