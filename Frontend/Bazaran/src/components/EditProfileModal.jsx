@@ -1,21 +1,67 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
   const [formData, setFormData] = useState({
-    name: user.name || "",
-    email: user.email || "",
-    phone: user.phone || "",
+    name: "",
+    email: "",
+    phone: "",
   });
+
+  const [errors, setErrors] = useState({});
+  const [serverErrors, setServerErrors] = useState({});
+
+  useEffect(() => {
+    if (user && isOpen) {
+      setFormData({
+        name: user.name || "",
+        email: user.email || "",
+        phone: user.phone || "",
+      });
+      setErrors({});
+      setServerErrors({});
+    }
+  }, [user, isOpen]);
 
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
+
+    // Clear field-specific errors while typing
+    setErrors((prev) => ({ ...prev, [e.target.name]: null }));
+    setServerErrors((prev) => ({ ...prev, [e.target.name]: null }));
   };
 
-  const handleSubmit = (e) => {
+  /* ✅ Client-side validation */
+  const validate = () => {
+    const newErrors = {};
+
+    if (!formData.name.trim()) {
+      newErrors.name = "Name is required";
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      newErrors.email = "Enter a valid email address";
+    }
+
+    if (formData.phone && !/^[0-9]{10}$/.test(formData.phone)) {
+      newErrors.phone = "Phone number must be 10 digits";
+    }
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    onSave(formData);
+    if (!validate()) return;
+
+    const result = await onSave(formData);
+
+    /* 🔴 Backend validation errors */
+    if (result?.errors) {
+      setServerErrors(result.errors);
+    }
   };
 
   return (
@@ -24,6 +70,7 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
         <h2 className="text-xl font-semibold mb-4">Edit Profile</h2>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Name */}
           <div>
             <label className="block text-sm font-medium text-gray-600">
               Name
@@ -33,11 +80,16 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
               name="name"
               value={formData.name}
               onChange={handleChange}
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
             />
+            {(errors.name || serverErrors.name) && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.name || serverErrors.name}
+              </p>
+            )}
           </div>
 
+          {/* Email */}
           <div>
             <label className="block text-sm font-medium text-gray-600">
               Email
@@ -47,11 +99,16 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
               name="email"
               value={formData.email}
               onChange={handleChange}
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              required
+              className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
             />
+            {(errors.email || serverErrors.email) && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.email || serverErrors.email}
+              </p>
+            )}
           </div>
 
+          {/* Phone */}
           <div>
             <label className="block text-sm font-medium text-gray-600">
               Phone
@@ -61,10 +118,17 @@ const EditProfileModal = ({ isOpen, onClose, user, onSave }) => {
               name="phone"
               value={formData.phone}
               onChange={handleChange}
-              className="w-full border rounded-lg px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="10 digit number"
+              className="w-full border rounded-lg px-4 py-2 focus:ring-2 focus:ring-blue-500"
             />
+            {(errors.phone || serverErrors.phone) && (
+              <p className="text-xs text-red-500 mt-1">
+                {errors.phone || serverErrors.phone}
+              </p>
+            )}
           </div>
 
+          {/* Actions */}
           <div className="flex justify-end gap-3 pt-4">
             <button
               type="button"

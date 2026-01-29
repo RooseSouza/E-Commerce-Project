@@ -9,113 +9,98 @@ import AddressList from "../components/AddressList";
 import RecentOrders from "../components/RecentOrders";
 import ProfileSettings from "../components/ProfileSettings";
 import EditProfileModal from "../components/EditProfileModal";
+import AddAddressModal from "../components/AddAddressModal";
 
 const UserProfile = () => {
   const navigate = useNavigate();
-  const { user: contextUser, clearUser } = useContext(UserContext);
+  const { clearUser } = useContext(UserContext);
 
-  const [user, setUser] = useState({
-    name: "",
-    email: "",
-    phone: "",
-  });
-
-  const [stats, setStats] = useState({
-    totalOrders: 0,
-    totalSpent: 0,
-    memberSince: "",
-  });
-
+  const [user, setUser] = useState({ name: "", email: "", phone: "" });
+  const [stats, setStats] = useState({});
   const [addresses, setAddresses] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+
   const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddAddress, setShowAddAddress] = useState(false);
 
   /* ✅ FETCH PROFILE */
   useEffect(() => {
-    const fetchProfileData = async () => {
-      try {
-        const token = localStorage.getItem("token");
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE}/api/users/me/profile`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
 
-        const res = await fetch(
-          `${import.meta.env.VITE_API_BASE}/api/users/me/profile`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+      setUser(data.user);
+      setStats(data.stats);
+      setAddresses(data.user.addresses || []);
 
-        const data = await res.json();
-
-        setUser({
-          name: data.user.name,
-          email: data.user.email,
-          phone: data.user.phone || "",
-        });
-
-        setStats(data.stats);
-
-        const formattedOrders = data.orders.map((order, index) => {
-          const d = new Date(order.createdAt);
-          const date = `${String(d.getDate()).padStart(2, "0")}/${String(
-            d.getMonth() + 1
-          ).padStart(2, "0")}/${d.getFullYear()}`;
-
+      setOrders(
+        data.orders.map((o, i) => {
+          const d = new Date(o.createdAt);
           return {
-            id: order._id,
-            orderName: `Order #${index + 1}`,
-            date,
-            amount: order.totalAmount,
-            status:
-              order.status.charAt(0).toUpperCase() + order.status.slice(1),
+            id: o._id,
+            orderName: `Order #${i + 1}`,
+            date: `${String(d.getDate()).padStart(2, "0")}/${String(
+              d.getMonth() + 1
+            ).padStart(2, "0")}/${d.getFullYear()}`,
+            amount: o.totalAmount,
+            status: o.status,
           };
-        });
+        })
+      );
 
-        setOrders(formattedOrders);
-        setAddresses(data.user.addresses || []);
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
-      }
+      setLoading(false);
     };
 
-    fetchProfileData();
+    fetchProfile();
   }, []);
 
   /* ✅ UPDATE PROFILE */
   const handleSaveProfile = async (updatedData) => {
-    try {
-      const token = localStorage.getItem("token");
+    const token = localStorage.getItem("token");
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE}/api/users/me`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedData),
+      }
+    );
 
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE}/api/users/me`,
-        {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(updatedData),
-        }
-      );
+    const data = await res.json();
+    if (!res.ok) return { errors: data.errors };
 
-      if (!res.ok) throw new Error("Update failed");
+    setUser(data);
+    setShowEditModal(false);
+  };
 
-      const updatedUser = await res.json();
+  /* ✅ ADD ADDRESS */
+  const handleAddAddress = async (addressData) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(addressData),
+      }
+    );
 
-      setUser({
-        name: updatedUser.name,
-        email: updatedUser.email,
-        phone: updatedUser.phone,
-      });
+    const data = await res.json();
+    if (!res.ok) return { errors: data.errors };
 
-      setShowEditModal(false);
-    } catch (err) {
-      console.error("Profile update error:", err);
-      alert("Failed to update profile");
-    }
+    setAddresses(data.addresses);
+    setShowAddAddress(false);
   };
 
   const handleLogout = () => {
@@ -124,31 +109,26 @@ const UserProfile = () => {
     navigate("/login", { replace: true });
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        Loading profile...
-      </div>
-    );
-  }
+  if (loading) return <div className="p-10">Loading...</div>;
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
 
-      <div className="flex-1 py-8 px-4">
-        <div className="max-w-6xl mx-auto">
-          <ProfileHeader user={user} onEditClick={() => setShowEditModal(true)} />
-          <ProfileStats stats={stats} />
+      <div className="flex-1 py-8 px-4 max-w-6xl mx-auto">
+        <ProfileHeader user={user} onEditClick={() => setShowEditModal(true)} />
+        <ProfileStats stats={stats} />
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            <div className="lg:col-span-2">
-              <RecentOrders orders={orders} onViewOrder={() => {}} />
-              <AddressList addresses={addresses} />
-            </div>
-
-            <ProfileSettings onLogout={handleLogout} />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="lg:col-span-2">
+            <RecentOrders orders={orders} />
+            <AddressList
+              addresses={addresses}
+              onAddNew={() => setShowAddAddress(true)}
+            />
           </div>
+
+          <ProfileSettings onLogout={handleLogout} />
         </div>
       </div>
 
@@ -157,6 +137,12 @@ const UserProfile = () => {
         onClose={() => setShowEditModal(false)}
         user={user}
         onSave={handleSaveProfile}
+      />
+
+      <AddAddressModal
+        isOpen={showAddAddress}
+        onClose={() => setShowAddAddress(false)}
+        onSave={handleAddAddress}
       />
 
       <Footer />
