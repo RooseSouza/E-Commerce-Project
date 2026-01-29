@@ -14,7 +14,7 @@ const VendorDashboard = () => {
   const [vendor, setVendor] = useState({});
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
-  const [showAddForm, setShowAddForm] = useState(false);
+  const [view, setView] = useState("list"); 
   const [editProduct, setEditProduct] = useState(null);
 
   const authHeader = { Authorization: `Bearer ${token}` };
@@ -60,28 +60,35 @@ const VendorDashboard = () => {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      <Sidebar
-        vendor={vendor}
-        setShowAddForm={setShowAddForm}
-        handleLogout={handleLogout}
-      />
+    
+    <Sidebar
+  
+  vendor={vendor}
+  setView={setView}
+  handleLogout={handleLogout}
+/>
+
 
       <main className="flex-1 p-6 overflow-y-auto">
-        {showAddForm && (
-          <AddProductForm
-            categories={categories}
-            token={token}
-            fetchProducts={fetchProducts}
-            onClose={() => setShowAddForm(false)}
-          />
-        )}
+  
+          {view === "add" && (
+  <AddProductForm
+    categories={categories}
+    token={token}
+    fetchProducts={fetchProducts}
+    onClose={() => setView("list")}
+  />
+)}
 
-        <ProductList
-          products={products}
-          onEdit={setEditProduct}
-          onDelete={handleDelete}
-          onToggle={handleToggle}
-        />
+{view === "list" && (
+  <ProductList
+    products={products}
+    onEdit={setEditProduct}
+    onDelete={handleDelete}
+    onToggle={handleToggle}
+  />
+)}
+
 
         {editProduct && (
           <EditProductModal
