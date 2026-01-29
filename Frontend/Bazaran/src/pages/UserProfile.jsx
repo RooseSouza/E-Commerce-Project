@@ -147,7 +147,7 @@ const handleEditProfile = () => alert("Edit profile modal would open here");
   clearUser(); // your context reset function
 
   // 3. Redirect to homepage (logged-out view)
-  navigate("/", { replace: true });
+  navigate("/login", { replace: true });
 };
 
   if (loading) {
