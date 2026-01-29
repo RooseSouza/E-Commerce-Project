@@ -84,50 +84,39 @@ const UserProfile = () => {
 
   /* ✅ ADD / EDIT ADDRESS */
   const handleAddAddress = async (addressData) => {
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-      let updatedAddresses;
-
-      if (editingAddressIndex !== null) {
-        updatedAddresses = [...addresses];
-        updatedAddresses[editingAddressIndex] = addressData;
-      } else {
-        updatedAddresses = [...addresses, addressData];
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(addressData), // ✅ IMPORTANT FIX
       }
+    );
 
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify({ addresses: updatedAddresses }),
-        }
-      );
+    const data = await res.json();
 
-      const data = await res.json();
-
-      if (!res.ok) {
-        return { errors: data.errors || { general: "Failed to save address" } };
-      }
-
-      setAddresses(data.addresses);
-      setShowAddAddress(false);
-      setEditingAddressIndex(null);
-      return null;
-    } catch (err) {
-      return {
-        errors: { general: "Server error. Please try again." },
-      };
+    if (!res.ok) {
+      return { errors: data.errors || { general: "Failed to add address" } };
     }
-  };
+
+    setAddresses(data.addresses);
+    setShowAddAddress(false);
+    return null;
+  } catch (err) {
+    return { errors: { general: "Server error" } };
+  }
+};
+
 
   /* ✅ DELETE ADDRESS */
   const handleDeleteAddress = async (index) => {
-  if (!window.confirm("Are you sure you want to delete this address?")) return;
+  if (!window.confirm("Are you sure you want to delete this address???")) return;
 
   try {
     const token = localStorage.getItem("token");
