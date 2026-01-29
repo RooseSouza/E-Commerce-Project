@@ -1,102 +1,72 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
-const AddAddressModal = ({ isOpen, onClose, onSave }) => {
-  const [formData, setFormData] = useState({
-    name: "",
-    phone: "",
-    houseNumber: "",
-    street: "",
-    city: "",
-    state: "",
-    zip: "",
-    country: "",
-  });
+const emptyForm = {
+  name: "",
+  houseNumber: "",
+  street: "",
+  city: "",
+  state: "",
+  zip: "",
+  country: "",
+  phone: "",
+};
 
-  const [errors, setErrors] = useState({});
+const AddAddressModal = ({ isOpen, onClose, onSubmit, initialData }) => {
+  const [formData, setFormData] = useState(emptyForm);
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData); // EDIT MODE
+    } else {
+      setFormData(emptyForm); // ADD MODE
+    }
+  }, [initialData]);
 
   if (!isOpen) return null;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
-    setErrors((prev) => ({ ...prev, [e.target.name]: null }));
   };
 
-  const validate = () => {
-    const e = {};
-
-    if (!formData.name.trim()) e.name = "Name is required";
-    if (!/^[0-9]{10}$/.test(formData.phone))
-      e.phone = "Phone must be 10 digits";
-    if (!formData.houseNumber.trim())
-      e.houseNumber = "House number required";
-    if (!formData.street.trim()) e.street = "Street required";
-    if (!formData.city.trim()) e.city = "City required";
-    if (!formData.state.trim()) e.state = "State required";
-    if (!/^[0-9]{6}$/.test(formData.zip))
-      e.zip = "Zip must be 6 digits";
-    if (!formData.country.trim()) e.country = "Country required";
-
-    setErrors(e);
-    return Object.keys(e).length === 0;
-  };
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
-    if (!validate()) return;
-
-    const result = await onSave(formData);
-    if (result?.errors) setErrors(result.errors);
+    onSubmit(formData);
   };
-
-  const fields = [
-    ["name", "Full Name"],
-    ["phone", "Phone"],
-    ["houseNumber", "House Number"],
-    ["street", "Street"],
-    ["city", "City"],
-    ["state", "State"],
-    ["zip", "Zip Code"],
-    ["country", "Country"],
-  ];
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
-      <div className="bg-white rounded-xl w-full max-w-lg p-6">
-        <h2 className="text-xl font-semibold mb-4">Add Address</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center z-50">
+      <div className="bg-white rounded-lg w-full max-w-lg p-6 relative">
+        <h2 className="text-xl font-bold mb-4">
+          {initialData ? "Edit Address" : "Add Address"}
+        </h2>
 
-        <form onSubmit={handleSubmit} className="space-y-3">
-          {fields.map(([name, label]) => (
-            <div key={name}>
-              <label className="block text-sm text-gray-600">{label}</label>
-              <input
-                name={name}
-                value={formData[name]}
-                onChange={handleChange}
-                className="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500"
-              />
-              {errors[name] && (
-                <p className="text-xs text-red-500 mt-1">{errors[name]}</p>
-              )}
-            </div>
+        <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-3">
+          {Object.keys(emptyForm).map((field) => (
+            <input
+              key={field}
+              type="text"
+              name={field}
+              placeholder={field.replace(/([A-Z])/g, " $1")}
+              value={formData[field]}
+              onChange={handleChange}
+              className="border rounded px-3 py-2 text-sm"
+              required
+            />
           ))}
 
-          {errors.general && (
-            <p className="text-sm text-red-600">{errors.general}</p>
-          )}
-
-          <div className="flex justify-end gap-3 pt-4">
+          <div className="flex justify-end gap-3 mt-4">
             <button
               type="button"
               onClick={onClose}
-              className="border px-4 py-2 rounded-lg"
+              className="px-4 py-2 text-sm border rounded"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="bg-blue-600 text-white px-4 py-2 rounded-lg"
+              className="px-4 py-2 text-sm bg-blue-600 text-white rounded"
             >
-              Add Address
+              {initialData ? "Update" : "Save"}
             </button>
           </div>
         </form>
