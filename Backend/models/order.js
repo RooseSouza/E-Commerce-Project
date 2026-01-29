@@ -42,36 +42,10 @@ const orderSchema = new mongoose.Schema({
     default: "placed"
   },
 
-  address: {
-    name: {
-      type: String,
-      required: false
-    },
-    phone: {
-      type: String,
-      required: false
-    },
-    street: {
-      type: String,
-      required: false
-    },
-    city: {
-      type: String,
-      required: false
-    },
-    state: {
-      type: String,
-      required: false
-    },
-    zip: {
-      type: Number,
-      required: false
-    },
-    country: {
-      type: String,
-      required: false
-    }
-  },
+  addressId: {
+  type: mongoose.Schema.Types.ObjectId,
+  required: true
+},
 
   createdAt: {
     type: Date,

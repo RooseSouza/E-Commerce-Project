@@ -1,6 +1,7 @@
 const Order = require("../models/order");
 const Cart = require("../models/cart");
 const Product = require("../models/product");
+const User = require("../models/user");
 
 // Place order and split by vendor
 exports.placeOrder = async (req, res) => {
@@ -12,18 +13,38 @@ exports.placeOrder = async (req, res) => {
       return res.status(400).json({ message: "Address is required" });
     }
 
-    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
 
+    // 🔁 Check for duplicate address
+    let savedAddress = user.addresses.find(
+      (addr) =>
+        addr.street === address.street &&
+        addr.city === address.city &&
+        addr.zip === address.zip &&
+        addr.phone === address.phone
+    );
+
+    // ➕ Add new address if not found
+    if (!savedAddress) {
+      user.addresses.push(address);
+      await user.save();
+      savedAddress = user.addresses[user.addresses.length - 1];
+    }
+
+    const addressId = savedAddress._id;
+
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
-    // Group items by vendor
+    // 🧩 Group items by vendor
     const vendorMap = {};
-
     cart.items.forEach((item) => {
       const vendorId = item.productId.vendorId.toString();
-
       if (!vendorMap[vendorId]) vendorMap[vendorId] = [];
       vendorMap[vendorId].push(item);
     });
@@ -33,17 +54,14 @@ exports.placeOrder = async (req, res) => {
     for (const vendorId in vendorMap) {
       const items = vendorMap[vendorId];
       let subtotal = 0;
-
-      // Check stock and calculate subtotal
       const orderItems = [];
+
       for (const item of items) {
         const product = await Product.findById(item.productId._id);
         if (!product || product.stock.quantity < item.quantity) {
-          return res
-            .status(400)
-            .json({
-              message: `Product ${product?.name || ""} is out of stock`,
-            });
+          return res.status(400).json({
+            message: `Product ${product?.name || ""} is out of stock`,
+          });
         }
 
         product.stock.quantity -= item.quantity;
@@ -57,7 +75,7 @@ exports.placeOrder = async (req, res) => {
         });
       }
 
-      const tax = Math.round(subtotal * 0.05); // 5% tax
+      const tax = Math.round(subtotal * 0.05);
       const deliveryCharge = subtotal >= 499 ? 0 : 40;
       const totalAmount = subtotal + tax + deliveryCharge;
 
@@ -65,18 +83,14 @@ exports.placeOrder = async (req, res) => {
         userId,
         vendorId,
         items: orderItems,
-        subtotal,
-        tax,
-        deliveryCharge,
         totalAmount,
-        address,
+        addressId,
         status: "placed",
       });
 
       createdOrders.push(order);
     }
 
-    // Clear cart
     cart.items = [];
     await cart.save();
 
