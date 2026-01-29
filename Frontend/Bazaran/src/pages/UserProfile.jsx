@@ -8,6 +8,7 @@ import ProfileStats from "../components/ProfileStats";
 import AddressList from "../components/AddressList";
 import RecentOrders from "../components/RecentOrders";
 import ProfileSettings from "../components/ProfileSettings";
+import EditProfileModal from "../components/EditProfileModal";
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -28,67 +29,43 @@ const UserProfile = () => {
   const [addresses, setAddresses] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showEditModal, setShowEditModal] = useState(false);
 
-  /* ✅ CONTEXT USER (fallback only) */
-  useEffect(() => {
-    if (contextUser) {
-      setUser((prev) => ({
-        ...prev,
-        name: contextUser.name || prev.name,
-        email: contextUser.email || prev.email,
-        phone: contextUser.phone || prev.phone,
-      }));
-    }
-  }, [contextUser]);
-
-  /* ✅ API DATA (source of truth) */
+  /* ✅ FETCH PROFILE */
   useEffect(() => {
     const fetchProfileData = async () => {
       try {
         const token = localStorage.getItem("token");
 
-        const response = await fetch(
+        const res = await fetch(
           `${import.meta.env.VITE_API_BASE}/api/users/me/profile`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
-              "Content-Type": "application/json",
             },
-          },
+          }
         );
 
-        if (!response.ok) throw new Error("Failed to fetch profile");
+        const data = await res.json();
 
-        const data = await response.json();
-
-        /* ✅ USER */
         setUser({
-          name: data.user.name || "",
-          email: data.user.email || "",
-          phone: data.user.phone || "Not provided",
+          name: data.user.name,
+          email: data.user.email,
+          phone: data.user.phone || "",
         });
 
-        /* ✅ STATS */
-        setStats({
-          totalOrders: data.stats.totalOrders,
-          totalSpent: data.stats.totalSpent,
-          memberSince: data.stats.memberSince,
-        });
+        setStats(data.stats);
 
-        /* ✅ ORDERS */
         const formattedOrders = data.orders.map((order, index) => {
-          const dateObj = new Date(order.createdAt);
-
-          const formattedDate = `${String(dateObj.getDate()).padStart(2, "0")}/${String(
-            dateObj.getMonth() + 1,
-          ).padStart(2, "0")}/${dateObj.getFullYear()}`;
+          const d = new Date(order.createdAt);
+          const date = `${String(d.getDate()).padStart(2, "0")}/${String(
+            d.getMonth() + 1
+          ).padStart(2, "0")}/${d.getFullYear()}`;
 
           return {
-            id: order._id, // keep for internal use
+            id: order._id,
             orderName: `Order #${index + 1}`,
-            productName:
-              order.items?.[0]?.product?.name || "Product name not available",
-            date: formattedDate,
+            date,
             amount: order.totalAmount,
             status:
               order.status.charAt(0).toUpperCase() + order.status.slice(1),
@@ -96,17 +73,9 @@ const UserProfile = () => {
         });
 
         setOrders(formattedOrders);
-
-        /* ✅ ADDRESSES */
-        /* ✅ ADDRESSES FROM USER COLLECTION */
-        setAddresses(
-          data.user.addresses?.map((addr) => ({
-            ...addr,
-            phone: addr.phone || "Not provided",
-          })) || [],
-        );
+        setAddresses(data.user.addresses || []);
       } catch (err) {
-        console.error("Profile fetch error:", err);
+        console.error(err);
       } finally {
         setLoading(false);
       }
@@ -115,22 +84,43 @@ const UserProfile = () => {
     fetchProfileData();
   }, []);
 
-  const handleEditProfile = () => alert("Edit profile modal would open here");
-  const handleEditAddress = (index) => alert(`Edit address ${index}`);
-  const handleDeleteAddress = (index) =>
-    setAddresses(addresses.filter((_, i) => i !== index));
-  const handleAddAddress = () => alert("Add address modal");
-  const handleViewOrder = (id) => alert(`View order ${id}`);
-  const handleChangePassword = () => alert("Change password");
+  /* ✅ UPDATE PROFILE */
+  const handleSaveProfile = async (updatedData) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE}/api/users/me`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(updatedData),
+        }
+      );
+
+      if (!res.ok) throw new Error("Update failed");
+
+      const updatedUser = await res.json();
+
+      setUser({
+        name: updatedUser.name,
+        email: updatedUser.email,
+        phone: updatedUser.phone,
+      });
+
+      setShowEditModal(false);
+    } catch (err) {
+      console.error("Profile update error:", err);
+      alert("Failed to update profile");
+    }
+  };
+
   const handleLogout = () => {
-    // 1. Remove auth data
     localStorage.removeItem("token");
-    localStorage.removeItem("user"); // if you store user info
-
-    // 2. Clear app state (context / redux)
-    clearUser(); // your context reset function
-
-    // 3. Redirect to homepage (logged-out view)
+    clearUser();
     navigate("/login", { replace: true });
   };
 
@@ -148,29 +138,27 @@ const UserProfile = () => {
 
       <div className="flex-1 py-8 px-4">
         <div className="max-w-6xl mx-auto">
-          {/* Profile Header */}
-          <ProfileHeader user={user} onEditClick={handleEditProfile} />
+          <ProfileHeader user={user} onEditClick={() => setShowEditModal(true)} />
           <ProfileStats stats={stats} />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <RecentOrders orders={orders} onViewOrder={handleViewOrder} />
-              <AddressList
-                addresses={addresses}
-                onEdit={handleEditAddress}
-                onDelete={handleDeleteAddress}
-                onAddNew={handleAddAddress}
-              />
+              <RecentOrders orders={orders} onViewOrder={() => {}} />
+              <AddressList addresses={addresses} />
             </div>
 
-            <ProfileSettings
-              onChangePassword={handleChangePassword}
-              onLogout={handleLogout}
-              //onDeleteAccount={handleDeleteAccount}
-            />
+            <ProfileSettings onLogout={handleLogout} />
           </div>
         </div>
       </div>
+
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        user={user}
+        onSave={handleSaveProfile}
+      />
+
       <Footer />
     </div>
   );
