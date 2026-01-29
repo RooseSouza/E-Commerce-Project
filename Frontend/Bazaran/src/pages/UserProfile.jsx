@@ -81,14 +81,24 @@ const UserProfile = () => {
         });
 
         /* ✅ ORDERS */
-        const formattedOrders = data.orders.map(order => ({
-          id: order._id,
-          date: new Date(order.createdAt).toISOString().split("T")[0],
-          amount: order.totalAmount,
-          status:
-            order.status.charAt(0).toUpperCase() +
-            order.status.slice(1),
-        }));
+        const formattedOrders = data.orders.map((order, index) => {
+          const dateObj = new Date(order.createdAt);
+
+          const formattedDate = `${String(dateObj.getDate()).padStart(2, "0")}/${String(
+            dateObj.getMonth() + 1
+          ).padStart(2, "0")}/${dateObj.getFullYear()}`;
+
+          return {
+            id: order._id, // keep for internal use
+            orderName: `Order #${index + 1}`,
+            productName:
+              order.items?.[0]?.product?.name || "Product name not available",
+            date: formattedDate,
+            amount: order.totalAmount,
+            status:
+              order.status.charAt(0).toUpperCase() + order.status.slice(1),
+          };
+        });
 
         setOrders(formattedOrders);
 
@@ -121,20 +131,24 @@ const UserProfile = () => {
     fetchProfileData();
   }, []);
 
+const handleEditProfile = () => alert("Edit profile modal would open here");
+  const handleEditAddress = (index) => alert(`Edit address ${index}`);
+  const handleDeleteAddress = (index) =>
+    setAddresses(addresses.filter((_, i) => i !== index));
+  const handleAddAddress = () => alert("Add address modal");
+  const handleViewOrder = (id) => alert(`View order ${id}`);
+  const handleChangePassword = () => alert("Change password");
   const handleLogout = () => {
-  // remove auth token
+  // 1. Remove auth data
   localStorage.removeItem("token");
+  localStorage.removeItem("user"); // if you store user info
 
-  // clear user from context
-  clearUser();
+  // 2. Clear app state (context / redux)
+  clearUser(); // your context reset function
 
-  // OPTIONAL: clear any cached user data
-  sessionStorage.clear();
-
-  // redirect to homepage as guest
+  // 3. Redirect to homepage (logged-out view)
   navigate("/", { replace: true });
 };
-
 
   if (loading) {
     return (
@@ -150,22 +164,29 @@ const UserProfile = () => {
 
       <div className="flex-1 py-8 px-4">
         <div className="max-w-6xl mx-auto">
-          <ProfileHeader user={user} />
+          {/* Profile Header */}
+          <ProfileHeader user={user} onEditClick={handleEditProfile} />
           <ProfileStats stats={stats} />
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2">
-              <RecentOrders orders={orders} />
-              <AddressList addresses={addresses} />
+              <RecentOrders orders={orders} onViewOrder={handleViewOrder} />
+              <AddressList
+                addresses={addresses}
+                onEdit={handleEditAddress}
+                onDelete={handleDeleteAddress}
+                onAddNew={handleAddAddress}
+              />
             </div>
 
             <ProfileSettings
+              onChangePassword={handleChangePassword}
               onLogout={handleLogout}
+              //onDeleteAccount={handleDeleteAccount}
             />
           </div>
         </div>
       </div>
-
       <Footer />
     </div>
   );
