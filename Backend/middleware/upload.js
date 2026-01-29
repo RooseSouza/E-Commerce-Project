@@ -1,14 +1,27 @@
 const multer = require("multer");
-const { CloudinaryStorage } = require("multer-storage-cloudinary");
+const multerStorageCloudinary = require("multer-storage-cloudinary");
 const cloudinary = require("../config/cloudinary");
 
-const storage = new CloudinaryStorage({
-  cloudinary,
-  params: {
-    folder: "vendor_products", // folder name in Cloudinary
-    allowed_formats: ["jpg", "png", "jpeg", "webp"]
-  }
-});
+let storage;
+
+// Handle different versions of multer-storage-cloudinary
+if (multerStorageCloudinary.CloudinaryStorage) {
+  // Version 4.x
+  storage = new multerStorageCloudinary.CloudinaryStorage({
+    cloudinary,
+    params: {
+      folder: "vendor_products",
+      allowed_formats: ["jpg", "png", "jpeg", "webp"],
+    },
+  });
+} else {
+  // Version 3.x or older (Fallback)
+  storage = multerStorageCloudinary({
+    cloudinary,
+    folder: "vendor_products",
+    allowedFormats: ["jpg", "png", "jpeg", "webp"],
+  });
+}
 
 const upload = multer({
   storage,

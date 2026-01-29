@@ -68,7 +68,18 @@ const productSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now
-  }
+  },
+
+  isTopPick: {
+    type: Boolean,
+    default: false
+  },
+
+  isFeatured: {
+    type: Boolean,
+    default: false
+  },
+ 
 });
 
 /* Index for faster search */
