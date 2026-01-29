@@ -9,7 +9,8 @@ const {
   getMe,
   getMyProfile,
   updateMe,
-  addAddress, // ✅ IMPORT
+  addAddress,
+  deleteAddress // ✅ IMPORT
 } = require("../controllers/userController");
 
 // Auth
@@ -25,6 +26,6 @@ router.put("/me", protect, updateMe);
 // Address
 router.post("/me/address", protect, addAddress); // ✅ CLEAN
 
-router.delete("/me/address/:addressId", protect, userController.deleteAddress);
+router.delete("/me/address/:addressId", protect, deleteAddress);
 
 module.exports = router;
