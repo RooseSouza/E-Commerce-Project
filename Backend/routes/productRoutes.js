@@ -7,13 +7,9 @@ const {
   getMyProducts,
   getAllProducts,
   getProductById,
-   getSingleProduct,
   updateProduct,
   deleteProduct,
   searchProducts,
-  getTopPicks, 
-  getFeaturedProducts, 
-  getJustArrivedProducts,
   toggleProductStatus
 } = require("../controllers/productController");
 
@@ -38,23 +34,6 @@ router.get("/", getAllProducts);
  * User searches for a product
  */
 router.get("/search", searchProducts);
-
-/** Get Top Picks Products (Must be before /:id)
- */
-router.get("/top-picks", getTopPicks);
-
-/** Get Featured Products (Must be before /:id)
- */
-router.get("/featured", getFeaturedProducts);
-
-/** Get Just Arrived Products (Must be before /:id)
- */
-router.get("/just-arrived", getJustArrivedProducts);
-
-/**
- * User gets single product details (Public)
- */
-router.get("/detail/:id", getSingleProduct);
 
 
 /**

@@ -13,8 +13,6 @@ exports.addProduct = async (req, res) => {
       stockQuantity,
       stockUnit,
       tags,
-      isTopPick,
-      isFeatured,
     } = req.body;
 
     if (
@@ -50,8 +48,6 @@ exports.addProduct = async (req, res) => {
         unit: stockUnit,
       },
       tags: Array.isArray(tags) ? tags.map((tag) => tag.toLowerCase()) : [],
-      isTopPick: isTopPick === 'true' || isTopPick === true,
-      isFeatured: isFeatured === 'true' || isFeatured === true,
     });
 
     const populatedProduct = await Product.findById(product._id)
@@ -89,23 +85,6 @@ exports.getAllProducts = async (req, res) => {
       .populate("vendorId", "name");
 
     res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Public get single product
-exports.getSingleProduct = async (req, res) => {
-  try {
-    const product = await Product.findById(req.params.id)
-      .populate("categoryId", "name")
-      .populate("vendorId", "name");
-
-    if (!product) {
-      return res.status(404).json({ message: "Product not found" });
-    }
-
-    res.json(product);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -217,14 +196,6 @@ exports.updateProduct = async (req, res) => {
       }
     }
 
-    /* ---------- FLAGS ---------- */
-    if (req.body?.isTopPick !== undefined) {
-      product.isTopPick = req.body.isTopPick === 'true' || req.body.isTopPick === true;
-    }
-    if (req.body?.isFeatured !== undefined) {
-      product.isFeatured = req.body.isFeatured === 'true' || req.body.isFeatured === true;
-    }
-
     /* ---------- IMAGE ---------- */
     if (req.file) {
       if (product.image?.public_id) {
@@ -272,46 +243,6 @@ exports.toggleProductStatus = async (req, res) => {
       message: `Product ${product.isActive ? "activated" : "disabled"} successfully`,
       isActive: product.isActive
     });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Get Top Picks
-exports.getTopPicks = async (req, res) => {
-  try {
-    const products = await Product.find({ isTopPick: true })
-      .limit(4)
-      .populate("categoryId", "name")
-      .populate("vendorId", "name");
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Get Featured Products
-exports.getFeaturedProducts = async (req, res) => {
-  try {
-    const products = await Product.find({ isFeatured: true })
-      .limit(5)
-      .populate("categoryId", "name")
-      .populate("vendorId", "name");
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
-// Get Just Arrived Products
-exports.getJustArrivedProducts = async (req, res) => {
-  try {
-    const products = await Product.find()
-      .sort({ createdAt: -1 })
-      .limit(5)
-      .populate("categoryId", "name")
-      .populate("vendorId", "name");
-    res.json(products);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
