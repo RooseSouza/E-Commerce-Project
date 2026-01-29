@@ -1,12 +1,13 @@
 import React from 'react'
 import ItemLongCard from '../components/itemLongCard'
+import { useNavigate } from 'react-router-dom'
 
 const LongCardsSection = () => {
   const cardsData = [
     {
       id: 1,
       image: 'https://images.unsplash.com/photo-1590671909091-43ff144014fe?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8MTR8fGluZGlhbiUyMHN3ZWV0c3xlbnwwfHwwfHx8MA%3D%3D',
-      title: 'Tradiotional sweets',
+      title: 'Traditional sweets',
       subtitle: 'From the best makers',
       discount: 'Sale 70%'
     },
@@ -26,14 +27,14 @@ const LongCardsSection = () => {
     },
     {
       id: 4,
-      image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=400&h=500&fit=crop',
-      title: 'Ceramic Collection',
+      image: 'https://images.pexels.com/photos/5711901/pexels-photo-5711901.jpeg',
+      title: 'Wooden tools',
       subtitle: 'Elegant designs',
       discount: 'Sale 65%'
     },
     {
       id: 5,
-      image: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=400&h=500&fit=crop',
+      image: 'https://images.pexels.com/photos/8399954/pexels-photo-8399954.jpeg',
       title: 'Metal Artifacts',
       subtitle: 'Timeless beauty',
       discount: 'Up to 55%'
@@ -47,9 +48,9 @@ const LongCardsSection = () => {
     }
   ]
 
+  const navigate = useNavigate()
   const handleCardClick = (cardId) => {
-    console.log(`Clicked card ${cardId}`)
-    // TODO: Navigate to product details or category page
+    navigate(`/product/${cardId}`)
   }
 
   return (

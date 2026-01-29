@@ -32,7 +32,7 @@ const GoanSaleSection = () => {
       name: 'Brass Decorative Plate',
       price: 1599,
       originalPrice: 2999,
-      image: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=300&h=300&fit=crop'
+      image: 'https://images.pexels.com/photos/31959766/pexels-photo-31959766.jpeg'
     }
   ]
 

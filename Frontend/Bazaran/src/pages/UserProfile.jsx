@@ -1,146 +1,174 @@
-import React, { useState } from 'react';
-import ProfileHeader from '../components/ProfileHeader';
-import ProfileStats from '../components/ProfileStats';
-import AddressList from '../components/AddressList';
-import RecentOrders from '../components/RecentOrders';
-import ProfileSettings from '../components/ProfileSettings';
+import React, { useState, useContext, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { UserContext } from "../context/userContext";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
+import ProfileHeader from "../components/ProfileHeader";
+import ProfileStats from "../components/ProfileStats";
+import AddressList from "../components/AddressList";
+import RecentOrders from "../components/RecentOrders";
+import ProfileSettings from "../components/ProfileSettings";
+import EditProfileModal from "../components/EditProfileModal";
+import AddAddressModal from "../components/AddAddressModal";
 
 const UserProfile = () => {
-  // Mock user data - replace with actual context/API data
-  const [user, setUser] = useState({
-    firstName: 'John',
-    lastName: 'Doe',
-    email: 'john.doe@example.com',
-    phone: '+91 9876543210'
-  });
+  const navigate = useNavigate();
+  const { clearUser } = useContext(UserContext);
 
-  const [stats] = useState({
-    totalOrders: 12,
-    totalSpent: 45250,
-    memberSince: '2024'
-  });
+  const [user, setUser] = useState({ name: "", email: "", phone: "" });
+  const [stats, setStats] = useState({});
+  const [addresses, setAddresses] = useState([]);
+  const [orders, setOrders] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const [addresses, setAddresses] = useState([
-    {
-      type: 'Home',
-      street: '123 Main Street',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      zipCode: '560001',
-      country: 'India'
-    },
-    {
-      type: 'Work',
-      street: '456 Business Plaza',
-      city: 'Bangalore',
-      state: 'Karnataka',
-      zipCode: '560034',
-      country: 'India'
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showAddAddress, setShowAddAddress] = useState(false);
+
+  /* ✅ FETCH PROFILE */
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const token = localStorage.getItem("token");
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE}/api/users/me/profile`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const data = await res.json();
+
+      setUser(data.user);
+      setStats(data.stats);
+      setAddresses(data.user.addresses || []);
+
+      setOrders(
+        data.orders.map((o, i) => {
+          const d = new Date(o.createdAt);
+          return {
+            id: o._id,
+            orderName: `Order #${i + 1}`,
+            date: `${String(d.getDate()).padStart(2, "0")}/${String(
+              d.getMonth() + 1
+            ).padStart(2, "0")}/${d.getFullYear()}`,
+            amount: o.totalAmount,
+            status: o.status,
+          };
+        })
+      );
+
+      setLoading(false);
+    };
+
+    fetchProfile();
+  }, []);
+
+  /* ✅ UPDATE PROFILE */
+  const handleSaveProfile = async (updatedData) => {
+    const token = localStorage.getItem("token");
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE}/api/users/me`,
+      {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(updatedData),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) return { errors: data.errors };
+
+    setUser(data);
+    setShowEditModal(false);
+  };
+
+  /* ✅ ADD ADDRESS */
+ const handleAddAddress = async (addressData) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(addressData),
+      }
+    );
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return { errors: data.errors || { general: "Failed to add address" } };
     }
-  ]);
 
-  const [orders] = useState([
-    {
-      id: 'ORD001',
-      date: '2026-01-20',
-      amount: 5999,
-      status: 'Delivered'
-    },
-    {
-      id: 'ORD002',
-      date: '2026-01-18',
-      amount: 2450,
-      status: 'Processing'
-    },
-    {
-      id: 'ORD003',
-      date: '2026-01-15',
-      amount: 8750,
-      status: 'Delivered'
-    },
-    {
-      id: 'ORD004',
-      date: '2026-01-10',
-      amount: 3200,
-      status: 'Cancelled'
-    },
-    {
-      id: 'ORD005',
-      date: '2026-01-05',
-      amount: 6100,
-      status: 'Delivered'
-    }
-  ]);
-
-  const handleEditProfile = () => {
-    alert('Edit profile modal would open here');
-  };
-
-  const handleEditAddress = (index) => {
-    alert(`Edit address ${index} would open here`);
-  };
-
-  const handleDeleteAddress = (index) => {
-    setAddresses(addresses.filter((_, i) => i !== index));
-  };
-
-  const handleAddAddress = () => {
-    alert('Add address modal would open here');
-  };
-
-  const handleViewOrder = (orderId) => {
-    alert(`View order ${orderId} details`);
-  };
-
-  const handleChangePassword = () => {
-    alert('Change password modal would open here');
-  };
+    setAddresses(data.addresses);
+    setShowAddAddress(false);
+    return null;
+  } catch (err) {
+    return {
+      errors: { general: "Server error. Please try again." },
+    };
+  }
+};
 
   const handleLogout = () => {
-    alert('User logged out');
-    // Implement actual logout logic
+    localStorage.removeItem("token");
+    clearUser();
+    navigate("/login", { replace: true });
   };
 
-  const handleDeleteAccount = () => {
-    if (window.confirm('Are you sure you want to delete your account? This action cannot be undone.')) {
-      alert('Account deletion logic would be executed here');
-    }
-  };
+  if (loading) {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <div className="text-center">
+        <div className="animate-spin h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-4"></div>
+        <p className="text-gray-600 font-medium">
+          Loading your profile...
+        </p>
+      </div>
+    </div>
+  );
+}
+
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4">
-        {/* Profile Header */}
-        <ProfileHeader user={user} onEditClick={handleEditProfile} />
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Navbar />
 
-        {/* Statistics */}
+      <div className="flex-1 py-8 px-4 max-w-6xl mx-auto">
+        <ProfileHeader user={user} onEditClick={() => setShowEditModal(true)} />
         <ProfileStats stats={stats} />
 
-        {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            {/* Recent Orders */}
-            <RecentOrders orders={orders} onViewOrder={handleViewOrder} />
-
-            {/* Addresses */}
-            <AddressList 
-              addresses={addresses} 
-              onEdit={handleEditAddress}
-              onDelete={handleDeleteAddress}
-              onAddNew={handleAddAddress}
+            <RecentOrders orders={orders} />
+            <AddressList
+              addresses={addresses}
+              onAddNew={() => setShowAddAddress(true)}
             />
           </div>
 
-          {/* Sidebar - Settings */}
-          <div>
-            <ProfileSettings 
-              onChangePassword={handleChangePassword}
-              onLogout={handleLogout}
-              onDeleteAccount={handleDeleteAccount}
-            />
-          </div>
+          <ProfileSettings onLogout={handleLogout} />
         </div>
       </div>
+
+      <EditProfileModal
+        isOpen={showEditModal}
+        onClose={() => setShowEditModal(false)}
+        user={user}
+        onSave={handleSaveProfile}
+      />
+
+      <AddAddressModal
+        isOpen={showAddAddress}
+        onClose={() => setShowAddAddress(false)}
+        onSave={handleAddAddress}
+      />
+
+      <Footer />
     </div>
   );
 };

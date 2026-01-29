@@ -3,29 +3,29 @@ const User = require("../models/user");
 
 exports.protect = async (req, res, next) => {
   try {
-    let token;
+    const authHeader = req.headers.authorization;
 
-    if (
-      req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
-    ) {
-      token = req.headers.authorization.split(" ")[1];
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
+      return res.status(401).json({ message: "Not authorized" });
     }
 
-    if (!token) {
-      return res.status(401).json({ message: "Not authorized, no token" });
-    }
-
+    const token = authHeader.split(" ")[1];
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-    req.user = await User.findById(decoded.id).select("-password");
+    // ✅ FETCH FULL USER DOCUMENT
+    const user = await User.findById(decoded.id).select("-password");
 
+    if (!user) {
+      return res.status(401).json({ message: "User not found" });
+    }
+
+    req.user = user; // 🔥 THIS FIXES EVERYTHING
     next();
-  } catch (error) {
-    return res.status(401).json({ message: "Not authorized" });
+  } catch (err) {
+    console.error("Auth error:", err);
+    res.status(401).json({ message: "Invalid token" });
   }
 };
-
 // Role-based access
 exports.authorize = (...roles) => {
   return (req, res, next) => {
