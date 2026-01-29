@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import Sidebar from "./Sidebar.jsx";
+
+import { useNavigate } from "react-router-dom";
 import ProductList from "./ProductList.jsx";
 import AddProductForm from "./AddProductForm.jsx";
 import EditProductModal from "./EditProductModal.jsx";
@@ -9,7 +11,6 @@ const API_BASE = import.meta.env.VITE_API_BASE;
 
 const VendorDashboard = () => {
   const token = localStorage.getItem("token");
-
   const [vendor, setVendor] = useState({});
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);

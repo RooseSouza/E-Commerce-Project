@@ -23,6 +23,7 @@ const UserProfile = () => {
 
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddAddress, setShowAddAddress] = useState(false);
+  const [editingAddressIndex, setEditingAddressIndex] = useState(null);
 
   /* ✅ FETCH PROFILE */
   useEffect(() => {
@@ -81,38 +82,86 @@ const UserProfile = () => {
     setShowEditModal(false);
   };
 
-  /* ✅ ADD ADDRESS */
- const handleAddAddress = async (addressData) => {
+  /* ✅ ADD / EDIT ADDRESS */
+  const handleAddAddress = async (addressData) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      let updatedAddresses;
+
+      if (editingAddressIndex !== null) {
+        updatedAddresses = [...addresses];
+        updatedAddresses[editingAddressIndex] = addressData;
+      } else {
+        updatedAddresses = [...addresses, addressData];
+      }
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ addresses: updatedAddresses }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { errors: data.errors || { general: "Failed to save address" } };
+      }
+
+      setAddresses(data.addresses);
+      setShowAddAddress(false);
+      setEditingAddressIndex(null);
+      return null;
+    } catch (err) {
+      return {
+        errors: { general: "Server error. Please try again." },
+      };
+    }
+  };
+
+  /* ✅ DELETE ADDRESS */
+  const handleDeleteAddress = async (index) => {
+  if (!window.confirm("Are you sure you want to delete this address?")) return;
+
   try {
     const token = localStorage.getItem("token");
+    const addressId = addresses[index]._id;
 
     const res = await fetch(
-      `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
+      `${import.meta.env.VITE_API_BASE}/api/users/me/address/${addressId}`,
       {
-        method: "POST",
+        method: "DELETE",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify(addressData),
       }
     );
 
     const data = await res.json();
 
     if (!res.ok) {
-      return { errors: data.errors || { general: "Failed to add address" } };
+      console.error("Delete failed");
+      return;
     }
 
     setAddresses(data.addresses);
-    setShowAddAddress(false);
-    return null;
   } catch (err) {
-    return {
-      errors: { general: "Server error. Please try again." },
-    };
+    console.error("Server error");
   }
 };
+
+
+  /* ✅ EDIT ADDRESS */
+  const handleEditAddress = (index) => {
+    setEditingAddressIndex(index);
+    setShowAddAddress(true);
+  };
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -121,18 +170,17 @@ const UserProfile = () => {
   };
 
   if (loading) {
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center">
-        <div className="animate-spin h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-4"></div>
-        <p className="text-gray-600 font-medium">
-          Loading your profile...
-        </p>
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="text-center">
+          <div className="animate-spin h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-4"></div>
+          <p className="text-gray-600 font-medium">
+            Loading your profile...
+          </p>
+        </div>
       </div>
-    </div>
-  );
-}
-
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -147,7 +195,12 @@ const UserProfile = () => {
             <RecentOrders orders={orders} />
             <AddressList
               addresses={addresses}
-              onAddNew={() => setShowAddAddress(true)}
+              onAddNew={() => {
+                setEditingAddressIndex(null);
+                setShowAddAddress(true);
+              }}
+              onEdit={handleEditAddress}
+              onDelete={handleDeleteAddress}
             />
           </div>
 
@@ -164,8 +217,16 @@ const UserProfile = () => {
 
       <AddAddressModal
         isOpen={showAddAddress}
-        onClose={() => setShowAddAddress(false)}
+        onClose={() => {
+          setShowAddAddress(false);
+          setEditingAddressIndex(null);
+        }}
         onSave={handleAddAddress}
+        initialData={
+          editingAddressIndex !== null
+            ? addresses[editingAddressIndex]
+            : null
+        }
       />
 
       <Footer />

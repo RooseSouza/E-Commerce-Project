@@ -25,4 +25,6 @@ router.put("/me", protect, updateMe);
 // Address
 router.post("/me/address", protect, addAddress); // ✅ CLEAN
 
+router.delete("/me/address/:addressId", protect, userController.deleteAddress);
+
 module.exports = router;
