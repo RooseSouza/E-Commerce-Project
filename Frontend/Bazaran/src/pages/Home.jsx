@@ -20,6 +20,7 @@ const Home = () => {
         // Helper to map backend data
         const mapProduct = (product) => ({
           id: product._id,
+          _id: product._id,
           name: product.name,
           price: product.price,
           originalPrice: product.originalPrice || Math.round(product.price * 1.2),

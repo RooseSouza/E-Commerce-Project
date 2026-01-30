@@ -13,6 +13,7 @@ const CTAproducts = () => {
     // Helper to map backend data to frontend format
     const mapProductData = (product) => ({
       id: product._id,
+      _id: product._id,
       name: product.name,
       price: product.price,
       originalPrice: product.originalPrice || Math.round(product.price * 1.2),
