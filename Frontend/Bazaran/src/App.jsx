@@ -5,7 +5,7 @@ import Home from './pages/Home'
 import Cart from './pages/Cart'
 import ProductDetails from './pages/ProductDetails'
 import UserProfile from './pages/UserProfile'
-
+import Checkout from './pages/Checkout'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
 import UserProvider from './context/userContext'
 import VendorDashboard from './pages/VendorDashboard'
@@ -25,6 +25,8 @@ const App = () => {
               <Route path="/cart" element={<Cart />} />
               <Route path="/profile" element={<UserProfile />} />
               <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+              <Route path="/checkout" element={<Checkout />} />
+
             </Routes>
           </Router>
         </div>
