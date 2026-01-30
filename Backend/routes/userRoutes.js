@@ -10,7 +10,9 @@ const {
   getMyProfile,
   updateMe,
   addAddress,
-  deleteAddress // ✅ IMPORT
+  deleteAddress,
+  updatePassword,
+   // ✅ IMPORT
 } = require("../controllers/userController");
 
 // Auth
@@ -27,5 +29,7 @@ router.put("/me", protect, updateMe);
 router.post("/me/address", protect, addAddress); // ✅ CLEAN
 
 router.delete("/me/address/:addressId", protect, deleteAddress);
+
+router.put("/me/password", protect, updatePassword);
 
 module.exports = router;

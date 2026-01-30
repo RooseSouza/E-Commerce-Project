@@ -11,6 +11,7 @@ import ProfileSettings from "../components/ProfileSettings";
 import EditProfileModal from "../components/EditProfileModal";
 import AddAddressModal from "../components/AddAddressModal";
 import OrderDetailsModal from "../components/OrderDetailsModal";
+import UpdatePasswordModal from "../components/UpdatePasswordModal";
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -21,9 +22,10 @@ const UserProfile = () => {
   const [addresses, setAddresses] = useState([]);
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
 
   const [selectedOrder, setSelectedOrder] = useState(null);
-const [showOrderModal, setShowOrderModal] = useState(false);
+  const [showOrderModal, setShowOrderModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [editingAddressIndex, setEditingAddressIndex] = useState(null);
@@ -67,6 +69,36 @@ const [showOrderModal, setShowOrderModal] = useState(false);
 
     setUser(data);
     setShowEditModal(false);
+  };
+
+  const handleUpdatePassword = async ({ oldPassword, newPassword }) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE}/api/users/me/password`,
+        {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ oldPassword, newPassword }),
+        },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { error: data.message || "Password update failed" };
+      }
+
+       alert("Password updated successfully");
+
+      return null;
+    } catch (err) {
+      return { error: "Server error" };
+    }
   };
 
   /* ✅ ADD / EDIT ADDRESS */
@@ -180,7 +212,7 @@ const [showOrderModal, setShowOrderModal] = useState(false);
             />
           </div>
 
-          <ProfileSettings onLogout={handleLogout} />
+          <ProfileSettings onLogout={handleLogout} onChangePassword={() => setShowPasswordModal(true)} />
         </div>
       </div>
 
@@ -202,18 +234,22 @@ const [showOrderModal, setShowOrderModal] = useState(false);
           editingAddressIndex !== null ? addresses[editingAddressIndex] : null
         }
       />
-{showOrderModal && (
-  <OrderDetailsModal
-  order={selectedOrder}
-  addresses={addresses}
-  onClose={() => {
-    setShowOrderModal(false);
-    setSelectedOrder(null);
-  }}
+      {showOrderModal && (
+        <OrderDetailsModal
+          order={selectedOrder}
+          addresses={addresses}
+          onClose={() => {
+            setShowOrderModal(false);
+            setSelectedOrder(null);
+          }}
+        />
+      )}
+      <UpdatePasswordModal 
+  isOpen={showPasswordModal}
+  onClose={() => setShowPasswordModal(false)}
+  onSave={handleUpdatePassword}
 />
-)}
 
-      
 
       <Footer />
     </div>
