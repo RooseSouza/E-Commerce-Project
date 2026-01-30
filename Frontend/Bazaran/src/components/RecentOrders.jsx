@@ -1,6 +1,5 @@
 import React from "react";
 
-
 const RecentOrders = ({ orders, onViewOrder }) => {
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
@@ -44,12 +43,12 @@ const RecentOrders = ({ orders, onViewOrder }) => {
 
                     {/* Date */}
                     <td className="py-3 px-4 text-gray-700">
-                       {order.date || '—'}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </td>
 
                     {/* Amount */}
                     <td className="py-3 px-4 text-gray-700 font-medium">
-                      ₹{order.amount}
+                      ₹{order.totalAmount}
                     </td>
 
                     {/* Status */}
@@ -73,7 +72,7 @@ const RecentOrders = ({ orders, onViewOrder }) => {
                     {/* Action */}
                     <td className="py-3 px-4">
                       <button
-                        onClick={() => onViewOrder(order._id || order.id)}
+                        onClick={() => onViewOrder(order)} // pass full order
                         className="text-blue-600 hover:text-blue-700 font-medium text-xs"
                       >
                         View
