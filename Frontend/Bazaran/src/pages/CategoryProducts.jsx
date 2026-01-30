@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 
@@ -7,6 +7,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const CategoryProducts = () => {
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
   const category = searchParams.get("category");
   const searchQuery = searchParams.get("search");
   const categoryId = searchParams.get("id");
@@ -73,13 +74,20 @@ const CategoryProducts = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.length > 0 ? (
             products.map((product) => (
-              <div key={product.id} className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300">
+              <div 
+                key={product.id} 
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                onClick={() => navigate(`/product/${product.id}`)}
+              >
                 <img src={product.image} alt={product.name} className="w-full h-48 object-cover" />
                 <div className="p-4">
                   <p className="text-sm text-gray-500 mb-1 capitalize">{product.category}</p>
                   <h3 className="text-lg font-semibold text-gray-800 mb-2">{product.name}</h3>
                   <p className="text-orange-600 font-bold">₹{product.price}</p>
-                  <button className="mt-4 w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition-colors">
+                  <button 
+                    className="mt-4 w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     Add to Cart
                   </button>
                 </div>

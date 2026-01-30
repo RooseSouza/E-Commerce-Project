@@ -52,9 +52,9 @@ router.get("/search", searchProducts);
 
 
 /**
- * Vendor gets single product
+ * Get single product
  */
-router.get("/:id", protect, authorize("vendor"), getProductById);
+router.get("/:id", getProductById);
 
 /**
  * Vendor updates product
