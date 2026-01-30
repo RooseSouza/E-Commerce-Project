@@ -2,9 +2,11 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
+import { useNavigate } from "react-router-dom";
 
 const Cart = () => {
   const [cartItems, setCartItems] = useState([]);
+  const navigate = useNavigate();
 
   useEffect(() => {
     fetchCart();
@@ -199,7 +201,17 @@ const Cart = () => {
                   </div>
 
                   {/* Checkout Button */}
-                  <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-lg transition-colors mb-3">
+                  <button
+                    onClick={() => {
+                      if (!cartItems || cartItems.length === 0) {
+                        alert("Your cart is empty");
+                        return;
+                      }
+                      navigate("/checkout");
+                    }}
+                    className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-bold py-3 px-4 rounded-lg transition-colors mb-3"
+                    disabled={!cartItems || cartItems.length === 0}
+                  >
                     Proceed to Checkout
                   </button>
 
