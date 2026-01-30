@@ -95,14 +95,47 @@ exports.placeOrder = async (req, res) => {
 };
 
 // GET LOGGED-IN VENDOR ORDERS
+// exports.getVendorOrders = async (req, res) => {
+//   try {
+//     const vendorId = req.user._id;
+
+//     const orders = await Order.find({ vendorId })
+//       .populate("userId", "name phone addresses")
+//       .populate("items.productId", "name price")
+//       .sort({ createdAt: -1 });
+
+//     res.json(orders);
+//   } catch (error) {
+//     console.error("Vendor order fetch error:", error);
+//     res.status(500).json({ message: "Failed to fetch vendor orders" });
+//   }
+// };
+
 exports.getVendorOrders = async (req, res) => {
   try {
     const vendorId = req.user._id;
 
-    const orders = await Order.find({ vendorId })
-      .populate("userId", "name email phone")
+    // Fetch orders and populate user and products
+    let orders = await Order.find({ vendorId })
+      .populate("userId", "name phone addresses")
       .populate("items.productId", "name price")
       .sort({ createdAt: -1 });
+
+    // Attach the selected address to each order
+    orders = orders.map(order => {
+      const user = order.userId;
+      const selectedAddress = user.addresses.find(
+        addr => addr._id.toString() === order.addressId.toString()
+      );
+
+      return {
+        ...order.toObject(), // convert mongoose doc to plain object
+        userId: {
+          ...user.toObject(),
+          selectedAddress: selectedAddress || null
+        }
+      };
+    });
 
     res.json(orders);
   } catch (error) {
