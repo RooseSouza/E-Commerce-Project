@@ -4,6 +4,7 @@ const connectDB = require("./database/db");
 const cors = require("cors");
 const Category = require("./models/category");
 
+
 dotenv.config();
 
 const app = express();
