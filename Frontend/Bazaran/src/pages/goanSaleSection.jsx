@@ -32,7 +32,6 @@ const GoanSaleSection = () => {
         console.error('Error fetching top picks:', error)
       }
     }
-
     fetchTopPicks()
   }, [])
 

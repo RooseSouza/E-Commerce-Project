@@ -18,16 +18,14 @@ const AddressList = ({ addresses, onEdit, onDelete, onAddNew }) => {
           {addresses.map((address, index) => (
             <div
               key={index}
-              className="border border-gray-200 rounded-lg p-4 bg-gray-50 relative"
+              className="border border-gray-200 rounded-lg p-4 bg-gray-50"
             >
-              {/* Name */}
               {address.name && (
                 <p className="font-semibold text-gray-800 mb-1">
                   {address.name}
                 </p>
               )}
 
-              {/* Full Address */}
               <p className="text-gray-700 text-sm">
                 {address.houseNumber}, {address.street}
               </p>
@@ -39,15 +37,16 @@ const AddressList = ({ addresses, onEdit, onDelete, onAddNew }) => {
                 📞 {address.phone}
               </p>
 
-              {/* Actions */}
-              <div className="flex gap-3 text-sm">
+              <div className="flex gap-4 mt-3 text-sm">
                 <button
                   onClick={() => onEdit(index)}
                   className="text-blue-600 hover:text-blue-700 font-medium"
                 >
                   Edit
                 </button>
+
                 <button
+                  type="button"
                   onClick={() => onDelete(index)}
                   className="text-red-600 hover:text-red-700 font-medium"
                 >

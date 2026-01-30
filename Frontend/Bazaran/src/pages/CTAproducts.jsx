@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react'
+import React , { useState, useEffect } from 'react'
 import ItemCard from '../components/itemcard'
 import CTA from '../components/CTA'
 
@@ -41,6 +41,7 @@ const CTAproducts = () => {
         console.error('Error fetching CTA products:', error)
       }
     }
+  
 
     fetchData()
   }, [])

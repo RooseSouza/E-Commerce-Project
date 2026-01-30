@@ -7,13 +7,9 @@ const {
   getMyProducts,
   getAllProducts,
   getProductById,
-   getSingleProduct,
   updateProduct,
   deleteProduct,
   searchProducts,
-  getTopPicks, 
-  getFeaturedProducts, 
-  getJustArrivedProducts,
   toggleProductStatus
 } = require("../controllers/productController");
 
@@ -39,23 +35,6 @@ router.get("/", getAllProducts);
  */
 router.get("/search", searchProducts);
 
-/** Get Top Picks Products (Must be before /:id)
- */
-router.get("/top-picks", getTopPicks);
-
-/** Get Featured Products (Must be before /:id)
- */
-router.get("/featured", getFeaturedProducts);
-
-/** Get Just Arrived Products (Must be before /:id)
- */
-router.get("/just-arrived", getJustArrivedProducts);
-
-/**
- * User gets single product details (Public)
- */
-router.get("/detail/:id", getSingleProduct);
-
 
 /**
  * Vendor gets single product
@@ -65,8 +44,14 @@ router.get("/:id", protect, authorize("vendor"), getProductById);
 /**
  * Vendor updates product
  */
-router.put("/:id", protect, authorize("vendor"), updateProduct);
 
+router.put(
+  "/:id",
+  protect,
+  authorize("vendor"),
+  upload.single("image"),
+  updateProduct
+);
 // Vendor enable / disable product
 router.put("/:id/toggle-status", protect, authorize("vendor"), toggleProductStatus);
 
