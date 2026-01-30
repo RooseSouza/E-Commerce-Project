@@ -1,44 +1,50 @@
-const Sidebar = ({ vendor, setView, handleLogout }) => {
-  return (
-    <aside className="w-64 bg-white border-r shadow-sm flex flex-col">
-      {/* Logo / Title */}
-      <div className="px-6 py-4 border-b">
-        <h1 className="text-xl font-bold text-gray-800">Bazaran</h1>
-        <p className="text-xs text-gray-500 mt-1">Vendor Dashboard</p>
-      </div>
+const Sidebar = ({ vendor, setView, currentView }) => {
 
-      {/* Navigation */}
+  const menuClass = (view) =>
+    `w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition
+     ${
+       currentView === view
+         ? "bg-orange-500 text-white shadow"
+         : "text-gray-700 hover:bg-gray-100"
+     }`;
+
+  return (
+    <aside className="w-64 bg-white border-r flex flex-col">
+    
+      {/*  Menu */}
       <nav className="flex-1 px-4 py-6 space-y-2">
         <button
-          onClick={() => setView("list")}
-          className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition"
+          onClick={() => setView("dashboard")}
+          className={menuClass("dashboard")}
         >
-          📦 My Products
+          Dashboard
+        </button>
+
+        <button
+          onClick={() => setView("list")}
+          className={menuClass("list")}
+        >
+           My Products
         </button>
 
         <button
           onClick={() => setView("add")}
-          className="w-full text-left px-4 py-2 rounded-lg text-gray-700 hover:bg-gray-100 font-medium transition"
+          className={menuClass("add")}
         >
-          ➕ Add Product
+           Add Product
+        </button>
+
+        <button
+          onClick={() => setView("orders")}
+          className={menuClass("orders")}
+        >
+          Orders
         </button>
       </nav>
 
-      {/* Footer */}
-      <div className="px-4 py-4 border-t flex items-center justify-between">
-        <div>
-          <p className="text-sm font-medium text-gray-700">
-            {vendor?.name}
-          </p>
-          <p className="text-xs text-gray-500">Vendor</p>
-        </div>
-
-        <button
-          onClick={handleLogout}
-          className="text-sm text-red-500 hover:text-red-600 font-medium"
-        >
-          Logout
-        </button>
+      {/*  Footer Hint */}
+      <div className="px-6 py-4 border-t text-xs text-gray-400">
+        © {new Date().getFullYear()} Bazaran
       </div>
     </aside>
   );

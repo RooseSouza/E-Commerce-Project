@@ -93,3 +93,21 @@ exports.placeOrder = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 };
+
+// GET LOGGED-IN VENDOR ORDERS
+exports.getVendorOrders = async (req, res) => {
+  try {
+    const vendorId = req.user._id;
+
+    const orders = await Order.find({ vendorId })
+      .populate("userId", "name email phone")
+      .populate("items.productId", "name price")
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
+  } catch (error) {
+    console.error("Vendor order fetch error:", error);
+    res.status(500).json({ message: "Failed to fetch vendor orders" });
+  }
+};
+

@@ -41,36 +41,147 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
   };
 
   return (
-    <div className="bg-white p-6 rounded shadow mb-6">
-      <h2 className="text-xl font-bold mb-4">Add Product</h2>
+    <div className="bg-white rounded-2xl shadow-lg border p-8 max-w-3xl">
+      <h2 className="text-2xl font-semibold text-gray-800 mb-6">
+        Add New Product
+      </h2>
 
-      <form onSubmit={handleSubmit} className="space-y-3">
-        <input name="name" onChange={handleChange} required placeholder="Name" className="w-full border p-2" />
-        <textarea name="description" onChange={handleChange} required placeholder="Description" className="w-full border p-2" />
-        <input name="price" type="number" onChange={handleChange} required placeholder="Price" className="w-full border p-2" />
-
-        <select name="categoryId" onChange={handleChange} required className="w-full border p-2">
-          <option value="">Select Category</option>
-          {categories.map((c) => (
-            <option key={c._id} value={c._id}>{c.name}</option>
-          ))}
-        </select>
-
-        <div className="flex gap-2">
-          <input name="stockQuantity" type="number" onChange={handleChange} required placeholder="Qty" className="border p-2 flex-1" />
-          <select name="stockUnit" onChange={handleChange} className="border p-2 flex-1">
-          <option value="piece">piece</option>
-          <option value="kg">kg</option>
-          <option value="g">g</option>
-          <option value="litre">litre</option>
-          <option value="ml">ml</option>
-          <option value="pack">pack</option>
-          </select>
+      <form onSubmit={handleSubmit} className="space-y-5">
+        {/* Product Name */}
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Product Name
+          </label>
+          <input
+            name="name"
+            onChange={handleChange}
+            required
+            placeholder="Enter product name"
+            className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+          />
         </div>
 
-        <input type="file" required onChange={(e) => setForm({ ...form, image: e.target.files[0] })} />
+        {/* Description */}
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Description
+          </label>
+          <textarea
+            name="description"
+            onChange={handleChange}
+            required
+            placeholder="Product description"
+            rows={3}
+            className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+          />
+        </div>
 
-        <button className="bg-blue-600 text-white p-2 rounded w-full">Save</button>
+        {/* Price + Category */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Price (₹)
+            </label>
+            <input
+              name="price"
+              type="number"
+              onChange={handleChange}
+              required
+              placeholder="0.00"
+              className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Category
+            </label>
+            <select
+              name="categoryId"
+              onChange={handleChange}
+              required
+              className="w-full rounded-lg border px-4 py-2 bg-white focus:ring-2 focus:ring-orange-400 focus:outline-none"
+            >
+              <option value="">Select Category</option>
+              {categories.map((c) => (
+                <option key={c._id} value={c._id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {/* Stock */}
+        <div className="grid grid-cols-2 gap-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Quantity
+            </label>
+            <input
+              name="stockQuantity"
+              type="number"
+              onChange={handleChange}
+              required
+              placeholder="Qty"
+              className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-600 mb-1">
+              Unit
+            </label>
+            <select
+              name="stockUnit"
+              onChange={handleChange}
+              className="w-full rounded-lg border px-4 py-2 bg-white focus:ring-2 focus:ring-orange-400 focus:outline-none"
+            >
+              <option value="piece">Piece</option>
+              <option value="kg">Kg</option>
+              <option value="g">Gram</option>
+              <option value="litre">Litre</option>
+              <option value="ml">ML</option>
+              <option value="pack">Pack</option>
+            </select>
+          </div>
+        </div>
+
+        {/* Image Upload */}
+        <div>
+          <label className="block text-sm font-medium text-gray-600 mb-1">
+            Product Image
+          </label>
+          <input
+            type="file"
+            required
+            onChange={(e) =>
+              setForm({ ...form, image: e.target.files[0] })
+            }
+            className="w-full text-sm file:mr-4 file:py-2 file:px-4
+                       file:rounded-lg file:border-0
+                       file:bg-orange-100 file:text-orange-700
+                       hover:file:bg-orange-200"
+          />
+        </div>
+
+        {/* Buttons */}
+        <div className="flex justify-end gap-3 pt-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-5 py-2 rounded-lg border text-gray-600 hover:bg-gray-100"
+          >
+            Cancel
+          </button>
+
+          <button
+            type="submit"
+            className="px-6 py-2 rounded-lg bg-orange-500 text-white font-medium hover:bg-orange-600 shadow"
+          >
+            Save Product
+          </button>
+        </div>
       </form>
     </div>
   );
