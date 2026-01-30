@@ -3,8 +3,8 @@ import { useNavigate, Link } from "react-router-dom";
 import { UserContext } from "../../context/userContext";
 import loginImage from "../../assets/img4.jpg";
 import Logo from "../../assets/logo1.png";
-import { useGoogleLogin } from "@react-oauth/google";
-import axios from "axios";
+// import { useGoogleLogin } from "@react-oauth/google";
+// import axios from "axios";
 const API_BASE = import.meta.env.VITE_API_BASE;
 
 

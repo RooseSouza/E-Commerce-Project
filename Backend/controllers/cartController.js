@@ -18,7 +18,7 @@ exports.addToCart = async (req, res) => {
     }
 
     const itemIndex = cart.items.findIndex(
-      (item) => item.productId.toString() === productId,
+      item => item.productId.toString() === productId
     );
 
     if (itemIndex > -1) {
@@ -27,7 +27,7 @@ exports.addToCart = async (req, res) => {
       cart.items.push({
         productId,
         quantity,
-        price: product.price,
+        price: product.price
       });
     }
 
@@ -40,18 +40,11 @@ exports.addToCart = async (req, res) => {
 
 exports.getCart = async (req, res) => {
   try {
-    const cart = await Cart.findOne({ userId: req.user._id }).populate({
-      path: "items.productId",
-      select: "name price image stock",
-    });
-
-    if (!cart) {
-      return res.json({ items: [] });
-    }
-
+    const userId = req.user._id;
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
     res.json(cart);
-  } catch (err) {
-    res.status(500).json({ message: err.message });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
 };
 

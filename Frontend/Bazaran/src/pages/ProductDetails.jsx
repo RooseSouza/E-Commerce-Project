@@ -1,43 +1,70 @@
-import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import ItemCard from '../components/itemcard'
+
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const ProductDetails = () => {
   const { productId } = useParams()
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
 
-  // Sample product data
-  const product = {
-    id: productId || 1,
-    name: 'The Unknown Product',
-    variant: '(Color) (Required Details)',
-    price: 34999,
-    originalPrice: 50000,
-    discount: '30%',
-    rating: 4.5,
-    reviewCount: 45666,
-    mainImage: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=600&h=600&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1590080876-e7de9e7cc9a5?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop'
-    ],
-    deliveryDate: 'XY Jan, Randomonday',
-    offers: [
-      'This is a 5% offer on all sale on selected product',
-      'This is a 5% offer on all sale on selected product',
-      'This is a 5% offer on all sale on selected product',
-      'This is a 5% offer on all sale on selected product',
-      'This is a 5% offer on all sale on selected product'
-    ],
-    description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
-    inStock: true
-  }
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch(`${API_BASE}/api/products/${productId}`)
+        const data = await response.json()
+
+        // Normalize images
+        let images = []
+        if (data?.images && data.images.length > 0) {
+          images = data.images.map((img) => (typeof img === 'string' ? img : img.url))
+        } else {
+          // Fallback to single image logic from goanSaleSection
+          // Handles: object with url, string url, or missing
+          const mainImage = data?.image?.url || data?.image || 'https://via.placeholder.com/300'
+          images = [mainImage]
+        }
+
+        setProduct({
+          id: data?._id,
+          name: data?.name,
+          // Handle category safely whether it's populated or just an ID
+          variant: data?.category?.name || data?.category || 'Standard',
+          price: data?.price || 0,
+          originalPrice: data?.originalPrice || Math.round((data?.price || 0) * 1.2),
+          discount: data?.discount || '30%',
+          rating: data?.rating || 4.5,
+          reviewCount: data?.numReviews || 0,
+          images: images,
+          deliveryDate: '3-5 Business Days',
+          offers: [
+            'Bank Offer 5% Unlimited Cashback on Axis Bank Credit Card',
+            'Special Price Get extra 20% off (price inclusive of discount)',
+            'Partner Offer Sign up for Flipkart Pay Later and get Flipkart Gift Card worth ₹100'
+          ],
+          description: data?.description || 'No description available.',
+          inStock: data?.countInStock > 0
+        })
+        setSelectedImage(0)
+      } catch (err) {
+        console.error("Error in ProductDetails:", err)
+        setError(err.message)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    if (productId) {
+      fetchProduct()
+    }
+  }, [productId])
 
   const relatedProducts = [
     {
@@ -76,6 +103,24 @@ const ProductDetails = () => {
 
   const handleBuyNow = () => {
     console.log(`Buying ${quantity} of product ${product.id}`)
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen flex justify-center items-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
+      </div>
+    )
+  }
+
+  if (error || !product) {
+    return (
+      <div className="min-h-screen flex justify-center items-center text-red-500 flex-col gap-4">
+        <h2 className="text-2xl font-bold">Error: {error || 'Product not found'}</h2>
+        <p className="text-gray-600">Check the console for more details.</p>
+        <Link to="/home" className="text-blue-500 hover:underline">Go back to Home</Link>
+      </div>
+    )
   }
 
   return (

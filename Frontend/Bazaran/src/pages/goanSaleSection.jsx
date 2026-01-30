@@ -1,40 +1,39 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import ItemCard from '../components/itemcard'
 import imgBanner from '../assets/img5.jpg'
 import imgBanner2 from '../assets/img6.jpg'
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
 const GoanSaleSection = () => {
   // Sample product data for top picks
-  const topPicksProducts = [
-    {
-      id: 1,
-      name: 'Goan spices',
-      price: 1299,
-      originalPrice: 2499,
-      image: 'https://images.unsplash.com/photo-1643824562770-f94d32874f72?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8c3BpY2VzJTIwbWFya2V0fGVufDB8fDB8fHww'
-    },
-    {
-      id: 2,
-      name: 'Ceramic Dinner Set',
-      price: 1899,
-      originalPrice: 3499,
-      image: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=300&h=300&fit=crop'
-    },
-    {
-      id: 3,
-      name: 'Woven Basket',
-      price: 899,
-      originalPrice: 1799,
-      image: 'https://images.unsplash.com/photo-1626037235530-fe56de7d6459?w=600&auto=format&fit=crop&q=60&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxzZWFyY2h8N3x8d292ZW4lMjBiYXNrZXR8ZW58MHx8MHx8fDA%3D'
-    },
-    {
-      id: 4,
-      name: 'Brass Decorative Plate',
-      price: 1599,
-      originalPrice: 2999,
-      image: 'https://images.pexels.com/photos/31959766/pexels-photo-31959766.jpeg'
+  const [topPicksProducts, setTopPicksProducts] = useState([])
+
+  useEffect(() => {
+    const fetchTopPicks = async () => {
+      try {
+        // Ensure your backend has a route like /api/products/top-picks or use query params
+        const response = await fetch(`${API_BASE}/api/products?isTopPick=true&limit=4`)
+        const data = await response.json()
+
+        if (Array.isArray(data)) {
+          // Map backend data to UI format
+          const mappedProducts = data.map((product) => ({
+            id: product._id,
+            name: product.name,
+            price: product.price,
+            // Fallback for original price if not in DB
+            originalPrice: product.originalPrice || Math.round(product.price * 1.2),
+            image: product.image?.url || product.image || 'https://via.placeholder.com/300'
+          }))
+          setTopPicksProducts(mappedProducts)
+        }
+      } catch (error) {
+        console.error('Error fetching top picks:', error)
+      }
     }
-  ]
+    fetchTopPicks()
+  }, [])
 
   // Top product categories
   const topCategories = [
