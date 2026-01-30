@@ -1,72 +1,89 @@
-
 const ProductList = ({ products, onEdit, onDelete, onToggle }) => {
-  if (!products.length) {
-    return <p className="text-gray-500">No products found.</p>;
-  }
-
   return (
-    <div>
-      <h2 className="text-2xl font-bold mb-4">My Products</h2>
+    <div className="bg-white rounded-xl shadow-sm p-6">
+      <h2 className="text-lg font-semibold mb-4">My Products</h2>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {products.map((product) => (
-          <div
-            key={product._id}
-            className="bg-white shadow rounded p-4 flex flex-col"
-          >
-            <img
-              src={product.image?.url}
-              alt={product.name}
-              className="w-full h-40 object-cover rounded mb-2"
-            />
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-50 text-gray-600">
+            <tr>
+              <th className="p-3 text-left">Product</th>
+              <th className="p-3">Price</th>
+              <th className="p-3">Stock</th>
+              <th className="p-3">Status</th>
+              <th className="p-3">Actions</th>
+            </tr>
+          </thead>
 
-            <h3 className="font-semibold text-lg">{product.name}</h3>
-            <p className="text-sm text-gray-500">
-              Category: {product.categoryId?.name}
-            </p>
-            <p className="text-sm">₹ {product.price}</p>
-            <p className="text-sm">
-              Stock: {product.stock?.quantity} {product.stock?.unit}
-            </p>
+          <tbody>
+            {products.map((p) => (
+              <tr key={p._id} className="border-b hover:bg-gray-50">
+                <td className="p-3 flex items-center gap-3">
+                  <img
+                    src={p.image?.url}
+                    alt=""
+                    className="w-10 h-10 rounded object-cover"
+                  />
+                  <span className="font-medium">{p.name}</span>
+                </td>
 
-            {/* STATUS */}
-            <span
-              className={`mt-1 text-sm font-medium ${
-                product.isActive ? "text-green-600" : "text-red-600"
-              }`}
-            >
-              Status: {product.isActive ? "Active" : "Disabled"}
-            </span>
+                <td className="p-3 text-center">₹{p.price}</td>
 
-            {/* ACTIONS */}
-            <div className="mt-3 flex gap-2">
-              <button
-                onClick={() => onEdit(product)}
-                className="flex-1 bg-yellow-500 hover:bg-yellow-600 text-white py-1 rounded"
-              >
-                Edit
-              </button>
+                <td className="p-3 text-center">
+                  {p.stock?.quantity} {p.stock?.unit}
+                </td>
 
-              <button
-                onClick={() => onDelete(product._id)}
-                className="flex-1 bg-red-500 hover:bg-red-600 text-white py-1 rounded"
-              >
-                Delete
-              </button>
+                <td className="p-3 text-center">
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-medium
+                      ${
+                        p.isActive
+                          ? "bg-green-100 text-green-600"
+                          : "bg-gray-200 text-gray-600"
+                      }`}
+                  >
+                    {p.isActive ? "Active" : "Disabled"}
+                  </span>
+                </td>
 
-              <button
-                onClick={() => onToggle(product._id)}
-                className={`flex-1 py-1 rounded text-white ${
-                  product.isActive
-                    ? "bg-gray-500 hover:bg-gray-600"
-                    : "bg-green-600 hover:bg-green-700"
+                <td className="p-3 flex justify-center gap-2">
+                  <button
+                    onClick={() => onEdit(p)}
+                    className="px-3 py-1 rounded bg-blue-500 text-white text-xs"
+                  >
+                    Edit
+                  </button>
+
+                 <button
+                onClick={() => onToggle(p._id)}
+                className={`px-3 py-1 rounded bg-green-500 text-white text-xs ${
+                  p.isActive
+                    ? "bg-gray-500 hover:bg-gray-500"
+                    : "bg-green-600 hover:bg-green-500"
                 }`}
               >
-                {product.isActive ? "Disable" : "Activate"}
+                {p.isActive ? "Disable" : "Activate"}
               </button>
-            </div>
-          </div>
-        ))}
+
+                  <button
+                    onClick={() => onDelete(p._id)}
+                    className="px-3 py-1 rounded bg-red-500 text-white text-xs"
+                  >
+                    Delete
+                  </button>
+                </td>
+              </tr>
+            ))}
+
+            {products.length === 0 && (
+              <tr>
+                <td colSpan="5" className="p-6 text-center text-gray-500">
+                  No products found
+                </td>
+              </tr>
+            )}
+          </tbody>
+        </table>
       </div>
     </div>
   );
