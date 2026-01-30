@@ -44,6 +44,7 @@ app.use("/api/categories", require("./routes/categoryRoutes"));
 
 
 
+
 // Predefined Local Market Categories
 const predefinedCategories = [
   { name: "Fresh Produce", description: "Farm fresh fruits and vegetables" },

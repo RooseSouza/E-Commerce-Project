@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useSearchParams } from "react-router-dom";
+import Navbar from "../components/Navbar";
+import Footer from "../components/Footer";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
@@ -56,7 +58,9 @@ const CategoryProducts = () => {
   }, [category, searchQuery, categoryId]);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      <Navbar />
+      <div className="flex-1 max-w-7xl mx-auto px-4 py-8 w-full">
       <h2 className="text-3xl font-bold text-gray-900 mb-8 capitalize">
         {category ? category : (searchQuery ? `Search Results: "${searchQuery}"` : "All Products")}
       </h2>
@@ -88,6 +92,8 @@ const CategoryProducts = () => {
           )}
         </div>
       )}
+      </div>
+      <Footer />
     </div>
   );
 };

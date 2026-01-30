@@ -2,7 +2,6 @@ const mongoose = require("mongoose");
 const Product = require("../models/product");
 const Category = require("../models/category");
 const cloudinary = require("../config/cloudinary");
-const mongoose = require("mongoose");
 // Vendor adds product
 exports.addProduct = async (req, res) => {
   try {
@@ -217,10 +216,6 @@ exports.updateProduct = async (req, res) => {
       if (!isNaN(price)) updateData.price = price;
     }
 
-    if (req.body?.price !== undefined && req.body.price !== "") {
-      product.price = Number(req.body.price);
-    }
-
     /* ---------- CATEGORY ---------- */
     if (req.body?.categoryName) {
       const category = await Category.findOne({ name: req.body.categoryName });
@@ -252,8 +247,8 @@ exports.updateProduct = async (req, res) => {
     }
 
     // -------- IMAGE --------
-    if (req.files && req.files.length > 0) {
-      const file = req.files[0];
+    if (req.file) {
+      const file = req.file;
 
       // remove old image
       const oldProduct = await Product.findById(req.params.id);

@@ -38,6 +38,16 @@ exports.addToCart = async (req, res) => {
   }
 };
 
+exports.getCart = async (req, res) => {
+  try {
+    const userId = req.user._id;
+    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    res.json(cart);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 exports.getCartSummary = async (req, res) => {
   try {
     const userId = req.user._id;
