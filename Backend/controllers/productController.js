@@ -1,3 +1,4 @@
+const mongoose = require("mongoose");
 const Product = require("../models/product");
 const Category = require("../models/category");
 const cloudinary = require("../config/cloudinary");
@@ -17,6 +18,10 @@ exports.addProduct = async (req, res) => {
       isFeatured,
     } = req.body;
 
+    if (!req.file) {
+      return res.status(400).json({ message: "Product image is required" });
+    }
+
     if (
       !name ||
       !description ||
@@ -35,6 +40,13 @@ exports.addProduct = async (req, res) => {
       return res.status(400).json({ message: "Invalid category selected" });
     }
 
+    let processedTags = [];
+    if (tags) {
+      processedTags = Array.isArray(tags) 
+        ? tags.map((tag) => tag.toLowerCase()) 
+        : tags.split(",").map((tag) => tag.trim().toLowerCase());
+    }
+
     const product = await Product.create({
       name,
       description,
@@ -50,6 +62,7 @@ exports.addProduct = async (req, res) => {
         unit: stockUnit,
       },
       tags: Array.isArray(tags) ? tags.map((tag) => tag.toLowerCase()) : [],
+      tags: processedTags,
       isTopPick: isTopPick === 'true' || isTopPick === true,
       isFeatured: isFeatured === 'true' || isFeatured === true,
     });
@@ -84,9 +97,46 @@ exports.getMyProducts = async (req, res) => {
 // User gets all products
 exports.getAllProducts = async (req, res) => {
   try {
-    const products = await Product.find()
+    const { isTopPick, isFeatured, isJustArrived, limit, categoryId, category } = req.query;
+    const filter = {};
+
+    // Helper to robustly check for true values (handles "true", "True", true)
+    const isTrue = (val) => {
+      if (typeof val === 'string') return val.trim().toLowerCase() === 'true';
+      return val === true;
+    };
+
+    if (isTrue(isTopPick)) {
+      filter.isTopPick = { $in: [true, 'true'] };
+    }
+    if (isTrue(isFeatured)) {
+      filter.isFeatured = { $in: [true, 'true'] };
+    }
+    if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
+      filter.categoryId = categoryId;
+    } else if (category) {
+      // Fallback: Find category by name if ID is missing
+      const categoryDoc = await Category.findOne({ name: { $regex: new RegExp(`^${category}$`, 'i') } });
+      if (categoryDoc) {
+        filter.categoryId = categoryDoc._id;
+      } else {
+        return res.json([]); // Category not found, return empty list
+      }
+    }
+
+    let query = Product.find(filter)
       .populate("categoryId", "name")
       .populate("vendorId", "name");
+
+    if (isTrue(isJustArrived)) {
+      query = query.sort({ createdAt: -1 });
+    }
+
+    if (limit) {
+      query = query.limit(Number(limit));
+    }
+
+    const products = await query;
 
     res.json(products);
   } catch (error) {
@@ -184,6 +234,15 @@ exports.updateProduct = async (req, res) => {
 
     if (req.body?.price !== undefined && req.body.price !== "") {
       product.price = Number(req.body.price);
+    }
+
+    /* ---------- CATEGORY ---------- */
+    if (req.body?.categoryName) {
+      const category = await Category.findOne({ name: req.body.categoryName });
+      if (!category) {
+        return res.status(400).json({ message: "Invalid category selected" });
+      }
+      product.categoryId = category._id;
     }
 
     /* ---------- STOCK SAFETY ---------- */
@@ -294,6 +353,7 @@ exports.getTopPicks = async (req, res) => {
 exports.getFeaturedProducts = async (req, res) => {
   try {
     const products = await Product.find({ isFeatured: true })
+      .sort({ createdAt: -1 })
       .limit(5)
       .populate("categoryId", "name")
       .populate("vendorId", "name");

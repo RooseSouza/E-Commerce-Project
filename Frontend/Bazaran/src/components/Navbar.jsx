@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../context/userContext";
@@ -6,6 +6,7 @@ import Logo from "../assets/logo1.png";
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
   const { user, clearUser } = useContext(UserContext);
   const [searchQuery, setSearchQuery] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
@@ -31,16 +32,21 @@ const Navbar = () => {
     setShowUserMenu(false);
   };
 
-  const categories = [
-    "Fresh produce",
-    "Spices and Pantry",
-    "Goan Delicacies",
-    "Handicrafts and arts",
-    "Home decors",
-    "Fashion",
-    "Metal and wood",
-    "Wellness and orgaics",
-  ];
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/categories`);
+        const data = await response.json();
+        const categoriesList = Array.isArray(data) ? data : (data.categories || []);
+        setCategories(categoriesList.slice(0, 10));
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <>
@@ -224,13 +230,13 @@ const Navbar = () => {
             
 
             {/* Category Links */}
-            {categories.map((category, index) => (
+            {categories.map((category) => (
               <Link
-                key={index}
-                to={`/products?category=${category.toLowerCase()}`}
+                key={category._id}
+                to={`/products?category=${encodeURIComponent(category.name.toLowerCase())}&id=${category._id}`}
                 className="flex-shrink-0 text-white hover:bg-orange-600 px-4 py-2 rounded-lg transition font-medium text-sm whitespace-nowrap"
               >
-                {category}
+                {category.name}
               </Link>
             ))}
           </div>

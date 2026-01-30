@@ -3,7 +3,7 @@ import ItemCard from '../components/itemcard'
 import imgBanner from '../assets/img5.jpg'
 import imgBanner2 from '../assets/img6.jpg'
 
-const API_BASE = import.meta.env.VITE_API_BASE;
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const GoanSaleSection = () => {
   // Sample product data for top picks
@@ -13,20 +13,21 @@ const GoanSaleSection = () => {
     const fetchTopPicks = async () => {
       try {
         // Ensure your backend has a route like /api/products/top-picks or use query params
-        const response = await fetch(`${API_BASE}/api/products/top-picks`)
+        const response = await fetch(`${API_BASE}/api/products?isTopPick=true&limit=4`)
         const data = await response.json()
 
-        // Map backend data to UI format
-        const mappedProducts = data.map((product) => ({
-          id: product._id,
-          name: product.name,
-          price: product.price,
-          // Fallback for original price if not in DB
-          originalPrice: product.originalPrice || Math.round(product.price * 1.2),
-          image: product.image?.url || product.image || 'https://via.placeholder.com/300'
-        }))
-
-        setTopPicksProducts(mappedProducts)
+        if (Array.isArray(data)) {
+          // Map backend data to UI format
+          const mappedProducts = data.map((product) => ({
+            id: product._id,
+            name: product.name,
+            price: product.price,
+            // Fallback for original price if not in DB
+            originalPrice: product.originalPrice || Math.round(product.price * 1.2),
+            image: product.image?.url || product.image || 'https://via.placeholder.com/300'
+          }))
+          setTopPicksProducts(mappedProducts)
+        }
       } catch (error) {
         console.error('Error fetching top picks:', error)
       }
