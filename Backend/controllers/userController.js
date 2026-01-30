@@ -161,6 +161,31 @@ exports.addAddress = async (req, res) => {
   }
 };
 
+exports.deleteAddress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { addressId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.addresses = user.addresses.filter(
+      (addr) => addr._id.toString() !== addressId
+    );
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Address deleted successfully",
+      addresses: user.addresses,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete address" });
+  }
+};
 
 // GOOGLE LOGIN
 exports.googleLogin = async (req, res) => {

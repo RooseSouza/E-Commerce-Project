@@ -17,7 +17,6 @@ const API_BASE = import.meta.env.VITE_API_BASE;
 const VendorDashboard = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
-
   const [vendor, setVendor] = useState({});
   const [products, setProducts] = useState([]);
   const [categories, setCategories] = useState([]);
