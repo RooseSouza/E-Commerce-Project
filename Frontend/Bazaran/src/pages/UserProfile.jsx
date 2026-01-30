@@ -10,6 +10,7 @@ import RecentOrders from "../components/RecentOrders";
 import ProfileSettings from "../components/ProfileSettings";
 import EditProfileModal from "../components/EditProfileModal";
 import AddAddressModal from "../components/AddAddressModal";
+import OrderDetailsModal from "../components/OrderDetailsModal";
 
 const UserProfile = () => {
   const navigate = useNavigate();
@@ -21,6 +22,8 @@ const UserProfile = () => {
   const [orders, setOrders] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  const [selectedOrder, setSelectedOrder] = useState(null);
+const [showOrderModal, setShowOrderModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
   const [showAddAddress, setShowAddAddress] = useState(false);
   const [editingAddressIndex, setEditingAddressIndex] = useState(null);
@@ -31,7 +34,7 @@ const UserProfile = () => {
       const token = localStorage.getItem("token");
       const res = await fetch(
         `${import.meta.env.VITE_API_BASE}/api/users/me/profile`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const data = await res.json();
 
@@ -39,20 +42,7 @@ const UserProfile = () => {
       setStats(data.stats);
       setAddresses(data.user.addresses || []);
 
-      setOrders(
-        data.orders.map((o, i) => {
-          const d = new Date(o.createdAt);
-          return {
-            id: o._id,
-            orderName: `Order #${i + 1}`,
-            date: `${String(d.getDate()).padStart(2, "0")}/${String(
-              d.getMonth() + 1
-            ).padStart(2, "0")}/${d.getFullYear()}`,
-            amount: o.totalAmount,
-            status: o.status,
-          };
-        })
-      );
+      setOrders(data.orders); // keep full order objects
 
       setLoading(false);
     };
@@ -63,17 +53,14 @@ const UserProfile = () => {
   /* ✅ UPDATE PROFILE */
   const handleSaveProfile = async (updatedData) => {
     const token = localStorage.getItem("token");
-    const res = await fetch(
-      `${import.meta.env.VITE_API_BASE}/api/users/me`,
-      {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify(updatedData),
-      }
-    );
+    const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/users/me`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(updatedData),
+    });
 
     const data = await res.json();
     if (!res.ok) return { errors: data.errors };
@@ -84,67 +71,69 @@ const UserProfile = () => {
 
   /* ✅ ADD / EDIT ADDRESS */
   const handleAddAddress = async (addressData) => {
-  try {
-    const token = localStorage.getItem("token");
+    try {
+      const token = localStorage.getItem("token");
 
-    const res = await fetch(
-      `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(addressData), // ✅ IMPORTANT FIX
         },
-        body: JSON.stringify(addressData), // ✅ IMPORTANT FIX
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        return { errors: data.errors || { general: "Failed to add address" } };
       }
-    );
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      return { errors: data.errors || { general: "Failed to add address" } };
+      setAddresses(data.addresses);
+      setShowAddAddress(false);
+      return null;
+    } catch (err) {
+      return { errors: { general: "Server error" } };
     }
-
-    setAddresses(data.addresses);
-    setShowAddAddress(false);
-    return null;
-  } catch (err) {
-    return { errors: { general: "Server error" } };
-  }
-};
-
+  };
+  const handleViewOrder = (order) => {
+    setSelectedOrder(order);
+    setShowOrderModal(true);
+  };
 
   /* ✅ DELETE ADDRESS */
   const handleDeleteAddress = async (index) => {
-  if (!window.confirm("Are you sure you want to delete this address?")) return;
+    if (!window.confirm("Are you sure you want to delete this address")) return;
 
-  try {
-    const token = localStorage.getItem("token");
-    const addressId = addresses[index]._id;
+    try {
+      const token = localStorage.getItem("token");
+      const addressId = addresses[index]._id;
 
-    const res = await fetch(
-      `${import.meta.env.VITE_API_BASE}/api/users/me/address/${addressId}`,
-      {
-        method: "DELETE",
-        headers: {
-          Authorization: `Bearer ${token}`,
+      const res = await fetch(
+        `${import.meta.env.VITE_API_BASE}/api/users/me/address/${addressId}`,
+        {
+          method: "DELETE",
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         },
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        console.error("Delete failed");
+        return;
       }
-    );
 
-    const data = await res.json();
-
-    if (!res.ok) {
-      console.error("Delete failed");
-      return;
+      setAddresses(data.addresses);
+    } catch (err) {
+      console.error("Server error");
     }
-
-    setAddresses(data.addresses);
-  } catch (err) {
-    console.error("Server error");
-  }
-};
-
+  };
 
   /* ✅ EDIT ADDRESS */
   const handleEditAddress = (index) => {
@@ -163,9 +152,7 @@ const UserProfile = () => {
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center">
           <div className="animate-spin h-10 w-10 border-4 border-gray-300 border-t-blue-600 rounded-full mx-auto mb-4"></div>
-          <p className="text-gray-600 font-medium">
-            Loading your profile...
-          </p>
+          <p className="text-gray-600 font-medium">Loading your profile...</p>
         </div>
       </div>
     );
@@ -181,7 +168,7 @@ const UserProfile = () => {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           <div className="lg:col-span-2">
-            <RecentOrders orders={orders} />
+            <RecentOrders orders={orders} onViewOrder={handleViewOrder} />
             <AddressList
               addresses={addresses}
               onAddNew={() => {
@@ -212,11 +199,21 @@ const UserProfile = () => {
         }}
         onSave={handleAddAddress}
         initialData={
-          editingAddressIndex !== null
-            ? addresses[editingAddressIndex]
-            : null
+          editingAddressIndex !== null ? addresses[editingAddressIndex] : null
         }
       />
+{showOrderModal && (
+  <OrderDetailsModal
+  order={selectedOrder}
+  addresses={addresses}
+  onClose={() => {
+    setShowOrderModal(false);
+    setSelectedOrder(null);
+  }}
+/>
+)}
+
+      
 
       <Footer />
     </div>
