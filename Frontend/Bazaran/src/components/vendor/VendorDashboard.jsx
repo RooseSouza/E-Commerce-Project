@@ -7,99 +7,101 @@ import Header from "./DashboardHeader.jsx";
 import ProductList from "./ProductList.jsx";
 import AddProductForm from "./AddProductForm.jsx";
 import EditProductModal from "./EditProductModal.jsx";
-import DashBoardCards from "./DashBoardCard.jsx";
+import DashboardCards from "./DashBoardCard.jsx"; // unified cards for products & orders
 import EditProfileModal from "../EditProfileModal";
 import VendorOrders from "./VendorOrders.jsx";
-
 
 const API_BASE = import.meta.env.VITE_API_BASE;
 
 const VendorDashboard = () => {
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
+
   const [vendor, setVendor] = useState({});
   const [products, setProducts] = useState([]);
+  const [orders, setOrders] = useState([]);
   const [categories, setCategories] = useState([]);
+
   const [view, setView] = useState("dashboard");
   const [editProduct, setEditProduct] = useState(null);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [productFilter, setProductFilter] = useState("total"); // total/active/inactive/outOfStock
+  const [orderFilter, setOrderFilter] = useState("all");
+// all | placed | confirmed | dispatched | delivered | cancelled
+
 
   const authHeader = { Authorization: `Bearer ${token}` };
 
+  /* ---------------- AUTH CHECK ---------------- */
   useEffect(() => {
-    if (!token) {
-      navigate("/login", { replace: true });
-    }
+    if (!token) navigate("/login", { replace: true });
   }, [token, navigate]);
 
   /* ---------------- FETCH DATA ---------------- */
   const fetchVendor = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/users/me`, {
-        headers: authHeader,
-      });
+      const res = await axios.get(`${API_BASE}/api/users/me`, { headers: authHeader });
       setVendor(res.data);
     } catch (err) {
-      // Token invalid / expired
       localStorage.removeItem("token");
       navigate("/login", { replace: true });
     }
   };
 
   const fetchProducts = async () => {
-    const res = await axios.get(
-      `${API_BASE}/api/products/my-products`,
-      { headers: authHeader }
-    );
-    setProducts(res.data.products || res.data);
+    try {
+      const res = await axios.get(`${API_BASE}/api/products/my-products`, { headers: authHeader });
+      setProducts(res.data.products || res.data);
+    } catch (err) {
+      console.error("Failed to fetch products", err);
+    }
   };
 
   const fetchCategories = async () => {
-    const res = await axios.get(`${API_BASE}/api/categories`);
-    setCategories(res.data.categories || res.data);
+    try {
+      const res = await axios.get(`${API_BASE}/api/categories`);
+      setCategories(res.data.categories || res.data);
+    } catch (err) {
+      console.error("Failed to fetch categories", err);
+    }
+  };
+
+  const fetchOrders = async () => {
+    try {
+      const res = await axios.get(`${API_BASE}/api/orders/vendor`, { headers: authHeader });
+      setOrders(res.data);
+    } catch (err) {
+      console.error("Failed to fetch orders", err);
+    }
   };
 
   useEffect(() => {
     fetchVendor();
     fetchProducts();
     fetchCategories();
+    fetchOrders();
   }, []);
 
-  /* ---------------- ACTIONS ---------------- */
+  /* ---------------- PRODUCT ACTIONS ---------------- */
   const handleDelete = async (id) => {
     if (!window.confirm("Delete product?")) return;
-    await axios.delete(`${API_BASE}/api/products/${id}`, {
-      headers: authHeader,
-    });
-    setProducts((prev) => prev.filter((p) => p._id !== id));
+    await axios.delete(`${API_BASE}/api/products/${id}`, { headers: authHeader });
+    setProducts(prev => prev.filter(p => p._id !== id));
   };
 
   const handleToggle = async (id) => {
-    await axios.put(
-      `${API_BASE}/api/products/${id}/toggle-status`,
-      {},
-      { headers: authHeader }
-    );
+    await axios.put(`${API_BASE}/api/products/${id}/toggle-status`, {}, { headers: authHeader });
     fetchProducts();
   };
 
   const handleProductUpdated = (updatedProduct) => {
-    setProducts((prev) =>
-      prev.map((p) =>
-        p._id === updatedProduct._id ? updatedProduct : p
-      )
-    );
+    setProducts(prev => prev.map(p => (p._id === updatedProduct._id ? updatedProduct : p)));
   };
 
-  /* ---------------- PROFILE UPDATE ---------------- */
+  /* ---------------- PROFILE ---------------- */
   const handleProfileUpdate = async (formData) => {
     try {
-      const res = await axios.put(
-        `${API_BASE}/api/users/me`,
-        formData,
-        { headers: authHeader }
-      );
-
+      const res = await axios.put(`${API_BASE}/api/users/me`, formData, { headers: authHeader });
       setVendor(res.data);
       setShowProfileModal(false);
       return {};
@@ -108,10 +110,9 @@ const VendorDashboard = () => {
     }
   };
 
-  /* ---------------- LOGOUT ---------------- */
   const handleLogout = () => {
     localStorage.removeItem("token");
-    navigate("/login", { replace: true }); // 🔥 prevents back navigation
+    navigate("/login", { replace: true });
   };
 
   /* ---------------- UI ---------------- */
@@ -133,23 +134,39 @@ const VendorDashboard = () => {
         onProfileClick={() => setShowProfileModal(true)}
       />
 
-      <div className="flex flex-1 overflow-hidden">
-        
-        <Sidebar
-          vendor={vendor}
-          setView={setView}
-          currentView={view}
-        />
+ <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
 
-        <main className="flex-1 p-6 overflow-y-auto">
+        {/* SIDEBAR */}
+        <Sidebar vendor={vendor} setView={setView} currentView={view} />
+
+        <main className="flex-1 p-3 sm:p-4 md:p-6 overflow-y-auto">
+
 
           {/* DASHBOARD */}
           {view === "dashboard" && (
             <div>
-              <h1 className="text-2xl font-bold mb-6">
-                Welcome back, {vendor?.name}
-              </h1>
-              <DashBoardCards products={products} />
+          <h1 className="text-xl sm:text-2xl font-bold mb-4 sm:mb-6">
+Welcome back, {vendor?.name}</h1>
+
+              {/* PRODUCT + ORDER CARDS */}
+                              <DashboardCards
+                    products={products}
+                    orders={orders}
+
+                    activeProductFilter={productFilter}
+                    activeOrderFilter={orderFilter}
+
+                    onProductCardClick={(filter) => {
+                      setProductFilter(filter);
+                      setView("list"); // go to product list
+                    }}
+
+                    onOrderCardClick={(status) => {
+                      setOrderFilter(status);
+                      setView("orders"); // go to orders page
+                    }}
+                  />
+
             </div>
           )}
 
@@ -170,6 +187,7 @@ const VendorDashboard = () => {
               onEdit={setEditProduct}
               onDelete={handleDelete}
               onToggle={handleToggle}
+              productFilter={productFilter}
             />
           )}
 
@@ -184,10 +202,13 @@ const VendorDashboard = () => {
             />
           )}
 
+          {/* ORDERS */}
           {view === "orders" && (
-  <VendorOrders token={token} />
-)}
-
+            <VendorOrders
+              token={token}
+              orderFilter={orderFilter}
+            />
+          )}
 
         </main>
       </div>
