@@ -72,6 +72,7 @@ exports.placeOrder = async (req, res) => {
         address,
         status: "placed",
       });
+      
 
       createdOrders.push(order);
     }

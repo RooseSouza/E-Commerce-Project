@@ -142,10 +142,16 @@ const UserProfile = () => {
   const handleViewOrder = (id) => alert(`View order ${id}`);
   const handleChangePassword = () => alert("Change password");
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    clearUser();
-    navigate("/login");
-  };
+  // 1. Remove auth data
+  localStorage.removeItem("token");
+  localStorage.removeItem("user"); // if you store user info
+
+  // 2. Clear app state (context / redux)
+  clearUser(); // your context reset function
+
+  // 3. Redirect to homepage (logged-out view)
+  navigate("/", { replace: true });
+};
   const handleDeleteAccount = () => alert("Delete account");
 
   if (loading) {
