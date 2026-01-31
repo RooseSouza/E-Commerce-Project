@@ -8,6 +8,7 @@ const {
   getMyProducts,
   getAllProducts,
   getProductById,
+  getPublicProduct,
   updateProduct,
   deleteProduct,
   searchProducts,
@@ -54,7 +55,7 @@ router.get("/search", searchProducts);
 /**
  * Get single product
  */
-router.get("/:id", getProductById);
+router.get("/:id", getPublicProduct);
 
 /**
  * Vendor updates product

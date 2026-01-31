@@ -170,9 +170,13 @@ exports.searchProducts = async (req, res) => {
 };
 
 
-// Vendor gets single product
+// Vendor gets single product (Protected: checks ownership)
 exports.getProductById = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: "Product not found (Invalid ID)" });
+    }
+
     const product = await Product.findOne({
       _id: req.params.id,
       vendorId: req.user._id,
@@ -190,6 +194,27 @@ exports.getProductById = async (req, res) => {
   }
 };
 
+// Public gets single product (No auth required)
+exports.getPublicProduct = async (req, res) => {
+  try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: "Product not found (Invalid ID)" });
+    }
+
+    const product = await Product.findById(req.params.id)
+      .populate("categoryId", "name")
+      .populate("vendorId", "name");
+
+    if (!product) {
+      return res.status(404).json({ message: "Product not found" });
+    }
+
+    res.json(product);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+};
+
 /**
  * Vendor updates SINGLE product
  */
@@ -199,6 +224,10 @@ exports.updateProduct = async (req, res) => {
     // 🔍 Debug (keep for now)
     console.log("REQ BODY:", req.body);
     console.log("REQ FILES:", req.files);
+
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: "Product not found (Invalid ID)" });
+    }
 
     const updateData = {};
 
@@ -296,6 +325,10 @@ exports.updateProduct = async (req, res) => {
 // maunal disable or enable product
 exports.toggleProductStatus = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: "Product not found (Invalid ID)" });
+    }
+
     const product = await Product.findOne({
       _id: req.params.id,
       vendorId: req.user._id
@@ -368,6 +401,10 @@ exports.getJustArrivedProducts = async (req, res) => {
 // Vendor deletes product
 exports.deleteProduct = async (req, res) => {
   try {
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
+      return res.status(404).json({ message: "Product not found (Invalid ID)" });
+    }
+
     const deletedProduct = await Product.findOneAndDelete({
       _id: req.params.id,
       vendorId: req.user._id,
