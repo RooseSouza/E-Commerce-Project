@@ -14,6 +14,7 @@ const ProductDetails = () => {
   const [quantity, setQuantity] = useState(1)
   const [productState, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [relatedProducts, setRelatedProducts] = useState([])
   const [error, setError] = useState(null)
 
   useEffect(() => {
@@ -110,43 +111,61 @@ const ProductDetails = () => {
     inStock: false
   }
 
-  const relatedProducts = [
-    {
-      id: '2',
-      _id: '2',
-      name: 'Similar Product A',
-      price: 1599,
-      originalPrice: 3199,
-      image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=300&h=300&fit=crop'
-    },
-    {
-      id: '3',
-      _id: '3',
-      name: 'Similar Product B',
-      price: 1299,
-      originalPrice: 2599,
-      image: 'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=300&h=300&fit=crop'
-    },
-    {
-      id: '4',
-      _id: '4',
-      name: 'Similar Product C',
-      price: 1799,
-      originalPrice: 3599,
-      image: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=300&h=300&fit=crop'
-    },
-    {
-      id: '5',
-      _id: '5',
-      name: 'Similar Product D',
-      price: 1499,
-      originalPrice: 2999,
-      image: 'https://images.unsplash.com/photo-1590080876-e7de9e7cc9a5?w=300&h=300&fit=crop'
-    }
-  ]
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/products?limit=20`)
+        const data = await response.json()
 
-  const handleAddToCart = () => {
-    console.log(`Added ${quantity} of product ${product.id} to cart`)
+        if (Array.isArray(data)) {
+          // Filter out current product
+          const filtered = data.filter((p) => p._id !== productId && p.id !== productId)
+          // Shuffle array to get random products
+          const shuffled = filtered.sort(() => 0.5 - Math.random())
+          // Take first 4
+          const selected = shuffled.slice(0, 4)
+
+          const mapped = selected.map((p) => ({
+            id: p._id,
+            _id: p._id,
+            name: p.name,
+            price: p.price,
+            originalPrice: p.originalPrice || Math.round(p.price * 1.2),
+            image: p.image?.url || p.image || 'https://via.placeholder.com/300'
+          }))
+          setRelatedProducts(mapped)
+        }
+      } catch (error) {
+        console.error('Error fetching related products:', error)
+      }
+    }
+
+    fetchRelatedProducts()
+  }, [productId])
+
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login to add items to cart");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: product.id, quantity: quantity }),
+      });
+
+      const data = await response.json();
+      alert(response.ok ? "Item added to cart!" : data.message || "Failed to add to cart");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Something went wrong. Please try again.");
+    }
   }
 
   const handleBuyNow = () => {
@@ -221,18 +240,6 @@ const ProductDetails = () => {
                   {product.variant}
                 </p>
 
-                {/* Rating */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex items-center gap-1">
-                    <span className="text-yellow-400 text-lg">★★★★☆</span>
-                  </div>
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded font-semibold text-sm">
-                    {product.rating}
-                  </span>
-                  <span className="text-gray-600">
-                    {product.reviewCount.toLocaleString()} reviews
-                  </span>
-                </div>
               </div>
 
               {/* Price Section */}
@@ -258,23 +265,6 @@ const ProductDetails = () => {
                 <p className="text-gray-700">
                   <span className="font-semibold">Secure Delivery expected by</span> {product.deliveryDate}
                 </p>
-              </div>
-
-              {/* Offers */}
-              <div className="bg-white p-4 rounded-lg border border-gray-300">
-                <h3 className="font-bold text-gray-900 mb-3">Back and other offers</h3>
-                <ul className="space-y-2">
-                  {product.offers.slice(0, 3).map((offer, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                      <span className="text-green-600 mt-1">✓</span>
-                      <span>{offer}</span>
-                      <span className="text-xs text-gray-500 ml-auto">TNC</span>
-                    </li>
-                  ))}
-                </ul>
-                <button className="text-blue-600 hover:text-blue-800 font-semibold text-sm mt-3">
-                  View {product.offers.length - 3} more offers
-                </button>
               </div>
 
               {/* Quantity Selector */}
@@ -342,7 +332,9 @@ const ProductDetails = () => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct) => (
-                <ItemCard key={relatedProduct.id} product={relatedProduct} />
+                <Link key={relatedProduct.id} to={`/product/${relatedProduct.id}`}>
+                  <ItemCard product={relatedProduct} />
+                </Link>
               ))}
             </div>
           </div>
