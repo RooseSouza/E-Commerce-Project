@@ -32,11 +32,15 @@ exports.registerUser = async (req, res) => {
     }
 
     if (password.length < 6) {
-      return res.status(400).json({ message: "Password must be at least 6 characters" });
+      return res
+        .status(400)
+        .json({ message: "Password must be at least 6 characters" });
     }
 
     if (!/^[0-9]{10}$/.test(phone)) {
-      return res.status(400).json({ message: "Phone number must be 10 digits" });
+      return res
+        .status(400)
+        .json({ message: "Phone number must be 10 digits" });
     }
 
     const userExists = await User.findOne({ email });
@@ -74,7 +78,9 @@ exports.loginUser = async (req, res) => {
     const { email, password } = req.body;
 
     if (!email || !password) {
-      return res.status(400).json({ message: "Email and password are required" });
+      return res
+        .status(400)
+        .json({ message: "Email and password are required" });
     }
 
     if (!isValidEmail(email)) {
@@ -103,6 +109,84 @@ exports.loginUser = async (req, res) => {
   }
 };
 
+exports.addAddress = async (req, res) => {
+  try {
+    const {
+      name,
+      phone,
+      houseNumber,
+      street,
+      city,
+      state,
+      zip,
+      country,
+    } = req.body;
+
+    const errors = {};
+
+    if (!name) errors.name = "Name is required";
+    if (!/^[0-9]{10}$/.test(phone)) errors.phone = "Phone must be 10 digits";
+    if (!houseNumber) errors.houseNumber = "House number required";
+    if (!street) errors.street = "Street required";
+    if (!city) errors.city = "City required";
+    if (!state) errors.state = "State required";
+    if (!/^[0-9]{6}$/.test(zip)) errors.zip = "Zip must be 6 digits";
+    if (!country) errors.country = "Country required";
+
+    if (Object.keys(errors).length > 0) {
+      return res.status(400).json({ errors });
+    }
+
+    const user = req.user;
+
+    user.addresses.push({
+      name,
+      phone,
+      houseNumber,
+      street,
+      city,
+      state,
+      zip: Number(zip), // ✅ schema expects Number
+      country,
+    });
+
+    await user.save();
+
+    res.json({ addresses: user.addresses });
+  } catch (err) {
+    console.error("Add address error:", err);
+    res.status(500).json({
+      errors: { general: "Failed to add address" },
+    });
+  }
+};
+
+exports.deleteAddress = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { addressId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
+
+    user.addresses = user.addresses.filter(
+      (addr) => addr._id.toString() !== addressId
+    );
+
+    await user.save();
+
+    res.status(200).json({
+      message: "Address deleted successfully",
+      addresses: user.addresses,
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ error: "Failed to delete address" });
+  }
+};
+
 // GOOGLE LOGIN
 exports.googleLogin = async (req, res) => {
   try {
@@ -123,20 +207,52 @@ exports.googleLogin = async (req, res) => {
     }
 
     // generate JWT
-    const token = jwt.sign(
-      { id: user._id },
-      process.env.JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, {
+      expiresIn: "7d",
+    });
 
     res.status(200).json({
       token,
       user,
     });
-
   } catch (error) {
     console.error("GOOGLE LOGIN ERROR:", error);
     res.status(500).json({ message: "Google login failed" });
+  }
+};
+
+exports.updatePassword = async (req, res) => {
+  try {
+    const userId = req.user.id; // from auth middleware
+    const { oldPassword, newPassword } = req.body;
+
+    if (!oldPassword || !newPassword) {
+      return res.status(400).json({
+        message: "Old password and new password are required",
+      });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    // 🔐 check old password
+    const isMatch = await bcrypt.compare(oldPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: "Old password is incorrect" });
+    }
+
+    // 🔐 hash new password
+    const salt = await bcrypt.genSalt(10);
+    user.password = await bcrypt.hash(newPassword, salt);
+
+    await user.save();
+
+    res.json({ message: "Password updated successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
   }
 };
 
@@ -145,48 +261,83 @@ exports.getMyProfile = async (req, res) => {
   try {
     const userId = req.user._id;
 
-    // 1. Fetch user
     const user = await User.findById(userId).select("-password");
     if (!user) {
       return res.status(404).json({ message: "User not found" });
     }
 
-    // 2. Fetch orders
-    const orders = await Order.find({ userId }).sort({ createdAt: -1 });
+    const orders = await Order.find({ userId })
+      .sort({ createdAt: -1 })
+      .populate("items.productId", "name");
 
-    // 3. Stats
     const totalOrders = orders.length;
     const totalSpent = orders.reduce(
       (sum, order) => sum + order.totalAmount,
-      0
+      0,
     );
 
-    // 4. Member since
     const memberSince = new Date(user.createdAt).getFullYear();
 
     res.json({
-  user: {
-    name:
-      user.name ||
-      `${user.firstName || ""} ${user.lastName || ""}`.trim() ||
-      "Not provided!",
-    email: user.email,
-    phone: user.phone
-  },
-  stats: {
-    totalOrders,
-    totalSpent,
-    memberSince
-  },
-  orders
-});
-  } catch (error) {
-    console.error(error);
+      user: {
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        addresses: user.addresses, // ✅ IMPORTANT
+      },
+      stats: {
+        totalOrders,
+        totalSpent,
+        memberSince,
+      },
+      orders,
+    });
+  } catch (err) {
     res.status(500).json({ message: "Server error" });
   }
 };
 
+exports.updateMe = async (req, res) => {
+  try {
+    const userId = req.user.id;
+    const { name, email, phone } = req.body;
 
+    /* ---------- VALIDATIONS ---------- */
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return res.status(400).json({ message: "Invalid email format" });
+    }
+
+    // Phone validation (10 digits)
+    const phoneRegex = /^[0-9]{10}$/;
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({ message: "Invalid phone number" });
+    }
+
+    /* ---------- UPDATE ---------- */
+    const existingUser = await User.findOne({ email, _id: { $ne: userId } });
+    if (existingUser) {
+      return res.status(400).json({ message: "Email already in use" });
+    }
+
+    const updatedUser = await User.findByIdAndUpdate(
+      userId,
+      { name, email, phone },
+      { new: true, runValidators: true },
+    ).select("-password");
+
+    if (!updatedUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.json(updatedUser);
+  } catch (error) {
+    console.error("Profile update error:", error);
+    res.status(500).json({ message: "Server error" });
+  }
+};
 
 // Get logged-in user info
 exports.getMe = async (req, res) => {

@@ -1,0 +1,18 @@
+[33meafaa31[m[33m ([m[1;36mHEAD[m[33m, [m[1;32mShubhang[m[33m)[m HEAD@{0}: checkout: moving from Shubhang to shubhang
+[33meafaa31[m[33m ([m[1;36mHEAD[m[33m, [m[1;32mShubhang[m[33m)[m HEAD@{1}: commit: Added seed flags for product features and updated frontend to filter products by category name or ID.
+[33mb07fcb2[m[33m ([m[1;31morigin/Shubhang[m[33m)[m HEAD@{2}: commit: some more updates to product controller and product model
+[33m51012e5[m HEAD@{3}: commit: added routes and allow user to add multiple addresses and edit profile details
+[33me7976aa[m[33m ([m[1;32mmain[m[33m)[m HEAD@{4}: pull origin main: updating HEAD
+[33me7976aa[m[33m ([m[1;32mmain[m[33m)[m HEAD@{5}: pull origin main: updating HEAD
+[33me7976aa[m[33m ([m[1;32mmain[m[33m)[m HEAD@{6}: checkout: moving from main to Shubhang
+[33me7976aa[m[33m ([m[1;32mmain[m[33m)[m HEAD@{7}: commit: Updates in pages
+[33mc57983c[m HEAD@{8}: pull origin main: Fast-forward
+[33m3465b2c[m HEAD@{9}: commit (merge): Merge branch 'main' of https://github.com/RooseSouza/E-Commerce-Project
+[33m332cbfc[m HEAD@{10}: commit: Updates in pages
+[33m34e9ee6[m HEAD@{11}: Branch: renamed refs/heads/Shubhang to refs/heads/main
+[33m34e9ee6[m HEAD@{13}: commit (merge): Merge branch 'main' of https://github.com/RooseSouza/E-Commerce-Project into Shubhang
+[33m1f66847[m HEAD@{14}: commit: Updates in pages
+[33meec329a[m HEAD@{15}: commit: Adding frontend
+[33mffaef93[m HEAD@{16}: checkout: moving from main to Shubhang
+[33mffaef93[m HEAD@{17}: Branch: renamed refs/heads/main to refs/heads/main
+[33mffaef93[m HEAD@{19}: commit (initial): added the project

@@ -4,6 +4,7 @@ const connectDB = require("./database/db");
 const cors = require("cors");
 const Category = require("./models/category");
 
+
 dotenv.config();
 
 const app = express();
@@ -24,6 +25,7 @@ app.use(cors({
         callback(new Error("Not allowed by CORS"));
       }
     },
+ 
   credentials: true
 }));
 
@@ -43,22 +45,12 @@ app.use("/api/categories", require("./routes/categoryRoutes"));
 
 
 
+
 // Predefined Local Market Categories
 const predefinedCategories = [
-  { name: "Dairy", description: "Milk, cheese, butter, yogurt" },
-  { name: "Bakery", description: "Bread, cakes, pastries" },
-  { name: "Beverages", description: "Juices, soft drinks, tea, coffee" },
-  { name: "Snacks", description: "Chips, namkeen, chocolates" },
-  { name: "Meat & Poultry", description: "Chicken, mutton, fish, eggs" },
-  { name: "Seafood", description: "Fresh and frozen seafood" },
-  { name: "Grains & Pulses", description: "Rice, wheat, lentils, beans" },
-  { name: "Spices & Condiments", description: "Salt, spices, sauces, pickles" },
-  { name: "Personal Care", description: "Soap, shampoo, toothpaste, skincare" },
-  { name: "Household Items", description: "Cleaning products, kitchen supplies" },
-  { name: "Frozen Foods", description: "Frozen vegetables, ready-to-eat items" },
-  { name: "Sweets", description: "Mithai, biscuits, chocolates" },
   { name: "Fresh Produce", description: "Farm fresh fruits and vegetables" },
-  { name: "Goan Delicacies", description: "Traditional Goan food products" },
+  { name: "Spices & Pantry", description: "Salt, spices, sauces, pickles" },
+  { name: "Goan Delicacies", description: "Traditional Goan food products" },  
   { name: "Handicraft and Arts", description: "Handmade crafts and artwork" },
   { name: "Home Decors", description: "Decorative items for home" },
   { name: "Fashion", description: "Clothing and fashion accessories" },

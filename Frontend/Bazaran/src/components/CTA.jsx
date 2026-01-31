@@ -64,17 +64,6 @@ const CTA = () => {
               className="w-full px-4 py-3 rounded-lg bg-white/90 text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
             />
 
-            {/* Password Input */}
-            <input
-              type="password"
-              name="password"
-              placeholder="Password"
-              value={formData.password}
-              onChange={handleInputChange}
-              required
-              className="w-full px-4 py-3 rounded-lg bg-white/90 text-gray-900 placeholder-gray-600 focus:outline-none focus:ring-2 focus:ring-green-500 focus:bg-white transition-all"
-            />
-
             {/* Subscribe Button */}
             <button
               type="submit"

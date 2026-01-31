@@ -18,3 +18,44 @@
         overflow-x: hidden;
   }
 }
+
+.role-selector {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 12px;
+}
+
+/* Hide default radio */
+.role-tile input {
+  display: none;
+}
+
+.role-tile {
+  cursor: pointer;
+  border: 2px solid #d1d5db; /* gray-300 */
+  border-radius: 12px;
+  padding: 18px 16px;
+  text-align: center;
+  font-weight: 600;
+  color: #374151; /* gray-700 */
+  transition: all 0.2s ease;
+  background-color: white;
+}
+
+/* Hover effect */
+.role-tile:hover {
+  border-color: #3b82f6; /* blue-500 */
+  background-color: #eff6ff; /* blue-50 */
+}
+
+/* Active / Selected */
+.role-tile.active {
+  border-color: #3b82f6;
+  background-color: #3b82f6;
+  color: white;
+}
+
+/* Optional: subtle press feel */
+.role-tile:active {
+  transform: scale(0.98);
+}

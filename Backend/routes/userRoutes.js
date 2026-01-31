@@ -1,22 +1,35 @@
 const express = require("express");
 const router = express.Router();
 const { protect } = require("../middleware/authMiddleware");
-const { getMyProfile } = require("../controllers/userController");
 
 const {
   registerUser,
   loginUser,
   googleLogin,
   getMe,
+  getMyProfile,
+  updateMe,
+  addAddress,
+  deleteAddress,
+  updatePassword,
+   // ✅ IMPORT
 } = require("../controllers/userController");
 
-// Auth routes
+// Auth
 router.post("/register", registerUser);
 router.post("/login", loginUser);
-router.post("/google", googleLogin); // Google login route
+router.post("/google", googleLogin);
 
-// Protected route
+// Profile
 router.get("/me", protect, getMe);
 router.get("/me/profile", protect, getMyProfile);
+router.put("/me", protect, updateMe);
+
+// Address
+router.post("/me/address", protect, addAddress); // ✅ CLEAN
+
+router.delete("/me/address/:addressId", protect, deleteAddress);
+
+router.put("/me/password", protect, updatePassword);
 
 module.exports = router;

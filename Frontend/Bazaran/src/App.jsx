@@ -5,10 +5,11 @@ import Home from './pages/Home'
 import Cart from './pages/Cart'
 import ProductDetails from './pages/ProductDetails'
 import UserProfile from './pages/UserProfile'
-
+import Checkout from './pages/Checkout'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
 import UserProvider from './context/userContext'
 import VendorDashboard from './pages/VendorDashboard'
+import CategoryProducts from './pages/CategoryProducts'
 
 const App = () => {
   return (
@@ -25,6 +26,9 @@ const App = () => {
               <Route path="/cart" element={<Cart />} />
               <Route path="/profile" element={<UserProfile />} />
               <Route path="/vendor-dashboard" element={<VendorDashboard />} />
+              <Route path="/products" element={<CategoryProducts />} />
+              <Route path="/checkout" element={<Checkout />} />
+
             </Routes>
           </Router>
         </div>
@@ -46,7 +50,7 @@ const Root = () => {
 
   return isAuthenticated ?
     (
-      <Navigate to="/home" />
+      <Navigate to="/login" />
     ) :
     (
       <Navigate to="/home" />
