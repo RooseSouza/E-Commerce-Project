@@ -103,7 +103,6 @@ exports.getAllProducts = async (req, res) => {
       .populate("categoryId", "name")
       .populate("vendorId", "name");
     const { isTopPick, isFeatured, isJustArrived, limit, categoryId, category } = req.query;
-    const filter = {};
 
     // Helper to robustly check for true values (handles "true", "True", true)
     const isTrue = (val) => {
