@@ -156,9 +156,7 @@ const GoanSaleSection = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-8">Top picks by experts</h2>
               <div className="grid grid-cols-2 gap-6">
                 {topPicksProducts.map((product) => (
-                  <Link key={product.id} to={`/product/${product.id}`}>
-                    <ItemCard product={product} />
-                  </Link>
+                  <ItemCard key={product.id} product={product} />
                 ))}
               </div>
             </div>

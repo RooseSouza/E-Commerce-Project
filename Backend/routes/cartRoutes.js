@@ -9,6 +9,7 @@ router.get('/', getCart);
 router.post('/add', addToCart);
 router.put('/update', updateCartItem);
 router.delete('/remove/:productId', removeFromCart);
+router.get('/summary', getCartSummary);
 router.get("/summary", protect, getCartSummary);
 
 module.exports = router;

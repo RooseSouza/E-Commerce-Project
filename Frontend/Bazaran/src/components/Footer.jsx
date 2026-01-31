@@ -44,23 +44,23 @@ const Footer = () => {
             </div>
           </div>
 
-          {/* Our Readables */}
+          {/* Top Categories */}
           <div>
-            <h3 className="text-lg font-bold mb-4">Our Readables</h3>
+            <h3 className="text-lg font-bold mb-4">Top Categories</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Articles
+                <Link to="/products?category=Goan%20Delicacies" className="hover:text-amber-200 transition-colors text-sm">
+                  Goan Delicacies
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                 Blogs
+                <Link to="/products?category=Handicraft%20and%20Arts" className="hover:text-amber-200 transition-colors text-sm">
+                 Handicrafts
                 </Link>
               </li>
               <li>
-                <Link to="#" className="hover:text-amber-200 transition-colors text-sm">
-                  Goan Stories
+                <Link to="/products?category=Spices%20%26%20Pantry" className="hover:text-amber-200 transition-colors text-sm">
+                  Spices & Pantry
                 </Link>
               </li>
              
@@ -72,7 +72,7 @@ const Footer = () => {
             <h3 className="text-lg font-bold mb-4">Quick Links</h3>
             <ul className="space-y-2">
               <li>
-                <Link to="/" className="hover:text-amber-200 transition-colors text-sm">
+                <Link to="/home" className="hover:text-amber-200 transition-colors text-sm">
                   Home
                 </Link>
               </li>
@@ -82,8 +82,8 @@ const Footer = () => {
                 </Link>
               </li>
               <li>
-                <Link to="/vendors" className="hover:text-amber-200 transition-colors text-sm">
-                  Our Vendors
+                <Link to="/cart" className="hover:text-amber-200 transition-colors text-sm">
+                  My Cart
                 </Link>
               </li>
               <li>
