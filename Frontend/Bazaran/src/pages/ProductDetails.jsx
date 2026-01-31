@@ -74,7 +74,7 @@ const ProductDetails = () => {
             'Partner Offer Sign up for Flipkart Pay Later and get Flipkart Gift Card worth ₹100'
           ],
           description: data.description || 'No description available.',
-          inStock: data?.countInStock > 0
+          inStock: (data?.stock?.quantity || 0) > 0
         })
         setSelectedImage(0)
       } catch (err) {
@@ -298,12 +298,7 @@ const ProductDetails = () => {
                   <span>🛒</span>
                   Add to cart
                 </button>
-                <button
-                  onClick={handleBuyNow}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-                >
-                  Buy Now
-                </button>
+                
               </div>
 
               {/* Stock Status */}
@@ -332,9 +327,7 @@ const ProductDetails = () => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct) => (
-                <Link key={relatedProduct.id} to={`/product/${relatedProduct.id}`}>
-                  <ItemCard product={relatedProduct} />
-                </Link>
+                <ItemCard key={relatedProduct.id} product={relatedProduct} />
               ))}
             </div>
           </div>

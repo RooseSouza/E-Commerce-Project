@@ -83,7 +83,7 @@ const Cart = () => {
               <div className="lg:col-span-2 space-y-4">
                 {cartItems.map((item) => (
                   <div
-                    key={item.id}
+                    key={item._id}
                     className="bg-white rounded-lg shadow-md overflow-hidden"
                   >
                     <div className="flex gap-4 p-6">
@@ -99,7 +99,7 @@ const Cart = () => {
                       {/* Product Details */}
                       <div className="flex-1">
                         <Link
-                          to={`/product/${item.id}`}
+                          to={`/product/${item.productId._id}`}
                           className="text-lg font-bold text-gray-900 hover:text-blue-600 mb-2 block"
                         >
                           {item.productId.name}
