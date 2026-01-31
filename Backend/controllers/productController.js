@@ -1,334 +1,433 @@
-const mongoose = require("mongoose");
-const Product = require("../models/product");
-const Category = require("../models/category");
-const cloudinary = require("../config/cloudinary");
+const mongoose = require("mongoose"); 
+const Product = require("../models/product"); 
+const Category = require("../models/category"); 
+const cloudinary = require("../config/cloudinary"); 
 
-/* ================= ADD PRODUCT ================= */
-exports.addProduct = async (req, res) => {
-  try {
-    const {
-      name,
-      description,
-      price,
-      categoryName,
-      stockQuantity,
-      stockUnit,
-      tags,
-      isTopPick,
-      isFeatured,
-    } = req.body;
+// Vendor adds product 
+exports.addProduct = async (req, res) => { 
+  try { 
+    const { 
+      name, 
+      description, 
+      price, 
+      categoryName, 
+      stockQuantity, 
+      stockUnit, 
+      tags, 
+      isTopPick, 
+      isFeatured, 
+    } = req.body; 
 
-    if (!req.file) {
-      return res.status(400).json({ message: "Product image is required" });
-    }
+    if (!req.file) { 
+      return res.status(400).json({ message: "Product image is required" }); 
+    } 
 
-    if (
-      !name ||
-      !description ||
-      !price ||
-      !categoryName ||
-      stockQuantity === undefined ||
-      !stockUnit
-    ) {
-      return res.status(400).json({ message: "Please provide all required fields" });
-    }
+    if ( 
+      !name || 
+      !description || 
+      !price || 
+      !categoryName || 
+      stockQuantity === undefined || 
+      !stockUnit 
+    ) { 
+      return res 
+        .status(400) 
+        .json({ message: "Please provide all required fields" }); 
+    } 
 
-    const category = await Category.findOne({ name: categoryName });
-    if (!category) {
-      return res.status(400).json({ message: "Invalid category selected" });
-    }
+    const category = await Category.findOne({ name: categoryName }); 
+    if (!category) { 
+      return res.status(400).json({ message: "Invalid category selected" }); 
+    } 
 
-    let processedTags = [];
-    if (tags) {
-      processedTags = Array.isArray(tags)
-        ? tags.map((t) => t.toLowerCase())
-        : tags.split(",").map((t) => t.trim().toLowerCase());
-    }
+    let processedTags = []; 
+    if (tags) { 
+      processedTags = Array.isArray(tags) 
+        ? tags.map((tag) => tag.toLowerCase()) 
+        : tags.split(",").map((tag) => tag.trim().toLowerCase()); 
+    } 
 
-    const product = await Product.create({
-      name,
-      description,
-      price,
-      categoryId: category._id,
-      image: {
-        url: req.file.path,
-        public_id: req.file.filename,
-      },
-      vendorId: req.user._id,
-      stock: {
-        quantity: stockQuantity,
-        unit: stockUnit,
-      },
-      tags: processedTags,
-      isTopPick: isTopPick === true || isTopPick === "true",
-      isFeatured: isFeatured === true || isFeatured === "true",
-    });
+    const product = await Product.create({ 
+      name, 
+      description, 
+      price, 
+      categoryId: category._id, 
+      image: { 
+        url: req.file.path, // Cloudinary secure_url 
+        public_id: req.file.filename // Cloudinary public_id 
+      }, 
+      vendorId: req.user._id, 
+      stock: { 
+        quantity: stockQuantity, 
+        unit: stockUnit, 
+      }, 
+      tags: processedTags, 
+      isTopPick: isTopPick === 'true' || isTopPick === true, 
+      isFeatured: isFeatured === 'true' || isFeatured === true, 
+    }); 
 
-    res.status(201).json({
-      message: "Product added successfully",
-      product,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    const populatedProduct = await Product.findById(product._id) 
+      .populate("categoryId", "name") 
+      .populate("vendorId", "name"); 
 
-/* ================= GET MY PRODUCTS ================= */
-exports.getMyProducts = async (req, res) => {
-  try {
-    const products = await Product.find({ vendorId: req.user._id })
-      .populate("categoryId", "name");
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    res.status(201).json({ 
+      message: "Product added successfully", 
+      product, 
+    }); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
 
-/* ================= GET ALL PRODUCTS ================= */
-exports.getAllProducts = async (req, res) => {
-  try {
-    const filter = req.user.role === "admin" ? {} : { isActive: true };
-    const { isTopPick, isFeatured, isJustArrived, limit, categoryId, category } =
-      req.query;
+// Vendor gets own products 
+exports.getMyProducts = async (req, res) => { 
+  try { 
+    const products = await Product.find({ vendorId: req.user._id }).populate( 
+      "categoryId", 
+      "name", 
+    ); 
+    res.json(products); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
 
-    const isTrue = (val) =>
-      typeof val === "string" ? val.toLowerCase() === "true" : val === true;
+// Users get all active products 
+exports.getAllProducts = async (req, res) => { 
+  try { 
+    const filter = req.user.role === "admin" ? {} : { isActive: true }; 
 
-    if (isTrue(isTopPick)) filter.isTopPick = true;
-    if (isTrue(isFeatured)) filter.isFeatured = true;
+    const products = await Product.find(filter) 
+      .populate("categoryId", "name") 
+      .populate("vendorId", "name"); 
 
-    if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) {
-      filter.categoryId = categoryId;
-    } else if (category) {
-      const categoryDoc = await Category.findOne({
-        name: { $regex: new RegExp(`^${category}$`, "i") },
-      });
-      if (!categoryDoc) return res.json([]);
-      filter.categoryId = categoryDoc._id;
-    }
+    const { 
+      isTopPick, 
+      isFeatured, 
+      isJustArrived, 
+      limit, 
+      categoryId, 
+      category 
+    } = req.query; 
 
-    let query = Product.find(filter)
-      .populate("categoryId", "name")
-      .populate("vendorId", "name");
+    // Helper to robustly check for true values (handles "true", "True", true) 
+    const isTrue = (val) => { 
+      if (typeof val === 'string') return val.trim().toLowerCase() === 'true'; 
+      return val === true; 
+    }; 
 
-    if (isTrue(isJustArrived)) {
-      query = query.sort({ createdAt: -1 });
-    }
+    if (isTrue(isTopPick)) { 
+      filter.isTopPick = { $in: [true, 'true'] }; 
+    } 
 
-    if (limit) query = query.limit(Number(limit));
+    if (isTrue(isFeatured)) { 
+      filter.isFeatured = { $in: [true, 'true'] }; 
+    } 
 
-    const products = await query;
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    if (categoryId && mongoose.Types.ObjectId.isValid(categoryId)) { 
+      filter.categoryId = categoryId; 
+    } else if (category) { 
+      // Fallback: Find category by name if ID is missing 
+      const categoryDoc = await Category.findOne({ 
+        name: { $regex: new RegExp(^${category}$, 'i') } 
+      }); 
 
-/* ================= SEARCH ================= */
-exports.searchProducts = async (req, res) => {
-  try {
-    const { q } = req.query;
-    if (!q) return res.status(400).json({ message: "Search query is required" });
+      if (categoryDoc) { 
+        filter.categoryId = categoryDoc._id; 
+      } else { 
+        return res.json([]); // Category not found, return empty list 
+      } 
+    } 
 
-    const products = await Product.find({
-      $or: [
-        { name: { $regex: q, $options: "i" } },
-        { tags: { $regex: q, $options: "i" } },
-      ],
-    })
-      .populate("categoryId", "name")
-      .populate("vendorId", "name");
+    let query = Product.find(filter) 
 
-    res.json(products);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    if (isTrue(isJustArrived)) { 
+      query = query.sort({ createdAt: -1 }); 
+    } 
 
-/* ================= GET PRODUCT (VENDOR) ================= */
-exports.getProductById = async (req, res) => {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: "Invalid product ID" });
-    }
+    if (limit) { 
+      query = query.limit(Number(limit)); 
+    } 
 
-    const product = await Product.findOne({
-      _id: req.params.id,
-      vendorId: req.user._id,
-    }).populate("categoryId", "name");
+    query = query.populate("categoryId", "name").populate("vendorId", "name"); 
 
-    if (!product) {
-      return res.status(404).json({ message: "Product not found or denied" });
-    }
+    const products = await query; 
+    res.json(products); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
 
-    res.json(product);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+//User searches for product 
+exports.searchProducts = async (req, res) => { 
+  try { 
+    const { q } = req.query; 
+    if (!q) { 
+      return res.status(400).json({ message: "Search query is required" }); 
+    } 
 
-/* ================= GET PRODUCT (PUBLIC) ================= */
-exports.getPublicProduct = async (req, res) => {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: "Invalid product ID" });
-    }
+    const products = await Product.find({ 
+      $or: [ 
+        { name: { $regex: q, $options: "i" } }, 
+        { tags: { $regex: q, $options: "i" } } 
+      ] 
+    }) 
+      .populate("categoryId", "name") 
+      .populate("vendorId", "name"); 
 
-    const product = await Product.findById(req.params.id)
-      .populate("categoryId", "name")
-      .populate("vendorId", "name");
+    res.json(products); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
 
-    if (!product) return res.status(404).json({ message: "Product not found" });
-    res.json(product);
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+// Vendor gets single product (Protected: checks ownership) 
+exports.getProductById = async (req, res) => { 
+  try { 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) { 
+      return res.status(404).json({ message: "Product not found (Invalid ID)" }); 
+    } 
 
-/* ================= UPDATE PRODUCT ================= */
-exports.updateProduct = async (req, res) => {
-  try {
-    console.log("REQ BODY:", req.body);
-    console.log("REQ FILE:", req.file);
+    const product = await Product.findOne({ 
+      _id: req.params.id, 
+      vendorId: req.user._id, 
+    }).populate("categoryId", "name"); 
 
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: "Invalid product ID" });
-    }
+    if (!product) { 
+      return res.status(404).json({ 
+        message: "Product not found or access denied", 
+      }); 
+    } 
 
-    const updateData = {};
+    res.json(product); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
 
-    if (req.body.name !== undefined) updateData.name = req.body.name;
-    if (req.body.description !== undefined)
-      updateData.description = req.body.description;
+// Public gets single product (No auth required) 
+exports.getPublicProduct = async (req, res) => { 
+  try { 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) { 
+      return res.status(404).json({ message: "Product not found (Invalid ID)" }); 
+    } 
 
-    if (req.body.price !== undefined) {
-      const price = Number(req.body.price);
-      if (!isNaN(price)) updateData.price = price;
-    }
+    const product = await Product.findById(req.params.id) 
+      .populate("categoryId", "name") 
+      .populate("vendorId", "name"); 
 
-    if (req.body.categoryName) {
-      const category = await Category.findOne({ name: req.body.categoryName });
-      if (!category) {
-        return res.status(400).json({ message: "Invalid category" });
-      }
-      updateData.categoryId = category._id;
-    }
+    if (!product) { 
+      return res.status(404).json({ message: "Product not found" }); 
+    } 
 
-    if (req.body.stockQuantity !== undefined && req.body.stockQuantity !== "") {
-      const qty = Number(req.body.stockQuantity);
-      if (!isNaN(qty)) {
-        updateData["stock.quantity"] = qty;
-        updateData.isActive = qty > 0;
-      }
-    }
+    res.json(product); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
 
-    if (req.body.stockUnit) updateData["stock.unit"] = req.body.stockUnit;
+/** 
+ * Vendor updates SINGLE product 
+ */ 
+exports.updateProduct = async (req, res) => { 
+  try { 
+    // 🔍 Debug (keep for now) 
+    console.log("REQ BODY:", req.body); 
+    console.log("REQ FILES:", req.files); 
 
-    if (req.file) {
-      const oldProduct = await Product.findById(req.params.id);
-      if (oldProduct?.image?.public_id) {
-        await cloudinary.uploader.destroy(oldProduct.image.public_id);
-      }
-      updateData.image = {
-        url: req.file.path,
-        public_id: req.file.filename,
-      };
-    }
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) { 
+      return res.status(404).json({ message: "Product not found (Invalid ID)" }); 
+    } 
 
-    const updatedProduct = await Product.findOneAndUpdate(
-      { _id: req.params.id, vendorId: req.user._id },
-      { $set: updateData },
-      { new: true, runValidators: true }
-    )
-      .populate("categoryId", "name")
-      .populate("vendorId", "name");
+    const updateData = {}; 
 
-    if (!updatedProduct) {
-      return res.status(404).json({ message: "Unauthorized or not found" });
-    }
+    // -------- BASIC FIELDS -------- 
+    if (req.body.name !== undefined) { 
+      updateData.name = req.body.name; 
+    } 
 
-    res.json({
-      message: "Product updated successfully",
-      product: updatedProduct,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    if (req.body.description !== undefined) { 
+      updateData.description = req.body.description; 
+    } 
 
-/* ================= TOGGLE PRODUCT ================= */
-exports.toggleProductStatus = async (req, res) => {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: "Invalid product ID" });
-    }
+    if (req.body.price !== undefined) { 
+      const price = Number(req.body.price); 
+      if (!isNaN(price)) updateData.price = price; 
+    } 
 
-    const product = await Product.findOne({
-      _id: req.params.id,
-      vendorId: req.user._id,
-    });
+    /* ---------- CATEGORY ---------- */ 
+    if (req.body?.categoryName) { 
+      const category = await Category.findOne({ name: req.body.categoryName }); 
+      if (!category) { 
+        return res.status(400).json({ message: "Invalid category selected" }); 
+      } 
+      updateData.categoryId = category._id; 
+    } 
 
-    if (!product) return res.status(404).json({ message: "Not found" });
+    // -------- STOCK -------- 
+    if (req.body.stockQuantity !== undefined && req.body.stockQuantity !== "") { 
+      const qty = Number(req.body.stockQuantity); 
+      if (!isNaN(qty)) { 
+        updateData["stock.quantity"] = qty; 
+        updateData.isActive = qty > 0; // auto enable/disable 
+      } 
+    } 
 
-    product.isActive =
-      product.stock?.quantity === 0 ? false : !product.isActive;
+    if (req.body.stockUnit) { 
+      updateData["stock.unit"] = req.body.stockUnit; 
+    } 
 
-    await product.save();
+    // -------- CATEGORY -------- 
+    if ( 
+      req.body.categoryId && 
+      mongoose.Types.ObjectId.isValid(req.body.categoryId) 
+    ) { 
+      updateData.categoryId = req.body.categoryId; 
+    } 
 
-    res.json({
-      message: `Product ${product.isActive ? "activated" : "disabled"}`,
-      isActive: product.isActive,
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
+    // -------- IMAGE -------- 
+    if (req.file) { 
+      const file = req.file; 
 
-/* ================= SPECIAL LISTS ================= */
-exports.getTopPicks = async (req, res) => {
-  const products = await Product.find({ isTopPick: true, isActive: true })
-    .limit(4)
-    .populate("categoryId", "name")
-    .populate("vendorId", "name");
-  res.json(products);
-};
+      // remove old image 
+      const oldProduct = await Product.findById(req.params.id); 
+      if (oldProduct?.image?.public_id) { 
+        await cloudinary.uploader.destroy(oldProduct.image.public_id); 
+      } 
 
-exports.getFeaturedProducts = async (req, res) => {
-  const products = await Product.find({ isFeatured: true, isActive: true })
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .populate("categoryId", "name")
-    .populate("vendorId", "name");
-  res.json(products);
-};
+      updateData.image = { 
+        url: file.path, 
+        public_id: file.filename, 
+      }; 
+    } 
 
-exports.getJustArrivedProducts = async (req, res) => {
-  const products = await Product.find({ isActive: true })
-    .sort({ createdAt: -1 })
-    .limit(5)
-    .populate("categoryId", "name")
-    .populate("vendorId", "name");
-  res.json(products);
-};
+    // -------- UPDATE -------- 
+    const updatedProduct = await Product.findOneAndUpdate( 
+      { _id: req.params.id, vendorId: req.user._id }, 
+      { $set: updateData }, 
+      { 
+        new: true, 
+        runValidators: true, 
+      } 
+    ) 
+      .populate("categoryId", "name") 
+      .populate("vendorId", "name"); 
 
-/* ================= DELETE ================= */
-exports.deleteProduct = async (req, res) => {
-  try {
-    if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: "Invalid product ID" });
-    }
+    if (!updatedProduct) { 
+      return res.status(404).json({ 
+        message: "Product not found or not authorized", 
+      }); 
+    } 
 
-    const deletedProduct = await Product.findOneAndDelete({
-      _id: req.params.id,
-      vendorId: req.user._id,
-    });
+    res.status(200).json({ 
+      message: "Product updated successfully", 
+      product: updatedProduct, 
+    }); 
+  } catch (error) { 
+    console.error("UPDATE PRODUCT ERROR:", error); 
+    res.status(500).json({ 
+      message: "Server error while updating product", 
+      error: error.message, 
+    }); 
+  } 
+}; 
 
-    if (!deletedProduct) {
-      return res.status(403).json({ message: "Unauthorized delete" });
-    }
+// maunal disable or enable product 
+exports.toggleProductStatus = async (req, res) => { 
+  try { 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) { 
+      return res.status(404).json({ message: "Product not found (Invalid ID)" }); 
+    } 
 
-    res.json({ message: "Product deleted successfully" });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
+    const product = await Product.findOne({ 
+      _id: req.params.id, 
+      vendorId: req.user._id 
+    }); 
+
+    if (!product) { 
+      return res.status(404).json({ message: "Product not found" }); 
+    } 
+
+    // 🔹 AUTO DISABLE IF STOCK = 0 
+    if (product.stock?.quantity === 0) { 
+      product.isActive = false; 
+    } else { 
+      // 🔹 MANUAL TOGGLE 
+      product.isActive = !product.isActive; 
+    } 
+
+    await product.save(); 
+
+    res.json({ 
+      message: `Product ${product.isActive ? "activated" : "disabled"} successfully`, 
+      isActive: product.isActive 
+    }); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
+
+// Get Top Picks 
+exports.getTopPicks = async (req, res) => { 
+  try { 
+    const products = await Product.find({ isTopPick: true }) 
+      .limit(4) 
+      .populate("categoryId", "name") 
+      .populate("vendorId", "name"); 
+    res.json(products); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
+
+// Get Featured Products 
+exports.getFeaturedProducts = async (req, res) => { 
+  try { 
+    const products = await Product.find({ isFeatured: true }) 
+      .sort({ createdAt: -1 }) 
+      .limit(5) 
+      .populate("categoryId", "name") 
+      .populate("vendorId", "name"); 
+    res.json(products); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
+
+// Get Just Arrived Products 
+exports.getJustArrivedProducts = async (req, res) => { 
+  try { 
+    const products = await Product.find() 
+      .sort({ createdAt: -1 }) 
+      .limit(5) 
+      .populate("categoryId", "name") 
+      .populate("vendorId", "name"); 
+    res.json(products); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
+}; 
+
+// Vendor deletes product 
+exports.deleteProduct = async (req, res) => { 
+  try { 
+    if (!mongoose.Types.ObjectId.isValid(req.params.id)) { 
+      return res.status(404).json({ message: "Product not found (Invalid ID)" }); 
+    } 
+
+    const deletedProduct = await Product.findOneAndDelete({ 
+      _id: req.params.id, 
+      vendorId: req.user._id, 
+    }); 
+
+    if (!deletedProduct) { 
+      return res.status(403).json({ 
+        message: "You can delete only your own product", 
+      }); 
+    } 
+
+    res.json({ message: "Product deleted successfully" }); 
+  } catch (error) { 
+    res.status(500).json({ error: error.message }); 
+  } 
 };
