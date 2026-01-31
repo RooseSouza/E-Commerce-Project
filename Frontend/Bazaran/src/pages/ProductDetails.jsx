@@ -7,10 +7,12 @@ import ItemCard from '../components/itemcard'
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const ProductDetails = () => {
-  const { productId } = useParams()
+  const params = useParams()
+  // Handle both 'productId' and 'id' parameter names to be safe with router config
+  const productId = params.productId || params.id
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
-  const [product, setProduct] = useState(null)
+  const [productState, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
 
@@ -18,8 +20,21 @@ const ProductDetails = () => {
     const fetchProduct = async () => {
       try {
         setLoading(true)
+        setError(null)
+
         const response = await fetch(`${API_BASE}/api/products/${productId}`)
-        const data = await response.json()
+        
+        if (!response.ok) {
+          throw new Error(`Product not found (Status: ${response.status})`)
+        }
+
+        const result = await response.json()
+        // Handle if backend returns { product: {...} } or just {...}
+        const data = result.product || result
+
+        if (!data || (!data.name && !data._id && !data.id)) {
+          throw new Error('Invalid product data received')
+        }
 
         // Normalize images
         let images = []
@@ -32,16 +47,24 @@ const ProductDetails = () => {
           images = [mainImage]
         }
 
+        // Handle category safely (Backend uses categoryId)
+        let variant = 'Standard'
+        if (data?.categoryId) {
+          variant = typeof data.categoryId === 'object' ? data.categoryId.name : data.categoryId
+        } else if (data?.category) {
+          variant = typeof data.category === 'object' ? data.category.name : data.category
+        }
+
         setProduct({
-          id: data?._id,
-          name: data?.name,
+          id: data._id || data.id,
+          name: data.name,
           // Handle category safely whether it's populated or just an ID
-          variant: data?.category?.name || data?.category || 'Standard',
-          price: data?.price || 0,
-          originalPrice: data?.originalPrice || Math.round((data?.price || 0) * 1.2),
-          discount: data?.discount || '30%',
-          rating: data?.rating || 4.5,
-          reviewCount: data?.numReviews || 0,
+          variant: variant || 'Standard',
+          price: data.price || 0,
+          originalPrice: data.originalPrice || Math.round((data.price || 0) * 1.2),
+          discount: data.discount || '30%',
+          rating: data.rating || 4.5,
+          reviewCount: data.numReviews || 0,
           images: images,
           deliveryDate: '3-5 Business Days',
           offers: [
@@ -49,13 +72,17 @@ const ProductDetails = () => {
             'Special Price Get extra 20% off (price inclusive of discount)',
             'Partner Offer Sign up for Flipkart Pay Later and get Flipkart Gift Card worth ₹100'
           ],
-          description: data?.description || 'No description available.',
+          description: data.description || 'No description available.',
           inStock: data?.countInStock > 0
         })
         setSelectedImage(0)
       } catch (err) {
         console.error("Error in ProductDetails:", err)
-        setError(err.message)
+        if (err.message === 'Failed to fetch') {
+          setError(`Network error: Verify backend is running on port 5000 and allows CORS.`)
+        } else {
+          setError(err.message)
+        }
       } finally {
         setLoading(false)
       }
@@ -66,30 +93,51 @@ const ProductDetails = () => {
     }
   }, [productId])
 
+  // Fallback data if fetch fails so page still renders
+  const product = productState || {
+    id: '0',
+    name: 'Product Details Unavailable',
+    variant: '',
+    price: 0,
+    originalPrice: 0,
+    discount: '0%',
+    rating: 0,
+    reviewCount: 0,
+    images: ['https://via.placeholder.com/500?text=No+Image'],
+    deliveryDate: 'N/A',
+    offers: [],
+    description: 'We could not load the product details at this time.',
+    inStock: false
+  }
+
   const relatedProducts = [
     {
-      id: 2,
+      id: '2',
+      _id: '2',
       name: 'Similar Product A',
       price: 1599,
       originalPrice: 3199,
       image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=300&h=300&fit=crop'
     },
     {
-      id: 3,
+      id: '3',
+      _id: '3',
       name: 'Similar Product B',
       price: 1299,
       originalPrice: 2599,
       image: 'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=300&h=300&fit=crop'
     },
     {
-      id: 4,
+      id: '4',
+      _id: '4',
       name: 'Similar Product C',
       price: 1799,
       originalPrice: 3599,
       image: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=300&h=300&fit=crop'
     },
     {
-      id: 5,
+      id: '5',
+      _id: '5',
       name: 'Similar Product D',
       price: 1499,
       originalPrice: 2999,
@@ -109,16 +157,6 @@ const ProductDetails = () => {
     return (
       <div className="min-h-screen flex justify-center items-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
-
-  if (error || !product) {
-    return (
-      <div className="min-h-screen flex justify-center items-center text-red-500 flex-col gap-4">
-        <h2 className="text-2xl font-bold">Error: {error || 'Product not found'}</h2>
-        <p className="text-gray-600">Check the console for more details.</p>
-        <Link to="/home" className="text-blue-500 hover:underline">Go back to Home</Link>
       </div>
     )
   }

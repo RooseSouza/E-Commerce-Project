@@ -23,7 +23,7 @@ const CTAproducts = () => {
     const fetchData = async () => {
       try {
         // Fetch Featured Products
-        const featuredRes = await fetch(`${API_BASE}/api/products?isFeatured='true'&limit=5`)
+        const featuredRes = await fetch(`${API_BASE}/api/products?isFeatured=true&limit=5`)
         const featuredData = await featuredRes.json()
         
         if (Array.isArray(featuredData)) {
