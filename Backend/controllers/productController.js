@@ -97,7 +97,7 @@ exports.getAllProducts = async (req, res) => {
   try { 
     const filter = req.user.role === "admin" ? {} : { isActive: true }; 
 
-    const products = await Product.find(filter) 
+    const initialProducts = await Product.find(filter) 
       .populate("categoryId", "name") 
       .populate("vendorId", "name"); 
 
@@ -129,7 +129,7 @@ exports.getAllProducts = async (req, res) => {
     } else if (category) { 
       // Fallback: Find category by name if ID is missing 
       const categoryDoc = await Category.findOne({ 
-        name: { $regex: new RegExp(^${category}$, 'i') } 
+        name: { $regex: new RegExp(`^${category}$`, 'i') } 
       }); 
 
       if (categoryDoc) { 
