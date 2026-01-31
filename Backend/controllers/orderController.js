@@ -3,19 +3,23 @@ const Cart = require("../models/cart");
 const Product = require("../models/product");
 const User = require("../models/user");
 
-// Place order and split by vendor
+/**
+ * @desc    Place order
+ * @route   POST /api/orders
+ * @access  Private
+ */
 exports.placeOrder = async (req, res) => {
   try {
     const userId = req.user._id;
     const { address } = req.body;
 
+    /* ================= ADDRESS ================= */
     if (!address || !address.houseNumber) {
       return res.status(400).json({ message: "Complete address is required" });
     }
 
     const user = await User.findById(userId);
 
-    // 🔍 Check if same address already exists
     let existingAddress = user.addresses.find(
       (a) =>
         a.houseNumber === address.houseNumber &&
@@ -32,13 +36,17 @@ exports.placeOrder = async (req, res) => {
 
     const addressId = existingAddress._id;
 
+    /* ================= CART ================= */
     const cart = await Cart.findOne({ userId }).populate("items.productId");
+
     if (!cart || cart.items.length === 0) {
       return res.status(400).json({ message: "Cart is empty" });
     }
 
+    /* ================= GROUP BY VENDOR ================= */
     const vendorMap = {};
-    cart.items.forEach(item => {
+
+    cart.items.forEach((item) => {
       const vendorId = item.productId.vendorId.toString();
       if (!vendorMap[vendorId]) vendorMap[vendorId] = [];
       vendorMap[vendorId].push(item);
@@ -46,25 +54,32 @@ exports.placeOrder = async (req, res) => {
 
     const createdOrders = [];
 
+    /* ================= CREATE ORDERS ================= */
     for (const vendorId in vendorMap) {
       let subtotal = 0;
       const orderItems = [];
 
       for (const item of vendorMap[vendorId]) {
-        const product = await Product.findById(item.productId._id);
+        const product = item.productId; // already populated ✅
 
         if (product.stock.quantity < item.quantity) {
-          return res.status(400).json({ message: "Out of stock" });
+          return res.status(400).json({
+            message: `${product.name} is out of stock`,
+          });
         }
 
+        // reduce stock
         product.stock.quantity -= item.quantity;
         await product.save();
 
-        subtotal += item.quantity * item.price;
+        const price = product.price; // ✅ FIXED
+
+        subtotal += item.quantity * price;
+
         orderItems.push({
           productId: product._id,
           quantity: item.quantity,
-          price: item.price,
+          price: price, // ✅ REQUIRED FIELD
         });
       }
 
@@ -77,71 +92,42 @@ exports.placeOrder = async (req, res) => {
         vendorId,
         items: orderItems,
         totalAmount,
-        addressId, // ✅ ONLY ID STORED
+        addressId,
         status: "placed",
       });
-      
 
       createdOrders.push(order);
     }
 
+    /* ================= CLEAR CART ================= */
     cart.items = [];
     await cart.save();
 
-    res.status(201).json({ message: "Order placed", orders: createdOrders });
+    res.status(201).json({
+      message: "Order placed successfully",
+      orders: createdOrders,
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ error: err.message });
   }
 };
 
-// GET LOGGED-IN VENDOR ORDERS
-// exports.getVendorOrders = async (req, res) => {
-//   try {
-//     const vendorId = req.user._id;
-
-//     const orders = await Order.find({ vendorId })
-//       .populate("userId", "name phone addresses")
-//       .populate("items.productId", "name price")
-//       .sort({ createdAt: -1 });
-
-//     res.json(orders);
-//   } catch (error) {
-//     console.error("Vendor order fetch error:", error);
-//     res.status(500).json({ message: "Failed to fetch vendor orders" });
-//   }
-// };
-
+/**
+ * @desc    Vendor gets their orders
+ * @route   GET /api/orders/vendor
+ * @access  Private
+ */
 exports.getVendorOrders = async (req, res) => {
   try {
     const vendorId = req.user._id;
 
-    // Fetch orders and populate user and products
-    let orders = await Order.find({ vendorId })
-      .populate("userId", "name phone addresses")
-      .populate("items.productId", "name price")
+    const orders = await Order.find({ vendorId })
+      .populate("items.productId")
       .sort({ createdAt: -1 });
 
-    // Attach the selected address to each order
-    orders = orders.map(order => {
-      const user = order.userId;
-      const selectedAddress = user.addresses.find(
-        addr => addr._id.toString() === order.addressId.toString()
-      );
-
-      return {
-        ...order.toObject(), // convert mongoose doc to plain object
-        userId: {
-          ...user.toObject(),
-          selectedAddress: selectedAddress || null
-        }
-      };
-    });
-
-    res.json(orders);
-  } catch (error) {
-    console.error("Vendor order fetch error:", error);
-    res.status(500).json({ message: "Failed to fetch vendor orders" });
+    res.status(200).json(orders);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
 };
-

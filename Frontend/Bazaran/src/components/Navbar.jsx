@@ -213,13 +213,6 @@ const Navbar = () => {
                           >
                             My Orders
                           </Link>
-                          <Link
-                            to="/wishlist"
-                            className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            Wishlist
-                          </Link>
                           <button
                             onClick={handleLogout}
                             className="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 border-t border-gray-200"
