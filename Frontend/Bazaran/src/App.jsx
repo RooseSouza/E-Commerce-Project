@@ -10,6 +10,7 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-d
 import UserProvider from './context/userContext'
 import VendorDashboard from './pages/VendorDashboard'
 import CategoryProducts from './pages/CategoryProducts'
+import OrdersPage from "./pages/OrdersPage"
 
 const App = () => {
   return (
@@ -28,6 +29,7 @@ const App = () => {
               <Route path="/vendor-dashboard" element={<VendorDashboard />} />
               <Route path="/products" element={<CategoryProducts />} />
               <Route path="/checkout" element={<Checkout />} />
+              <Route path="/orders" element={<OrdersPage />} />
 
             </Routes>
           </Router>

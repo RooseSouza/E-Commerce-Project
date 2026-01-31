@@ -93,7 +93,7 @@ const UserProfile = () => {
         return { error: data.message || "Password update failed" };
       }
 
-       alert("Password updated successfully");
+      alert("Password updated successfully");
 
       return null;
     } catch (err) {
@@ -102,35 +102,41 @@ const UserProfile = () => {
   };
 
   /* ✅ ADD / EDIT ADDRESS */
-  const handleAddAddress = async (addressData) => {
-    try {
-      const token = localStorage.getItem("token");
+  const handleSaveAddress = async (addressData) => {
+  try {
+    const token = localStorage.getItem("token");
 
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(addressData), // ✅ IMPORTANT FIX
-        },
-      );
-
-      const data = await res.json();
-
-      if (!res.ok) {
-        return { errors: data.errors || { general: "Failed to add address" } };
-      }
-
-      setAddresses(data.addresses);
-      setShowAddAddress(false);
-      return null;
-    } catch (err) {
-      return { errors: { general: "Server error" } };
+    // if editing, send _id
+    if (editingAddressIndex !== null) {
+      addressData._id = addresses[editingAddressIndex]._id;
     }
-  };
+
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
+      {
+        method: "POST", // ✅ ALWAYS POST
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(addressData),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) return { errors: data.errors };
+
+    setAddresses(data.addresses);
+    setShowAddAddress(false);
+    setEditingAddressIndex(null);
+
+    return null;
+  } catch (err) {
+    return { errors: { general: "Server error" } };
+  }
+};
+
+
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
@@ -229,11 +235,12 @@ const UserProfile = () => {
           setShowAddAddress(false);
           setEditingAddressIndex(null);
         }}
-        onSave={handleAddAddress}
+        onSave={handleSaveAddress}
         initialData={
           editingAddressIndex !== null ? addresses[editingAddressIndex] : null
         }
       />
+
       {showOrderModal && (
         <OrderDetailsModal
           order={selectedOrder}
@@ -244,11 +251,11 @@ const UserProfile = () => {
           }}
         />
       )}
-      <UpdatePasswordModal 
-  isOpen={showPasswordModal}
-  onClose={() => setShowPasswordModal(false)}
-  onSave={handleUpdatePassword}
-/>
+      <UpdatePasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSave={handleUpdatePassword}
+      />
 
 
       <Footer />

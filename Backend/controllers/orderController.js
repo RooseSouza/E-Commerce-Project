@@ -80,6 +80,7 @@ exports.placeOrder = async (req, res) => {
         addressId, // ✅ ONLY ID STORED
         status: "placed",
       });
+      
 
       createdOrders.push(order);
     }
