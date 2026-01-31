@@ -97,6 +97,11 @@ exports.getMyProducts = async (req, res) => {
 
 exports.getAllProducts = async (req, res) => {
   try {
+    const filter = req.user.role === "admin" ? {} : { isActive: true };
+
+    const products = await Product.find(filter)
+      .populate("categoryId", "name")
+      .populate("vendorId", "name");
     const { isTopPick, isFeatured, isJustArrived, limit, categoryId, category } = req.query;
     const filter = {};
 
@@ -144,6 +149,8 @@ exports.getAllProducts = async (req, res) => {
     res.status(500).json({ error: error.message });
   }
 };
+
+
 
 //User searches for product
 exports.searchProducts = async (req, res) => {

@@ -1,27 +1,27 @@
+const mongoose = require("mongoose");
 const Order = require("../models/order");
 const Cart = require("../models/cart");
 const Product = require("../models/product");
 const User = require("../models/user");
 
-/**
- * @desc    Place order
- * @route   POST /api/orders
- * @access  Private
- */
-exports.placeOrder = async (req, res) => {
+/* ================= PLACE ORDER ================= */
+const placeOrder = async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
     const userId = req.user._id;
     const { address } = req.body;
 
     /* ================= ADDRESS ================= */
     if (!address || !address.houseNumber) {
-      return res.status(400).json({ message: "Complete address is required" });
+      throw new Error("Complete address is required");
     }
 
-    const user = await User.findById(userId);
+    const user = await User.findById(userId).session(session);
 
     let existingAddress = user.addresses.find(
-      (a) =>
+      a =>
         a.houseNumber === address.houseNumber &&
         a.street === address.street &&
         a.city === address.city &&
@@ -30,17 +30,18 @@ exports.placeOrder = async (req, res) => {
 
     if (!existingAddress) {
       user.addresses.push(address);
-      await user.save();
+      await user.save({ session });
       existingAddress = user.addresses[user.addresses.length - 1];
     }
 
     const addressId = existingAddress._id;
 
-    /* ================= CART ================= */
-    const cart = await Cart.findOne({ userId }).populate("items.productId");
+    const cart = await Cart.findOne({ userId })
+      .populate("items.productId")
+      .session(session);
 
     if (!cart || cart.items.length === 0) {
-      return res.status(400).json({ message: "Cart is empty" });
+      throw new Error("Cart is empty");
     }
 
     /* ================= GROUP BY VENDOR ================= */
@@ -60,17 +61,15 @@ exports.placeOrder = async (req, res) => {
       const orderItems = [];
 
       for (const item of vendorMap[vendorId]) {
-        const product = item.productId; // already populated ✅
+        const product = await Product.findById(item.productId._id).session(session);
 
         if (product.stock.quantity < item.quantity) {
-          return res.status(400).json({
-            message: `${product.name} is out of stock`,
-          });
+          throw new Error(`Out of stock: ${product.name}`);
         }
 
         // reduce stock
         product.stock.quantity -= item.quantity;
-        await product.save();
+        await product.save({ session });
 
         const price = product.price; // ✅ FIXED
 
@@ -96,38 +95,85 @@ exports.placeOrder = async (req, res) => {
         status: "placed",
       });
 
-      createdOrders.push(order);
+      createdOrders.push(order[0]);
     }
 
     /* ================= CLEAR CART ================= */
     cart.items = [];
-    await cart.save();
+    await cart.save({ session });
+
+    await session.commitTransaction();
+    session.endSession();
 
     res.status(201).json({
       message: "Order placed successfully",
       orders: createdOrders,
     });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: err.message });
+    await session.abortTransaction();
+    session.endSession();
+    res.status(400).json({ message: err.message });
   }
 };
 
-/**
- * @desc    Vendor gets their orders
- * @route   GET /api/orders/vendor
- * @access  Private
- */
-exports.getVendorOrders = async (req, res) => {
+/* ================= GET VENDOR ORDERS ================= */
+const getVendorOrders = async (req, res) => {
   try {
     const vendorId = req.user._id;
 
-    const orders = await Order.find({ vendorId })
-      .populate("items.productId")
+    let orders = await Order.find({ vendorId })
+      .populate("userId", "name phone addresses")
+      .populate("items.productId", "name price image")
       .sort({ createdAt: -1 });
 
-    res.status(200).json(orders);
+    orders = orders.map(order => {
+      const user = order.userId;
+      const selectedAddress = user.addresses.find(
+        addr => addr._id.toString() === order.addressId.toString()
+      );
+
+      return {
+        ...order.toObject(),
+        userId: {
+          ...user.toObject(),
+          selectedAddress: selectedAddress || null
+        }
+      };
+    });
+
+    res.json(orders);
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    res.status(500).json({ message: "Failed to fetch vendor orders" });
   }
+};
+
+/* ================= UPDATE STATUS ================= */
+const updateOrderStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status } = req.body;
+
+    const validStatuses = ["confirmed", "dispatched", "delivered", "cancelled"];
+    if (!validStatuses.includes(status)) {
+      return res.status(400).json({ message: "Invalid status" });
+    }
+
+    const order = await Order.findOne({ _id: id, vendorId: req.user._id });
+    if (!order) {
+      return res.status(404).json({ message: "Order not found" });
+    }
+
+    order.status = status;
+    await order.save();
+
+    res.json({ message: "Status updated", order });
+  } catch (err) {
+    res.status(500).json({ message: "Update failed" });
+  }
+};
+
+module.exports = {
+  placeOrder,
+  getVendorOrders,
+  updateOrderStatus
 };
