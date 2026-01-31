@@ -1,33 +1,24 @@
-import React from 'react'
+import React, { useState, useEffect } from 'react'
 import FeatureCard from './FeatureCard'
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
 const FeaturesSection = () => {
-  const features = [
-    {
-      id: 1,
-      icon: '🚚',
-      title: 'Free Delivery',
-      description: 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nesciunt adipisicing elit. Nesciunt'
-    },
-    {
-      id: 2,
-      icon: '⏱️',
-      title: 'Timely delivery',
-      description: 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nesciunt adipisicing elit. Nesciunt'
-    },
-    {
-      id: 3,
-      icon: '✓',
-      title: 'Multi-Quality checks',
-      description: 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nesciunt adipisicing elit. Nesciunt'
-    },
-    {
-      id: 4,
-      icon: '🎧',
-      title: '24/7 Customer Service',
-      description: 'Lorem ipsum, dolor sit amet consectetur adipisicing elit. Nesciunt adipisicing elit. Nesciunt'
+  const [features, setFeatures] = useState([])
+
+  useEffect(() => {
+    const fetchFeatures = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/features`)
+        const data = await response.json()
+        setFeatures(data)
+      } catch (error) {
+        console.error('Error fetching features:', error)
+      }
     }
-  ]
+
+    fetchFeatures()
+  }, [])
 
   return (
     <section className="py-12 lg:py-16 px-4 bg-gray-50">

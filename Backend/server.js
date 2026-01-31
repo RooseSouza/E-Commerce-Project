@@ -8,6 +8,7 @@ const adminRoutes = require("./routes/AdminRoutes");
 
 
 
+
 dotenv.config();
 
 const app = express();
@@ -28,6 +29,7 @@ app.use(cors({
         callback(new Error("Not allowed by CORS"));
       }
     },
+ 
   credentials: true
 }));
 
@@ -43,6 +45,7 @@ app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/payments", require("./routes/paymentRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));
 app.use("/api/admin", require("./routes/AdminRoutes"));
+
 
 
 

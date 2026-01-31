@@ -1,11 +1,19 @@
 import React from "react";
-
+import { useNavigate } from "react-router-dom";
 
 const RecentOrders = ({ orders, onViewOrder }) => {
+  const navigate = useNavigate();
   return (
     <div className="bg-white rounded-lg shadow-md p-6 mb-6">
+      <div className="flex items-center justify-between mb-4">
       <h2 className="text-2xl font-bold text-gray-800 mb-4">Recent Orders</h2>
-
+      <button
+        onClick={() => navigate("/orders")}
+        className="text-sm font-medium text-blue-600 hover:text-blue-700 border border-blue-600 px-4 py-1.5 rounded-md hover:bg-blue-50 transition"
+      >
+        View All
+      </button>
+      </div>
       {orders && orders.length > 0 ? (
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -44,27 +52,26 @@ const RecentOrders = ({ orders, onViewOrder }) => {
 
                     {/* Date */}
                     <td className="py-3 px-4 text-gray-700">
-                       {order.date || '—'}
+                      {new Date(order.createdAt).toLocaleDateString()}
                     </td>
 
                     {/* Amount */}
                     <td className="py-3 px-4 text-gray-700 font-medium">
-                      ₹{order.amount}
+                      ₹{order.totalAmount}
                     </td>
 
                     {/* Status */}
                     <td className="py-3 px-4">
                       <span
                         className={`px-3 py-1 rounded-full text-xs font-medium
-                        ${
-                          order.status === "Delivered"
+                        ${order.status === "Delivered"
                             ? "bg-green-100 text-green-800"
                             : order.status === "Processing"
                               ? "bg-blue-100 text-blue-800"
                               : order.status === "Cancelled"
                                 ? "bg-red-100 text-red-800"
                                 : "bg-yellow-100 text-yellow-800"
-                        }`}
+                          }`}
                       >
                         {order.status}
                       </span>
@@ -73,7 +80,7 @@ const RecentOrders = ({ orders, onViewOrder }) => {
                     {/* Action */}
                     <td className="py-3 px-4">
                       <button
-                        onClick={() => onViewOrder(order._id || order.id)}
+                        onClick={() => onViewOrder(order)} // pass full order
                         className="text-blue-600 hover:text-blue-700 font-medium text-xs"
                       >
                         View
@@ -88,6 +95,7 @@ const RecentOrders = ({ orders, onViewOrder }) => {
       ) : (
         <p className="text-gray-600 text-center py-8">No orders yet</p>
       )}
+      
     </div>
   );
 };

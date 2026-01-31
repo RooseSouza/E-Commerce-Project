@@ -30,6 +30,11 @@ import UserProvider from "./context/userContext";
 import ProtectedRoute from "./route/ProtectedRoutes";
 import AdminRoute from "./route/AdminRoute";
 
+
+import CategoryProducts from './pages/CategoryProducts'
+import OrdersPage from "./pages/OrdersPage"
+import Checkout from './pages/Checkout'
+
 const App = () => {
   return (
     <UserProvider>
@@ -79,6 +84,10 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+              
+              <Route path="/products" element={<CategoryProducts />} />
+              <Route path="/checkout" element={<Checkout />} />
+              <Route path="/orders" element={<OrdersPage />} />
 
           {/* VENDOR */}
           <Route
