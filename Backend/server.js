@@ -6,9 +6,6 @@ const Category = require("./models/category");
 const adminRoutes = require("./routes/adminRoutes");
 
 
-
-
-
 dotenv.config();
 
 const app = express();
@@ -45,6 +42,7 @@ app.use("/api/orders", require("./routes/orderRoutes"));
 app.use("/api/payments", require("./routes/paymentRoutes"));
 app.use("/api/categories", require("./routes/categoryRoutes"));
 app.use("/api/admin", require("./routes/adminRoutes"));
+app.use("/api/newsletter", require("./routes/newsletterRoutes"));
 
 
 
