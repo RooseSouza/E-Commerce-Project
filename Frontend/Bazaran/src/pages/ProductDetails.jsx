@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import ItemCard from '../components/itemcard'
@@ -7,6 +7,7 @@ import ItemCard from '../components/itemcard'
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const ProductDetails = () => {
+  const navigate = useNavigate()
   const params = useParams()
   // Handle both 'productId' and 'id' parameter names to be safe with router config
   const productId = params.productId || params.id
@@ -164,6 +165,36 @@ const ProductDetails = () => {
       alert(response.ok ? "Item added to cart!" : data.message || "Failed to add to cart");
     } catch (error) {
       console.error("Error adding to cart:", error);
+      alert("Something went wrong. Please try again.");
+    }
+  }
+
+  const handleBuyNow = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login to purchase");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: product.id, quantity: quantity }),
+      });
+
+      if (response.ok) {
+        navigate("/checkout");
+      } else {
+        const data = await response.json();
+        alert(data.message || "Failed to process request");
+      }
+    } catch (error) {
+      console.error("Error in Buy Now:", error);
       alert("Something went wrong. Please try again.");
     }
   }

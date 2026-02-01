@@ -21,7 +21,7 @@ const Checkout = () => {
       },
     });
     const data = await res.json();
-    setCartItems(data.items || []);
+    setCartItems((data.items || []).filter((item) => item.productId));
   };
 
   /* ================= ADDRESSES ================= */
@@ -42,7 +42,7 @@ const Checkout = () => {
 
   /* ================= TOTALS ================= */
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.productId.price * item.quantity,
+    (sum, item) => (item.productId ? sum + item.productId.price * item.quantity : sum),
     0
   );
   const shipping = subtotal >= 499 ? 0 : 40;
@@ -64,7 +64,7 @@ const Checkout = () => {
       },
       body: JSON.stringify({
         address: selectedAddress,
-        items: cartItems.map((item) => ({
+        items: cartItems.filter((item) => item.productId).map((item) => ({
           productId: item.productId._id,
           quantity: item.quantity,
           price: item.productId.price,
@@ -145,7 +145,7 @@ const Checkout = () => {
             <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
 
             <div className="space-y-3 text-sm">
-              {cartItems.map(item => (
+              {cartItems.filter(item => item.productId).map(item => (
                 <div key={item.productId._id} className="flex justify-between">
                   <span>
                     {item.productId.name} × {item.quantity}
