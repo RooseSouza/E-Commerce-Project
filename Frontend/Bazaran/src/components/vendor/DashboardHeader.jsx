@@ -5,8 +5,9 @@ const DashboardHeader = ({ vendor, onProfileClick, onLogout }) => {
     <header className="h-16 bg-white border-b flex items-center justify-between px-6">
       {/* Left */}
       <div>
-        <h2 className="text-lg font-semibold text-gray-800">
-       Vendor
+       <h2 className="text-2xl md:text-3xl font-semibold text-orange-600">
+
+      Bazaran
         </h2>
       </div>
 

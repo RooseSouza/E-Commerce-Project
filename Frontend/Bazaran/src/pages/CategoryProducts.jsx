@@ -2,7 +2,6 @@ import React, { useState, useEffect } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
-import ItemCard from "../components/itemcard";
 
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
@@ -39,11 +38,9 @@ const CategoryProducts = () => {
         if (Array.isArray(data)) {
           const mappedProducts = data.map((product) => ({
             id: product._id,
-            _id: product._id,
             name: product.name,
             category: product.categoryId?.name || "Unknown",
             price: product.price,
-            originalPrice: product.originalPrice || Math.round(product.price * 1.2),
             image: product.image?.url || "https://via.placeholder.com/300",
           }));
           setProducts(mappedProducts);
@@ -77,7 +74,24 @@ const CategoryProducts = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
           {products.length > 0 ? (
             products.map((product) => (
-              <ItemCard key={product.id} product={product} />
+              <div 
+                key={product.id} 
+                className="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow duration-300 cursor-pointer"
+                onClick={() => navigate(`/product/${product.id}`)}
+              >
+                <img src={product.image} alt={product.name} className="w-full h-48 object-cover" />
+                <div className="p-4">
+                  <p className="text-sm text-gray-500 mb-1 capitalize">{product.category}</p>
+                  <h3 className="text-lg font-semibold text-gray-800 mb-2">{product.name}</h3>
+                  <p className="text-orange-600 font-bold">₹{product.price}</p>
+                  <button 
+                    className="mt-4 w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition-colors"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    Add to Cart
+                  </button>
+                </div>
+              </div>
             ))
           ) : (
             <div className="col-span-full text-center py-12">
