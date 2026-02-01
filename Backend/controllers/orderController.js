@@ -13,6 +13,7 @@ const placeOrder = async (req, res) => {
     const userId = req.user._id;
     const { address } = req.body;
 
+    /* ================= ADDRESS ================= */
     if (!address || !address.houseNumber) {
       throw new Error("Complete address is required");
     }
@@ -43,8 +44,10 @@ const placeOrder = async (req, res) => {
       throw new Error("Cart is empty");
     }
 
+    /* ================= GROUP BY VENDOR ================= */
     const vendorMap = {};
-    cart.items.forEach(item => {
+
+    cart.items.forEach((item) => {
       const vendorId = item.productId.vendorId.toString();
       if (!vendorMap[vendorId]) vendorMap[vendorId] = [];
       vendorMap[vendorId].push(item);
@@ -52,6 +55,7 @@ const placeOrder = async (req, res) => {
 
     const createdOrders = [];
 
+    /* ================= CREATE ORDERS ================= */
     for (const vendorId in vendorMap) {
       let subtotal = 0;
       const orderItems = [];
@@ -63,14 +67,18 @@ const placeOrder = async (req, res) => {
           throw new Error(`Out of stock: ${product.name}`);
         }
 
+        // reduce stock
         product.stock.quantity -= item.quantity;
         await product.save({ session });
 
-        subtotal += item.quantity * item.price;
+        const price = product.price; // ✅ FIXED
+
+        subtotal += item.quantity * price;
+
         orderItems.push({
           productId: product._id,
           quantity: item.quantity,
-          price: item.price
+          price: price, // ✅ REQUIRED FIELD
         });
       }
 
@@ -78,29 +86,29 @@ const placeOrder = async (req, res) => {
       const deliveryCharge = subtotal >= 499 ? 0 : 40;
       const totalAmount = subtotal + tax + deliveryCharge;
 
-      const order = await Order.create(
-        [{
-          userId,
-          vendorId,
-          items: orderItems,
-          totalAmount,
-          addressId,
-          status: "placed"
-        }],
-        { session }
-      );
+      const order = await Order.create({
+        userId,
+        vendorId,
+        items: orderItems,
+        totalAmount,
+        addressId,
+        status: "placed",
+      });
 
       createdOrders.push(order[0]);
     }
 
+    /* ================= CLEAR CART ================= */
     cart.items = [];
     await cart.save({ session });
 
     await session.commitTransaction();
     session.endSession();
 
-    res.status(201).json({ message: "Order placed", orders: createdOrders });
-
+    res.status(201).json({
+      message: "Order placed successfully",
+      orders: createdOrders,
+    });
   } catch (err) {
     await session.abortTransaction();
     session.endSession();
