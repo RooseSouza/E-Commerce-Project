@@ -96,36 +96,6 @@ exports.updateCartItem = async (req, res) => {
   }
 };
 
-// Get Cart Summary
-exports.getCartSummary = async (req, res) => {
-  try {
-    const userId = req.user._id;
-
-    const cart = await Cart.findOne({ userId });
-
-    if (!cart) {
-      return res.json({
-        totalProducts: 0,
-        totalQuantity: 0
-      });
-    }
-
-    const totalProducts = cart.items.length; // 👈 UNIQUE PRODUCTS
-
-    const totalQuantity = cart.items.reduce(
-      (sum, item) => sum + item.quantity,
-      0
-    );
-
-    res.json({
-      totalProducts,
-      totalQuantity
-    });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-};
-
 // Remove Item from Cart
 exports.removeFromCart = async (req, res) => {
   try {
