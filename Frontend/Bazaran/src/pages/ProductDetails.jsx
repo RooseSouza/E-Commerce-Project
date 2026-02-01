@@ -327,7 +327,7 @@ const ProductDetails = () => {
               {product.inStock ? (
                 <p className="text-green-600 font-semibold">✓ In Stock</p>
               ) : (
-                <p className="text-red-600 font-semibold">Out of Stock</p>
+                <p className="text-red-600 font-semibold"> Out of Stock</p>
               )}
             </div>
           </div>
