@@ -7,36 +7,48 @@ import FeaturedBannerSection from '../components/FeaturedBannerSection'
 import CTAproducts from './CTAproducts'
 import FeaturesSection from '../components/FeaturesSection'
 import Footer from '../components/Footer'
-const API_BASE = import.meta.env.VITE_API_BASE;
+
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const Home = () => {
-  // Featured products data
   const [featuredProducts, setFeaturedProducts] = useState([])
+  const [bestSellers, setBestSellers] = useState([])
 
   useEffect(() => {
-    const fetchProducts = async () => {
+    const fetchData = async () => {
       try {
-        // Fetch products from the backend
-        // Ensure your backend is running on this port and the route is correct (e.g., /api/products)
-        const response = await fetch(`${API_BASE}/api/products`)
-        const data = await response.json()
-
-        // Map the backend data to the format expected by ItemCard
-        const mappedProducts = data.slice(0, 4).map((product) => ({
+        // Helper to map backend data
+        const mapProduct = (product) => ({
           id: product._id,
+          _id: product._id,
           name: product.name,
           price: product.price,
-          originalPrice: Math.round(product.price * 1.2), // Simulating original price as it's not in backend
-          image: product.image?.url || 'https://via.placeholder.com/300'
-        }))
+          originalPrice: product.originalPrice || Math.round(product.price * 1.2),
+          image: product.image?.url || product.image || 'https://via.placeholder.com/300'
+        })
 
-        setFeaturedProducts(mappedProducts)
+        // Fetch Featured Products (Limit 5)
+        const featRes = await fetch(`${API_BASE}/api/products?isFeatured=true&limit=5`)
+        const featData = await featRes.json()
+        
+        if (Array.isArray(featData)) {
+          setFeaturedProducts(featData.map(mapProduct))
+        }
+
+        // Fetch Best Sellers (Using Top Picks as proxy, Limit 4)
+        const bestRes = await fetch(`${API_BASE}/api/products?isTopPick=true&limit=4`)
+        const bestData = await bestRes.json()
+        
+        if (Array.isArray(bestData)) {
+          setBestSellers(bestData.map(mapProduct))
+        }
+
       } catch (error) {
-        console.error('Error fetching products:', error)
+        console.error('Error fetching home products:', error)
       }
     }
 
-    fetchProducts()
+    fetchData()
   }, [])
 
   return (
@@ -51,26 +63,17 @@ const Home = () => {
       {/* Featured Products Section */}
       <section className="py-12 lg:py-16 px-4">
         <div className="max-w-7xl mx-auto">
+          <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Products</h2>
           {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featuredProducts.map((product) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
+            {featuredProducts.slice(0, 5).map((product) => (
               <ItemCard key={product.id} product={product} />
             ))}
           </div>
         </div>
       </section>
 
-      {/* Best Sellers Section */}
-      <section className="py-12 lg:py-16 px-4 bg-white">
-        <div className="max-w-7xl mx-auto">
-
-          {/* Product Grid will be added here */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {/* Product cards will go here */}
-          </div>
-        </div>
-      </section>
-
+    
       {/* Goan Sale Section */}
       <section className="w-full">
         <GoanSaleSection />

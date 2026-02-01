@@ -1,13 +1,36 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
 const ItemCard = ({ product }) => {
   const navigate = useNavigate();
 
-  const handleAddToCart = (e) => {
+  const handleAddToCart = async (e) => {
     e.stopPropagation();
-    // TODO: Implement add to cart functionality
-    console.log('Added to cart:', product);
+    
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login to add items to cart");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: product._id || product.id, quantity: 1 }),
+      });
+
+      const data = await response.json();
+      alert(response.ok ? "Item added to cart!" : data.message || "Failed to add to cart");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Something went wrong. Please try again.");
+    }
   };
 
   const handleCardClick = () => {

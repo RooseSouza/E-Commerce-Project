@@ -1,6 +1,5 @@
 import React from 'react'
 import ItemLongCard from '../components/itemLongCard'
-import { useNavigate } from 'react-router-dom'
 
 const LongCardsSection = () => {
   const cardsData = [
@@ -48,11 +47,6 @@ const LongCardsSection = () => {
     }
   ]
 
-  const navigate = useNavigate()
-  const handleCardClick = (cardId) => {
-    navigate(`/product/${cardId}`)
-  }
-
   return (
     <div className="w-full bg-gray-50 py-20 px-4">
       <div className="max-w-7xl mx-auto">
@@ -75,7 +69,6 @@ const LongCardsSection = () => {
               title={card.title}
               subtitle={card.subtitle}
               discount={card.discount}
-              onClick={() => handleCardClick(card.id)}
             />
           ))}
         </div>

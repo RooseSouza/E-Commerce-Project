@@ -19,24 +19,13 @@ const ProfileSettings = ({ onChangePassword, onLogout, onDeleteAccount }) => {
 
         <button
           onClick={onLogout}
-          className="w-full flex items-center justify-between p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
-        >
-          <div className="text-left">
-            <p className="font-medium text-gray-800">Logout</p>
-            <p className="text-gray-600 text-sm">Sign out of your account</p>
-          </div>
-          <span className="text-gray-400">→</span>
-        </button>
-
-        <button
-          onClick={onDeleteAccount}
           className="w-full flex items-center justify-between p-4 border border-red-200 rounded-lg hover:bg-red-50 transition-colors"
         >
           <div className="text-left">
-            <p className="font-medium text-red-600">Delete Account</p>
-            <p className="text-red-500 text-sm">Permanently delete your account</p>
+            <p className="font-medium text-red-600">Logout</p>
+            <p className="text-red-500 text-sm">Sign out of your account</p>
           </div>
-          <span className="text-red-400">→</span>
+          <span className="text-gray-400">→</span>
         </button>
       </div>
     </div>
