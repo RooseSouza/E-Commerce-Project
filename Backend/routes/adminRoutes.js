@@ -2,25 +2,43 @@ const express = require("express");
 const router = express.Router();
 
 const { protect, authorize } = require("../middleware/authMiddleware");
-const adminCtrl = require("../controllers/AdminController"); // ✅ FIXED PATH
 
-// All routes are ADMIN only
+const {
+  getAdminStats,
+  getAllVendors,
+  approveVendor,
+  rejectVendor,
+  blockVendor,
+  unblockVendor,
+  getVendorProducts,
+  getAllUsers,
+  getAllProductsAdmin,
+  toggleProductStatusAdmin,
+  deleteProductAdmin,
+  approveRejectProduct
+} = require("../controllers/adminController");
+
+// 🔐 All routes ADMIN only
 router.use(protect, authorize("admin"));
 
-// Dashboard stats
-router.get("/stats", adminCtrl.getAdminStats);
+// 📊 Dashboard
+router.get("/stats", getAdminStats);
 
-// Vendors & Users
-router.get("/vendors", adminCtrl.getAllVendors);
-router.get("/vendors/:vendorId/products", adminCtrl.getVendorProducts);
-router.get("/users", adminCtrl.getAllUsers);
+// 👥 Vendors & Users
+router.get("/vendors", getAllVendors);
+router.get("/vendors/:vendorId/products", getVendorProducts);
+router.get("/users", getAllUsers);
 
-// Products management
-router.get("/products", adminCtrl.getAllProductsAdmin);
-router.patch("/products/:id/toggle", adminCtrl.toggleProductStatusAdmin);
+// 📦 Products
+router.get("/products", getAllProductsAdmin);
+router.patch("/products/:id/toggle", toggleProductStatusAdmin);
+router.delete("/products/:id", deleteProductAdmin);
+router.patch("/products/:id/approve-reject", approveRejectProduct);
 
-router.delete(
-  "/products/:id",
-  adminCtrl.deleteProductAdmin
-);
+// 🏪 Vendor approval / blocking
+router.patch("/vendors/:id/approve", approveVendor);
+router.patch("/vendors/:id/reject", rejectVendor);
+router.patch("/vendors/:id/block", blockVendor);
+router.patch("/vendors/:id/unblock", unblockVendor);
+
 module.exports = router;

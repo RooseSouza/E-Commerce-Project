@@ -2,154 +2,214 @@ import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import axios from "axios";
 
-const API = import.meta.env.VITE_API_BASE;
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const VendorProducts = () => {
   const { vendorId } = useParams();
-  const token = localStorage.getItem("token");
-
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchVendorProducts();
-  }, [vendorId]);
+  const token = localStorage.getItem("token");
 
-  const fetchVendorProducts = async () => {
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const fetchProducts = async () => {
     try {
       const res = await axios.get(
-        `${API}/api/admin/vendors/${vendorId}/products`,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        `${API_BASE}/api/admin/vendors/${vendorId}/products`,
+        { headers: { Authorization: `Bearer ${token}` } }
       );
       setProducts(res.data);
     } catch (err) {
-      console.error("Fetch vendor products error", err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
   };
 
-  const toggleStatus = async (productId) => {
+  const toggleStatus = async (id) => {
     try {
       await axios.patch(
-        `${API}/api/admin/products/${productId}/toggle`,
+        `${API_BASE}/api/admin/products/${id}/toggle`,
         {},
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
+        { headers: { Authorization: `Bearer ${token}` } }
       );
-
-      fetchVendorProducts(); // refresh list
+      fetchProducts();
     } catch (err) {
-      console.error("Toggle product error", err);
+      alert(err.response?.data?.message || "Action not allowed");
     }
   };
 
-const deleteProduct = async (productId) => {
-  if (!window.confirm("Are you sure you want to delete this product?")) return;
-
+  const updateApproval = async (id, status) => {
   try {
-    await axios.delete(
-      `${API}/api/admin/products/${productId}`,
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
+    await axios.patch(
+      `${API_BASE}/api/admin/products/${id}/approval`,
+      { status },
+      { headers: { Authorization: `Bearer ${token}` } }
     );
-
-    setProducts((prev) => prev.filter((p) => p._id !== productId));
-  } catch (error) {
-    console.error("Delete product failed:", error.response?.data || error.message);
-    alert("Failed to delete product");
+    fetchProducts();
+  } catch (err) {
+    alert("Action failed");
   }
 };
 
 
-if (loading) return <p>Loading vendor products...</p>;
+  const deleteProduct = async (id) => {
+    if (!window.confirm("Delete this product permanently?")) return;
+    try {
+      await axios.delete(`${API_BASE}/api/admin/products/${id}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      fetchProducts();
+    } catch {
+      alert("Delete failed");
+    }
+  };
+
+  const statusBadge = (p) => {
+    if (p.stock.quantity === 0)
+      return <span className="px-2 py-1 text-xs bg-gray-200 rounded">Disabled</span>;
+
+    if (!p.vendorId?.isApproved)
+      return <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">Pending</span>;
+
+    if (p.isActive)
+      return <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Active</span>;
+
+    return <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">Disabled</span>;
+  };
+
+  const actionButton = (p) => {
+    if (p.stock.quantity === 0 || !p.vendorId?.isApproved)
+      return (
+        <button
+          disabled
+          className="px-3 py-1 text-xs bg-gray-300 text-gray-600 rounded cursor-not-allowed"
+        >
+          Enable
+        </button>
+      );
+
+    return (
+      <button
+        onClick={() => toggleStatus(p._id)}
+        className={`px-3 py-1 text-xs rounded text-white ${
+          p.isActive ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
+        }`}
+      >
+        {p.isActive ? "Disable" : "Enable"}
+      </button>
+    );
+  };
+
+  if (loading) return <p className="p-6">Loading products...</p>;
 
   return (
-    <div className="bg-white rounded shadow p-6">
-      <h2 className="text-xl font-bold mb-6">Vendor Products</h2>
+    <div className="p-6">
+      <h2 className="text-2xl font-bold mb-6">Vendor Products</h2>
 
-      {products.length === 0 ? (
-        <p className="text-gray-500">This vendor has no products</p>
-      ) : (
-        <div className="overflow-x-auto">
-          <table className="w-full border text-sm">
-            <thead className="bg-gray-100">
-              <tr>
-                <th className="border px-3 py-2">#</th>
-                <th className="border px-3 py-2">Product</th>
-                <th className="border px-3 py-2">Category</th>
-                <th className="border px-3 py-2">Price</th>
-                <th className="border px-3 py-2">Stock</th>
-                <th className="border px-3 py-2">Status</th>
-                <th className="border px-3 py-2">Action</th>
+      <div className="overflow-x-auto bg-white shadow rounded-lg">
+        <table className="w-full text-sm">
+          <thead className="bg-gray-100">
+            <tr>
+              <th className="p-3 text-left">#</th>
+              <th className="p-3 text-left">Product</th>
+              <th className="p-3 text-left">Category</th>
+              <th className="p-3 text-left">Price</th>
+              <th className="p-3 text-left">Stock</th>
+              <th className="p-3 text-left">Status</th>
+              <th className="p-3 text-center">Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            {products.map((p, i) => (
+              <tr key={p._id} className="border-t hover:bg-gray-50">
+                <td className="p-3">{i + 1}</td>
+
+                <td className="p-3 flex items-center gap-3">
+                  <img
+                    src={p.image?.url}
+                    alt={p.name}
+                    className="w-10 h-10 rounded object-cover"
+                  />
+                  <span className="font-medium">{p.name}</span>
+                </td>
+
+                <td className="p-3">{p.categoryId?.name}</td>
+                <td className="p-3">₹{p.price}</td>
+                <td className="p-3">
+                  {p.stock.quantity} {p.stock.unit}
+                </td>
+               <td className="p-3">
+  {p.approvalStatus === "pending" && (
+    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">
+      Pending Approval
+    </span>
+  )}
+
+  {p.approvalStatus === "approved" && (
+    <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
+      Approved
+    </span>
+  )}
+
+  {p.approvalStatus === "rejected" && (
+    <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">
+      Rejected
+    </span>
+  )}
+</td>
+
+
+                <td className="p-3 flex gap-2 justify-center flex-wrap">
+
+  {/* APPROVE / REJECT */}
+  {p.approvalStatus === "pending" && (
+    <>
+      <button
+        onClick={() => updateApproval(p._id, "approved")}
+        className="px-3 py-1 bg-green-600 text-white rounded text-xs"
+      >
+        Approve
+      </button>
+
+      <button
+        onClick={() => updateApproval(p._id, "rejected")}
+        className="px-3 py-1 bg-red-600 text-white rounded text-xs"
+      >
+        Reject
+      </button>
+    </>
+  )}
+
+  {/* ENABLE / DISABLE */}
+  {p.approvalStatus === "approved" && p.stock.quantity > 0 && (
+    <button
+      onClick={() => toggleStatus(p._id)}
+      className={`px-3 py-1 text-xs rounded text-white ${
+        p.isActive ? "bg-red-600" : "bg-green-600"
+      }`}
+    >
+      {p.isActive ? "Disable" : "Enable"}
+    </button>
+  )}
+
+  {/* DELETE */}
+  <button
+    onClick={() => deleteProduct(p._id)}
+    className="px-3 py-1 bg-black text-white rounded text-xs"
+  >
+    Delete
+  </button>
+</td>
+
               </tr>
-            </thead>
-            <tbody>
-              {products.map((product, index) => (
-                <tr key={product._id}>
-                  <td className="border px-3 py-2">{index + 1}</td>
-
-                  <td className="border px-3 py-2 flex items-center gap-3">
-                    <img
-                      src={product.image?.url}
-                      alt={product.name}
-                      className="w-10 h-10 rounded object-cover"
-                    />
-                    <span>{product.name}</span>
-                  </td>
-
-                  <td className="border px-3 py-2">
-                    {product.categoryId?.name}
-                  </td>
-
-                  <td className="border px-3 py-2">₹{product.price}</td>
-
-                  <td className="border px-3 py-2">
-                    {product.stock?.quantity} {product.stock?.unit}
-                  </td>
-
-                  <td className="border px-3 py-2">
-                    <span
-                      className={`px-2 py-1 rounded text-xs ${
-                        product.isActive
-                          ? "bg-green-100 text-green-700"
-                          : "bg-red-100 text-red-700"
-                      }`}
-                    >
-                      {product.isActive ? "Active" : "Disabled"}
-                    </span>
-                  </td>
-
-                  <td className="border px-3 py-2">
-                    <button
-                      onClick={() => toggleStatus(product._id)}
-                      className={`px-3 py-1 rounded text-white text-xs ${
-                        product.isActive
-                          ? "bg-red-600"
-                          : "bg-green-600"
-                      }`}
-                    >
-                      {product.isActive ? "Disable" : "Enable"}
-                    </button>
-
-                    
-                        <button
-                          onClick={() => deleteProduct(product._id)}
-                          className="px-2 py-1 rounded bg-gray-800 text-white text-xs"
-                        >
-                          Delete
-                        </button>
-                    </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 };
