@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 
 /* ================= AUTH ================= */
 import Login from "./pages/Auth/Login";
@@ -15,6 +10,9 @@ import Home from "./pages/Home";
 import Cart from "./pages/Cart";
 import ProductDetails from "./pages/ProductDetails";
 import UserProfile from "./pages/UserProfile";
+import Checkout from "./pages/Checkout";
+import CategoryProducts from "./pages/CategoryProducts";
+import OrdersPage from "./pages/OrdersPage";
 
 /* ================= VENDOR ================= */
 import VendorDashboard from "./pages/VendorDashboard";
@@ -30,17 +28,11 @@ import UserProvider from "./context/userContext";
 import ProtectedRoute from "./route/ProtectedRoutes";
 import AdminRoute from "./route/AdminRoute";
 
-
-import CategoryProducts from './pages/CategoryProducts'
-import OrdersPage from "./pages/OrdersPage"
-import Checkout from './pages/Checkout'
-
 const App = () => {
   return (
     <UserProvider>
       <Router>
         <Routes>
-
           {/* ROOT */}
           <Route path="/" element={<RootRedirect />} />
 
@@ -84,10 +76,33 @@ const App = () => {
               </ProtectedRoute>
             }
           />
-              
-              <Route path="/products" element={<CategoryProducts />} />
-              <Route path="/checkout" element={<Checkout />} />
-              <Route path="/orders" element={<OrdersPage />} />
+
+          <Route
+            path="/checkout"
+            element={
+              <ProtectedRoute>
+                <Checkout />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/products"
+            element={
+              <ProtectedRoute>
+                <CategoryProducts />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/orders"
+            element={
+              <ProtectedRoute>
+                <OrdersPage />
+              </ProtectedRoute>
+            }
+          />
 
           {/* VENDOR */}
           <Route
@@ -99,7 +114,7 @@ const App = () => {
             }
           />
 
-          {/* ================= ADMIN ROUTES (NESTED) ================= */}
+          {/* ADMIN (NESTED ROUTES) */}
           <Route
             path="/admin"
             element={
@@ -108,17 +123,14 @@ const App = () => {
               </AdminRoute>
             }
           >
-            {/* Default admin page */}
             <Route index element={<AdminDashboard />} />
-
             <Route path="dashboard" element={<AdminDashboard />} />
             <Route path="vendors" element={<Vendors />} />
             <Route path="vendors/:vendorId" element={<VendorProducts />} />
           </Route>
 
-          {/* 404 FALLBACK */}
+          {/* 404 */}
           <Route path="*" element={<Navigate to="/" />} />
-
         </Routes>
       </Router>
     </UserProvider>

@@ -51,9 +51,7 @@ const userSchema = new mongoose.Schema({
 
   password: {
     type: String,
-    required: function () {
-      return !this.googleId;
-    },
+    required: true,
   },
 
   role: {
@@ -64,24 +62,31 @@ const userSchema = new mongoose.Schema({
 
   phone: {
     type: String,
-    required: function () {
-      return !this.googleId;
-    },
+    required: true,
   },
 
-  addresses: [addressSchema], // ✅ ADDRESSES STORED HERE
+  addresses: [addressSchema],
+
+  /* 🔐 ADMIN CONTROLS */
+isApproved: {
+  type: Boolean,
+  default: false,
+},
+
+isBlocked: {
+  type: Boolean,
+  default: false,
+},
+
+approvalStatus: {
+  type: String,
+  enum: ["pending", "approved", "rejected"],
+  default: "pending",
+},
 
   createdAt: {
     type: Date,
     default: Date.now,
-  },
-
-  googleId: String,
-
-  provider: {
-    type: String,
-    enum: ["local", "google"],
-    default: "local",
   },
 });
 

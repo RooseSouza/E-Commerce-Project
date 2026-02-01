@@ -146,6 +146,8 @@ exports.getAllProducts = async (req, res) => {
   }
 };
 
+
+
 //User searches for product
 exports.searchProducts = async (req, res) => {
   try {

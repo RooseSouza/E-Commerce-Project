@@ -1,96 +1,81 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import axios from "axios";
-
-const API = import.meta.env.VITE_API_BASE;
 
 const Users = () => {
   const [users, setUsers] = useState([]);
-  const token = localStorage.getItem("token");
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
+    const fetchUsers = async () => {
+      try {
+        const { data } = await axios.get("/api/admin/users");
+        setUsers(data);
+      } catch (err) {
+        setError(err.response?.data?.message || "Error fetching users");
+      } finally {
+        setLoading(false);
+      }
+    };
     fetchUsers();
   }, []);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await axios.get(`${API}/api/admin/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setUsers(res.data);
-    } catch (err) {
-      console.error("Failed to fetch users", err);
-    }
-  };
-
-  const toggleUserStatus = async (userId) => {
-    try {
-      await axios.patch(
-        `${API}/api/admin/users/${userId}/toggle`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      fetchUsers(); // refresh list
-    } catch (err) {
-      console.error("Failed to toggle user status", err);
-    }
-  };
+  if (loading) return <p>Loading users...</p>;
+  if (error) return <p className="text-red-500">{error}</p>;
 
   return (
-    <div className="bg-white rounded-xl shadow p-6">
-      <h2 className="text-xl font-bold mb-6">Registered Users</h2>
+    <div>
+      <h1 className="text-2xl font-bold mb-4">All Users</h1>
 
-      {users.length === 0 ? (
-        <p className="text-gray-500">No users found</p>
-      ) : (
-        <table className="w-full border text-sm">
-          <thead className="bg-gray-100">
+      <div className="overflow-x-auto bg-white shadow-md rounded-lg">
+        <table className="min-w-full divide-y divide-gray-200">
+          <thead className="bg-gray-50">
             <tr>
-              <th className="border px-3 py-2">#</th>
-              <th className="border px-3 py-2">Name</th>
-              <th className="border px-3 py-2">Email</th>
-              <th className="border px-3 py-2">Phone</th>
-              <th className="border px-3 py-2">Status</th>
-              <th className="border px-3 py-2">Action</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Name
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Email
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Status
+              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                Actions
+              </th>
             </tr>
           </thead>
-
-          <tbody>
-            {users.map((user, index) => (
+          <tbody className="bg-white divide-y divide-gray-200">
+            {users.map((user) => (
               <tr key={user._id}>
-                <td className="border px-3 py-2">{index + 1}</td>
-                <td className="border px-3 py-2">{user.name}</td>
-                <td className="border px-3 py-2">{user.email}</td>
-                <td className="border px-3 py-2">{user.phone || "-"}</td>
-
-                <td className="border px-3 py-2">
-                  <span
-                    className={`px-2 py-1 rounded-full text-xs ${
-                      user.isBlocked
-                        ? "bg-red-100 text-red-700"
-                        : "bg-green-100 text-green-700"
-                    }`}
-                  >
-                    {user.isBlocked ? "Blocked" : "Active"}
-                  </span>
+                <td className="px-6 py-4 whitespace-nowrap">{user.name}</td>
+                <td className="px-6 py-4 whitespace-nowrap">{user.email}</td>
+                <td className="px-6 py-4 whitespace-nowrap">
+                  {user.isBlocked ? (
+                    <span className="text-red-500 font-semibold">Blocked</span>
+                  ) : (
+                    <span className="text-green-500 font-semibold">Active</span>
+                  )}
                 </td>
-
-                <td className="border px-3 py-2">
-                  <button
-                    onClick={() => toggleUserStatus(user._id)}
-                    className={`px-3 py-1 rounded text-white text-xs ${
-                      user.isBlocked
-                        ? "bg-green-600 hover:bg-green-700"
-                        : "bg-red-600 hover:bg-red-700"
-                    }`}
+                <td className="px-6 py-4 whitespace-nowrap space-x-2">
+                  <Link
+                    to={`${user._id}`}
+                    className="px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700 text-sm"
                   >
-                    {user.isBlocked ? "Unblock" : "Block"}
-                  </button>
+                    View Orders
+                  </Link>
+                  {/* You can add block/unblock actions later here if needed */}
                 </td>
               </tr>
             ))}
           </tbody>
         </table>
-      )}
+
+        {users.length === 0 && (
+          <p className="p-4 text-gray-500">No users found.</p>
+        )}
+      </div>
     </div>
   );
 };

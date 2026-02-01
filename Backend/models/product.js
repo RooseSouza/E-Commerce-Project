@@ -65,11 +65,35 @@ const productSchema = new mongoose.Schema({
     default: true
   },
 
+manualDisabled: {
+  type: Boolean,
+  default: false
+},
+
+approvalStatus: {
+  type: String,
+  enum: ["pending", "approved", "rejected"],
+  default: "pending"
+},
+
+
   createdAt: {
     type: Date,
     default: Date.now
   }
 });
+
+productSchema.virtual("isActivee").get(function () {
+  return (
+    this.stock.quantity > 0 &&
+    this.approvalStatus === "approved" &&
+    !this.manualDisabled
+  );
+});
+
+// ⚠️ IMPORTANT (so virtual appears in API responses)
+productSchema.set("toJSON", { virtuals: true });
+productSchema.set("toObject", { virtuals: true });
 
 /* Index for faster search */
 productSchema.index({ name: "text", tags: "text" });
