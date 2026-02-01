@@ -293,4 +293,8 @@ exports.getUserOrders = async (req, res) => {
 
     res.json(orders);
 
+ } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
+
