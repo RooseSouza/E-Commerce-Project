@@ -2,12 +2,16 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AddAddressModal from "../components/AddAddressModal";
+import { useNavigate } from "react-router-dom";
 
 const Checkout = () => {
   const [cartItems, setCartItems] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [selectedAddressIndex, setSelectedAddressIndex] = useState(null);
   const [showAddAddress, setShowAddAddress] = useState(false);
+  const [paymentModalOpen, setPaymentModalOpen] = useState(false);
+  const [currentOrderId, setCurrentOrderId] = useState(null);
+  const navigate = useNavigate();
 
   /* ================= CART ================= */
   const fetchCart = async () => {
@@ -47,19 +51,20 @@ const Checkout = () => {
 
   /* ================= PLACE ORDER ================= */
   const placeOrder = async () => {
-    if (selectedAddressIndex === null) return;
+  if (selectedAddressIndex === null) return;
 
-    const selectedAddress = addresses[selectedAddressIndex];
+  const selectedAddress = addresses[selectedAddressIndex];
 
-    await fetch(`${import.meta.env.VITE_API_BASE}/api/orders`, {
+  try {
+    const res = await fetch(`${import.meta.env.VITE_API_BASE}/api/orders`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${localStorage.getItem("token")}`,
       },
       body: JSON.stringify({
-        address: selectedAddress,          // FULL ADDRESS ONLY
-        items: cartItems.map(item => ({
+        address: selectedAddress,
+        items: cartItems.map((item) => ({
           productId: item.productId._id,
           quantity: item.quantity,
           price: item.productId.price,
@@ -71,9 +76,18 @@ const Checkout = () => {
       }),
     });
 
-    alert("Order placed successfully!");
-    window.location.href = "/home";
-  };
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.message || "Order failed");
+
+    // Instead of redirecting, open payment modal
+    setCurrentOrderId(data._id || data.order?._id); // save order ID
+    alert("Order placed successfully 🎉");
+      navigate("/home"); // ✅ redirect to homepage
+  } catch (err) {
+    console.error(err);
+    alert(err.message || "Order placement failed!");
+  }
+};
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -202,6 +216,8 @@ const Checkout = () => {
           }}
         />
       )}
+
+      
     </div>
   );
 };

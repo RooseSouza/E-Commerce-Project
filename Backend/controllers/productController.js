@@ -1,46 +1,47 @@
-const mongoose = require("mongoose");
-const Product = require("../models/product");
-const Category = require("../models/category");
-const cloudinary = require("../config/cloudinary");
-// Vendor adds product
-exports.addProduct = async (req, res) => {
-  try {
-    const {
-      name,
-      description,
-      price,
-      categoryName,
-      stockQuantity,
-      stockUnit,
-      tags,
-      isTopPick,
-      isFeatured,
-    } = req.body;
+const mongoose = require("mongoose"); 
+const Product = require("../models/product"); 
+const Category = require("../models/category"); 
+const cloudinary = require("../config/cloudinary"); 
 
-    if (!req.file) {
-      return res.status(400).json({ message: "Product image is required" });
-    }
+// Vendor adds product 
+exports.addProduct = async (req, res) => { 
+  try { 
+    const { 
+      name, 
+      description, 
+      price, 
+      categoryName, 
+      stockQuantity, 
+      stockUnit, 
+      tags, 
+      isTopPick, 
+      isFeatured, 
+    } = req.body; 
 
-    if (
-      !name ||
-      !description ||
-      !price ||
-      !categoryName ||
-      stockQuantity === undefined ||
-      !stockUnit
-    ) {
-      return res
-        .status(400)
-        .json({ message: "Please provide all required fields" });
-    }
+    if (!req.file) { 
+      return res.status(400).json({ message: "Product image is required" }); 
+    } 
 
-    const category = await Category.findOne({ name: categoryName });
-    if (!category) {
-      return res.status(400).json({ message: "Invalid category selected" });
-    }
+    if ( 
+      !name || 
+      !description || 
+      !price || 
+      !categoryName || 
+      stockQuantity === undefined || 
+      !stockUnit 
+    ) { 
+      return res 
+        .status(400) 
+        .json({ message: "Please provide all required fields" }); 
+    } 
 
-    let processedTags = [];
-    if (tags) {
+    const category = await Category.findOne({ name: categoryName }); 
+    if (!category) { 
+      return res.status(400).json({ message: "Invalid category selected" }); 
+    } 
+
+    let processedTags = []; 
+    if (tags) { 
       processedTags = Array.isArray(tags) 
         ? tags.map((tag) => tag.toLowerCase()) 
         : tags.split(",").map((tag) => tag.trim().toLowerCase());
