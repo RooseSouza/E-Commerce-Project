@@ -281,12 +281,6 @@ const ProductDetails = () => {
                   <span>🛒</span>
                   Add to cart
                 </button>
-                <button
-                  onClick={handleBuyNow}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-                >
-                  Buy Now
-                </button>
               </div>
 
               {/* Stock Status */}
