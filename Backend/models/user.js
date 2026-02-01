@@ -84,6 +84,12 @@ approvalStatus: {
   default: "pending",
 },
 
+isDeleted: {
+  type: Boolean,
+  default: false,
+},
+
+
   createdAt: {
     type: Date,
     default: Date.now,

@@ -1,7 +1,8 @@
 const jwt = require("jsonwebtoken");
 const User = require("../models/user");
 
-exports.protect = async (req, res, next) => {
+// 🔐 PROTECT ROUTES
+const protect = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
 
@@ -18,17 +19,17 @@ exports.protect = async (req, res, next) => {
       return res.status(401).json({ message: "User not found" });
     }
 
-    /* 🔒 BLOCK CHECK (ALL ROLES EXCEPT ADMIN) */
+    // 🚫 Blocked users (except admin)
     if (user.role !== "admin" && user.isBlocked) {
       return res.status(403).json({
         message: "Your account has been blocked by admin",
       });
     }
 
-    /* ⏳ APPROVAL CHECK (ONLY VENDORS) */
+    // ⏳ Vendor approval check
     if (user.role === "vendor" && !user.isApproved) {
       return res.status(403).json({
-        message: "Your vendor account is pending admin approval",
+        message: "Your vendor account is not approved by admin",
       });
     }
 
@@ -36,16 +37,24 @@ exports.protect = async (req, res, next) => {
     next();
   } catch (err) {
     console.error("Auth error:", err);
-    res.status(401).json({ message: "Invalid or expired token" });
+    return res.status(401).json({ message: "Invalid or expired token" });
   }
 };
 
 // 🔐 ROLE BASED ACCESS
-exports.authorize = (...roles) => {
+const authorize = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
-      return res.status(403).json({ message: "Access denied for this role" });
+      return res.status(403).json({
+        message: "Access denied for this role",
+      });
     }
     next();
   };
+};
+
+// ✅ IMPORTANT EXPORT
+module.exports = {
+  protect,
+  authorize,
 };
