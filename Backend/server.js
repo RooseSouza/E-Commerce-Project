@@ -6,9 +6,6 @@ const Category = require("./models/category");
 const adminRoutes = require("./routes/AdminRoutes");
 
 
-
-
-
 dotenv.config();
 
 const app = express();
