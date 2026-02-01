@@ -223,15 +223,7 @@ const Cart = () => {
                     Continue Shopping
                   </Link>
 
-                  {/* Offers Section */}
-                  <div className="mt-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
-                    <p className="text-sm text-blue-800 mb-2">
-                      ✓ Free delivery on orders above ₹500
-                    </p>
-                    <p className="text-sm text-blue-800">
-                      ✓ Easy returns within 30 days
-                    </p>
-                  </div>
+                
                 </div>
               </div>
             </div>

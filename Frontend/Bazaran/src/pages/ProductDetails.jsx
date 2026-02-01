@@ -168,17 +168,6 @@ const ProductDetails = () => {
     }
   }
 
-  const handleBuyNow = () => {
-    console.log(`Buying ${quantity} of product ${product.id}`)
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-screen flex justify-center items-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
-      </div>
-    )
-  }
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -260,12 +249,6 @@ const ProductDetails = () => {
                 </p>
               </div>
 
-              {/* Delivery */}
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <p className="text-gray-700">
-                  <span className="font-semibold">Secure Delivery expected by</span> {product.deliveryDate}
-                </p>
-              </div>
 
               {/* Quantity Selector */}
               <div className="flex items-center gap-4">
