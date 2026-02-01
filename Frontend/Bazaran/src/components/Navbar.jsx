@@ -4,6 +4,7 @@ import { useContext } from "react";
 import { UserContext } from "../context/userContext";
 import Logo from "../assets/logo1.png";
 import axios from "axios";
+import NotificationBell from "./NotificationBell";
 
 
 const Navbar = () => {
@@ -164,6 +165,9 @@ const Navbar = () => {
                     </span>
                   )}
                 </Link>
+
+                {/* Notification Bell */}
+                <NotificationBell />
 
                 {/* User Menu */}
                 <div className="relative">

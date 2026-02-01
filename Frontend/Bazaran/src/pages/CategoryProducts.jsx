@@ -58,6 +58,33 @@ const CategoryProducts = () => {
     fetchProducts();
   }, [category, searchQuery, categoryId]);
 
+  const addToCart = async (e, productId) => {
+    e.stopPropagation();
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login to add items to cart");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId, quantity: 1 }),
+      });
+
+      const data = await response.json();
+      alert(response.ok ? "Item added to cart!" : data.message || "Failed to add to cart");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Something went wrong. Please try again.");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
       <Navbar />
@@ -86,7 +113,7 @@ const CategoryProducts = () => {
                   <p className="text-orange-600 font-bold">₹{product.price}</p>
                   <button 
                     className="mt-4 w-full bg-orange-500 text-white py-2 rounded hover:bg-orange-600 transition-colors"
-                    onClick={(e) => e.stopPropagation()}
+                    onClick={(e) => addToCart(e, product.id)}
                   >
                     Add to Cart
                   </button>

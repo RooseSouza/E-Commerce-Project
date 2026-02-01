@@ -25,14 +25,16 @@ import VendorProducts from "./admin/VendorProducts";
 
 /* ================= CONTEXT & ROUTES ================= */
 import UserProvider from "./context/userContext";
+import { NotificationProvider } from "./context/NotificationContext";
 import ProtectedRoute from "./route/ProtectedRoutes";
 import AdminRoute from "./route/AdminRoute";
 
 const App = () => {
   return (
     <UserProvider>
-      <Router>
-        <Routes>
+      <NotificationProvider>
+        <Router>
+          <Routes>
           {/* ROOT */}
           <Route path="/" element={<RootRedirect />} />
 
@@ -131,8 +133,9 @@ const App = () => {
 
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" />} />
-        </Routes>
-      </Router>
+          </Routes>
+        </Router>
+      </NotificationProvider>
     </UserProvider>
   );
 };

@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AddAddressModal from "../components/AddAddressModal";
 import { useNavigate } from "react-router-dom";
+import { useNotifications } from "../context/NotificationContext";
 
 const Checkout = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -12,6 +13,7 @@ const Checkout = () => {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState(null);
   const navigate = useNavigate();
+  const { fetchNotifications } = useNotifications();
 
   /* ================= CART ================= */
   const fetchCart = async () => {
@@ -82,6 +84,7 @@ const Checkout = () => {
     // Instead of redirecting, open payment modal
     setCurrentOrderId(data._id || data.order?._id); // save order ID
     alert("Order placed successfully 🎉");
+      fetchNotifications();
       navigate("/home"); // ✅ redirect to homepage
   } catch (err) {
     console.error(err);

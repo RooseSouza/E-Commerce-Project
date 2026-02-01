@@ -3,6 +3,7 @@ const Order = require("../models/order");
 const Cart = require("../models/cart");
 const Product = require("../models/product");
 const User = require("../models/user");
+const Notification = require("../models/notification");
 
 /* ================= PLACE ORDER ================= */
 const placeOrder = async (req, res) => {
@@ -102,6 +103,21 @@ const placeOrder = async (req, res) => {
     cart.items = [];
     await cart.save({ session });
 
+    /* ================= CREATE NOTIFICATIONS ================= */
+    console.log("🔔 Creating notifications for user:", userId);
+    // Create a notification for each order generated (in case of multiple vendors)
+    for (const order of createdOrders) {
+      if (order) {
+        console.log(`🔔 Notification for Order ID: ${order._id}`);
+        await Notification.create([{
+          userId,
+          title: "Order Placed",
+          message: `Your order #${order._id.toString().slice(-6)} has been placed successfully.`,
+          orderId: order._id
+        }], { session });
+      }
+    }
+
     await session.commitTransaction();
     session.endSession();
 
@@ -165,6 +181,14 @@ const updateOrderStatus = async (req, res) => {
 
     order.status = status;
     await order.save();
+
+    // Create Notification for Status Update
+    await Notification.create({
+      userId: order.userId,
+      title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+      message: `Your order #${order._id.toString().slice(-6)} has been ${status}.`,
+      orderId: order._id
+    });
 
     res.json({ message: "Status updated", order });
   } catch (err) {
