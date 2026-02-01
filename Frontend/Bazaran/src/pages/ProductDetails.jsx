@@ -77,7 +77,7 @@ const ProductDetails = () => {
             'Partner Offer Sign up for Flipkart Pay Later and get Flipkart Gift Card worth ₹100'
           ],
           description: data.description || 'No description available.',
-          inStock: data?.countInStock > 0
+          inStock: (data?.stock?.quantity ?? data?.countInStock ?? 0) > 0
         })
         setSelectedImage(0)
       } catch (err) {
@@ -147,6 +147,11 @@ const ProductDetails = () => {
   }, [productId])
 
   const handleAddToCart = async () => {
+    if (!product.inStock) {
+      alert("This product is out of stock");
+      return;
+    }
+
     const token = localStorage.getItem("token");
     if (!token) {
       alert("Please login to add items to cart");
@@ -309,17 +314,13 @@ const ProductDetails = () => {
               <div className="flex gap-4">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  disabled={!product.inStock}
+                  className={`flex-1 ${!product.inStock ? "bg-gray-300 cursor-not-allowed" : "bg-yellow-400 hover:bg-yellow-500"} text-gray-900 font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2`}
                 >
                   <span>🛒</span>
-                  Add to cart
+                  {product.inStock ? "Add to cart" : "Out of Stock"}
                 </button>
-                <button
-                  onClick={handleBuyNow}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-                >
-                  Buy Now
-                </button>
+                
               </div>
 
               {/* Stock Status */}

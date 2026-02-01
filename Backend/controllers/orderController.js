@@ -87,14 +87,14 @@ const placeOrder = async (req, res) => {
       const deliveryCharge = subtotal >= 499 ? 0 : 40;
       const totalAmount = subtotal + tax + deliveryCharge;
 
-      const order = await Order.create({
+      const order = await Order.create([{
         userId,
         vendorId,
         items: orderItems,
         totalAmount,
         addressId,
         status: "placed",
-      });
+      }], { session });
 
       createdOrders.push(order[0]);
     }
@@ -107,14 +107,15 @@ const placeOrder = async (req, res) => {
     console.log("🔔 Creating notifications for user:", userId);
     // Create a notification for each order generated (in case of multiple vendors)
     for (const order of createdOrders) {
-      if (order) {
-        console.log(`🔔 Notification for Order ID: ${order._id}`);
-        await Notification.create([{
-          userId,
+      if (order && order._id) {
+        console.log(`🔔 Creating notification for Order ID: ${order._id}`);
+        const notification = new Notification({
+          userId: userId,
           title: "Order Placed",
           message: `Your order #${order._id.toString().slice(-6)} has been placed successfully.`,
-          orderId: order._id
-        }], { session });
+          orderId: order._id,
+        });
+        await notification.save({ session });
       }
     }
 
