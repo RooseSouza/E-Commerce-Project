@@ -42,39 +42,17 @@ const App = () => {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
 
-          {/* USER ROUTES */}
-          <Route
-            path="/home"
-            element={
-              <ProtectedRoute>
-                <Home />
-              </ProtectedRoute>
-            }
-          />
+          {/* USER ROUTES (PUBLIC) */}
+          <Route path="/home" element={<Home />} />
+          <Route path="/product/:productId" element={<ProductDetails />} />
+          <Route path="/products" element={<CategoryProducts />} />
 
-          <Route
-            path="/product/:productId"
-            element={
-              <ProtectedRoute>
-                <ProductDetails />
-              </ProtectedRoute>
-            }
-          />
-
+          {/* USER ROUTES (PROTECTED) */}
           <Route
             path="/cart"
             element={
               <ProtectedRoute>
                 <Cart />
-              </ProtectedRoute>
-            }
-          />
-
-          <Route
-            path="/profile"
-            element={
-              <ProtectedRoute>
-                <UserProfile />
               </ProtectedRoute>
             }
           />
@@ -89,10 +67,10 @@ const App = () => {
           />
 
           <Route
-            path="/products"
+            path="/profile"
             element={
               <ProtectedRoute>
-                <CategoryProducts />
+                <UserProfile />
               </ProtectedRoute>
             }
           />
@@ -105,6 +83,7 @@ const App = () => {
               </ProtectedRoute>
             }
           />
+
 
           {/* VENDOR */}
           <Route
@@ -145,12 +124,12 @@ const RootRedirect = () => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  if (!token) return <Navigate to="/home" />;
+  if (!token) return <Navigate to="/" />;
 
   if (user?.role === "admin") return <Navigate to="/admin" />;
   if (user?.role === "vendor") return <Navigate to="/vendor-dashboard" />;
 
-  return <Navigate to="/home" />;
+  return <Navigate to="/" />;
 };
 
 export default App;
