@@ -24,6 +24,23 @@ const AdminSidebar = () => {
         >
           Vendors
         </Link>
+
+          <Link
+          to="/admin/users"
+          className={`block px-4 py-2 rounded hover:bg-yellow-500 hover:text-gray-900 transition ${
+            isActive("/admin/users") ? "bg-yellow-400 text-gray-900" : ""
+          }`}
+        >
+          Users
+        </Link>
+        <Link
+          to="/admin/products"
+          className={`block px-4 py-2 rounded hover:bg-yellow-500 hover:text-gray-900 transition ${
+            isActive("/admin/products") ? "bg-yellow-400 text-gray-900" : ""
+          }`}
+        >
+          Products
+        </Link>
       </nav>
     </div>
   );

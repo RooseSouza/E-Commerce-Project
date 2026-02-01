@@ -23,6 +23,9 @@ exports.getAdminStats = async (req, res) => {
   }
 };
 
+/**
+ * 👥 Get All Vendors
+ */
 exports.getAllVendors = async (req, res) => {
   try {
     const vendors = await User.aggregate([
@@ -46,19 +49,18 @@ exports.getAllVendors = async (req, res) => {
           email: 1,
           phone: 1,
           productCount: 1,
-          isApproved: 1,   // ✅ REQUIRED
-          isBlocked: 1,    // ✅ REQUIRED
-          createdAt: 1
+          isApproved: 1,
+          isBlocked: 1,
+          createdAt: 1,
         },
       },
     ]);
 
     res.json(vendors);
-  } catch (error) {
+  } catch (err) {
     res.status(500).json({ message: "Failed to fetch vendors" });
   }
 };
-
 
 /**
  * 📦 Get Products of Specific Vendor
@@ -78,13 +80,44 @@ exports.getVendorProducts = async (req, res) => {
 };
 
 /**
+ * 🧾 Get Orders of Specific Vendor (NEW)
+ */
+exports.getVendorOrders = async (req, res) => {
+  try {
+    const vendorId = req.params.vendorId;
+
+    // 1️⃣ Get vendor product IDs
+    const products = await Product.find(
+      { vendorId },
+      "_id name"
+    );
+
+    const productIds = products.map(p => p._id);
+
+    // 2️⃣ Find orders containing those products
+    const orders = await Order.find({
+      "items.productId": { $in: productIds },
+    })
+      .populate("userId", "name email")
+      .populate("items.productId", "name price")
+      .sort({ createdAt: -1 });
+
+    res.json({
+      vendorId,
+      totalOrders: orders.length,
+      orders,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
  * 👤 Get All Users
  */
 exports.getAllUsers = async (req, res) => {
   try {
-    const users = await User.find({ role: "user" })
-      .select("-password");
-
+    const users = await User.find({ role: "user" }).select("-password");
     res.json(users);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -92,7 +125,7 @@ exports.getAllUsers = async (req, res) => {
 };
 
 /**
- * 📦 Get All Products (Admin – no isActive filter)
+ * 📦 Get All Products (Admin)
  */
 exports.getAllProductsAdmin = async (req, res) => {
   try {
@@ -106,17 +139,22 @@ exports.getAllProductsAdmin = async (req, res) => {
   }
 };
 
+/**
+ * 🔁 Toggle Product Active Status
+ */
 exports.toggleProductStatusAdmin = async (req, res) => {
   const product = await Product.findById(req.params.id).populate("vendorId");
 
-  if (!product) return res.status(404).json({ message: "Not found" });
+  if (!product) return res.status(404).json({ message: "Product not found" });
 
   if (product.stock.quantity === 0) {
     return res.status(400).json({ message: "Stock is zero" });
   }
 
   if (!product.vendorId.isApproved || product.vendorId.isBlocked) {
-    return res.status(400).json({ message: "Vendor not approved or blocked" });
+    return res
+      .status(400)
+      .json({ message: "Vendor not approved or blocked" });
   }
 
   product.manualDisabled = !product.manualDisabled;
@@ -124,29 +162,28 @@ exports.toggleProductStatusAdmin = async (req, res) => {
 
   res.json({
     isActive: product.isActive,
-    manualDisabled: product.manualDisabled
+    manualDisabled: product.manualDisabled,
   });
 };
 
-
-
 /**
- * 🗑️ Admin Delete Product
+ * 🗑️ Delete Product (Admin)
  */
 exports.deleteProductAdmin = async (req, res) => {
   try {
     const product = await Product.findByIdAndDelete(req.params.id);
-
     if (!product) {
       return res.status(404).json({ message: "Product not found" });
     }
-
     res.json({ message: "Product deleted successfully" });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
+/**
+ * ✅ Approve Vendor
+ */
 exports.approveVendor = async (req, res) => {
   const vendor = await User.findById(req.params.id);
   if (!vendor) return res.status(404).json({ message: "Vendor not found" });
@@ -158,20 +195,30 @@ exports.approveVendor = async (req, res) => {
   res.json(vendor);
 };
 
-
+/**
+ * ❌ Reject Vendor
+ */
 exports.rejectVendor = async (req, res) => {
-  const vendor = await User.findById(req.params.id);
-  if (!vendor) return res.status(404).json({ message: "Vendor not found" });
+  try {
+    const vendor = await User.findByIdAndUpdate(
+      req.params.id,
+      { isApproved: false, isBlocked: false },
+      { new: true }
+    ).select("-password");
 
-  vendor.isApproved = null;
-  vendor.isBlocked = false;
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
 
-  await vendor.save();
-  res.json(vendor);
+    res.json(vendor);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-
-
+/**
+ * 🚫 Block Vendor
+ */
 exports.blockVendor = async (req, res) => {
   const vendor = await User.findById(req.params.id);
   if (!vendor) return res.status(404).json({ message: "Vendor not found" });
@@ -183,22 +230,33 @@ exports.blockVendor = async (req, res) => {
   res.json(vendor);
 };
 
-
+/**
+ * 🔓 Unblock Vendor
+ */
 exports.unblockVendor = async (req, res) => {
-  const vendor = await User.findById(req.params.id);
-  if (!vendor) return res.status(404).json({ message: "Vendor not found" });
+  try {
+    const vendor = await User.findByIdAndUpdate(
+      req.params.id,
+      { isBlocked: false },
+      { new: true }
+    ).select("-password");
 
-  vendor.isBlocked = false;
-  vendor.isApproved = false; // ⚠️ stays pending
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
 
-  await vendor.save();
-  res.json(vendor);
+    res.json(vendor);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
 
-
+/**
+ * ✅ / ❌ Approve or Reject Product
+ */
 exports.approveRejectProduct = async (req, res) => {
   try {
-    const { status } = req.body; // approved | rejected
+    const { status } = req.body;
 
     if (!["approved", "rejected"].includes(status)) {
       return res.status(400).json({ message: "Invalid status" });
@@ -209,7 +267,6 @@ exports.approveRejectProduct = async (req, res) => {
 
     product.approvalStatus = status;
 
-    // auto-disable if rejected
     if (status === "rejected") {
       product.manualDisabled = true;
     }
@@ -218,8 +275,23 @@ exports.approveRejectProduct = async (req, res) => {
 
     res.json({
       message: `Product ${status}`,
-      approvalStatus: product.approvalStatus
+      approvalStatus: product.approvalStatus,
     });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * 👤 Get Orders of Specific User
+ */
+exports.getUserOrders = async (req, res) => {
+  try {
+    const orders = await Order.find({ userId: req.params.userId })
+      .populate("items.productId", "name price")
+      .sort({ createdAt: -1 });
+
+    res.json(orders);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

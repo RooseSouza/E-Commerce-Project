@@ -21,7 +21,7 @@ const VendorProducts = () => {
         `${API_BASE}/api/admin/vendors/${vendorId}/products`,
         { headers: { Authorization: `Bearer ${token}` } }
       );
-      setProducts(res.data);
+      setProducts(Array.isArray(res.data) ? res.data : []);
     } catch (err) {
       console.error(err);
     } finally {
@@ -29,6 +29,7 @@ const VendorProducts = () => {
     }
   };
 
+  // 🔁 Enable / Disable
   const toggleStatus = async (id) => {
     try {
       await axios.patch(
@@ -38,24 +39,11 @@ const VendorProducts = () => {
       );
       fetchProducts();
     } catch (err) {
-      alert(err.response?.data?.message || "Action not allowed");
+      alert(err.response?.data?.message || "Action failed");
     }
   };
 
-  const updateApproval = async (id, status) => {
-  try {
-    await axios.patch(
-      `${API_BASE}/api/admin/products/${id}/approval`,
-      { status },
-      { headers: { Authorization: `Bearer ${token}` } }
-    );
-    fetchProducts();
-  } catch (err) {
-    alert("Action failed");
-  }
-};
-
-
+  // 🗑 Delete
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product permanently?")) return;
     try {
@@ -69,38 +57,17 @@ const VendorProducts = () => {
   };
 
   const statusBadge = (p) => {
-    if (p.stock.quantity === 0)
-      return <span className="px-2 py-1 text-xs bg-gray-200 rounded">Disabled</span>;
-
-    if (!p.vendorId?.isApproved)
-      return <span className="px-2 py-1 text-xs bg-yellow-100 text-yellow-700 rounded">Pending</span>;
-
-    if (p.isActive)
-      return <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">Active</span>;
-
-    return <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">Disabled</span>;
-  };
-
-  const actionButton = (p) => {
-    if (p.stock.quantity === 0 || !p.vendorId?.isApproved)
+    if (!p.isActive)
       return (
-        <button
-          disabled
-          className="px-3 py-1 text-xs bg-gray-300 text-gray-600 rounded cursor-not-allowed"
-        >
-          Enable
-        </button>
+        <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
+          Disabled
+        </span>
       );
 
     return (
-      <button
-        onClick={() => toggleStatus(p._id)}
-        className={`px-3 py-1 text-xs rounded text-white ${
-          p.isActive ? "bg-red-600 hover:bg-red-700" : "bg-green-600 hover:bg-green-700"
-        }`}
-      >
-        {p.isActive ? "Disable" : "Enable"}
-      </button>
+      <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
+        Active
+      </span>
     );
   };
 
@@ -123,6 +90,7 @@ const VendorProducts = () => {
               <th className="p-3 text-center">Actions</th>
             </tr>
           </thead>
+
           <tbody>
             {products.map((p, i) => (
               <tr key={p._id} className="border-t hover:bg-gray-50">
@@ -142,71 +110,43 @@ const VendorProducts = () => {
                 <td className="p-3">
                   {p.stock.quantity} {p.stock.unit}
                 </td>
-               <td className="p-3">
-  {p.approvalStatus === "pending" && (
-    <span className="px-2 py-1 bg-yellow-100 text-yellow-700 rounded text-xs">
-      Pending Approval
-    </span>
-  )}
 
-  {p.approvalStatus === "approved" && (
-    <span className="px-2 py-1 bg-green-100 text-green-700 rounded text-xs">
-      Approved
-    </span>
-  )}
-
-  {p.approvalStatus === "rejected" && (
-    <span className="px-2 py-1 bg-red-100 text-red-700 rounded text-xs">
-      Rejected
-    </span>
-  )}
-</td>
-
+                <td className="p-3">{statusBadge(p)}</td>
 
                 <td className="p-3 flex gap-2 justify-center flex-wrap">
+                  {/* ENABLE / DISABLE */}
+                  <button
+                    onClick={() => toggleStatus(p._id)}
+                    disabled={p.stock.quantity === 0}
+                    className={`px-3 py-1 text-xs rounded text-white ${
+                      p.stock.quantity === 0
+                        ? "bg-gray-300 cursor-not-allowed"
+                        : p.isActive
+                        ? "bg-red-600 hover:bg-red-700"
+                        : "bg-green-600 hover:bg-green-700"
+                    }`}
+                  >
+                    {p.isActive ? "Disable" : "Enable"}
+                  </button>
 
-  {/* APPROVE / REJECT */}
-  {p.approvalStatus === "pending" && (
-    <>
-      <button
-        onClick={() => updateApproval(p._id, "approved")}
-        className="px-3 py-1 bg-green-600 text-white rounded text-xs"
-      >
-        Approve
-      </button>
-
-      <button
-        onClick={() => updateApproval(p._id, "rejected")}
-        className="px-3 py-1 bg-red-600 text-white rounded text-xs"
-      >
-        Reject
-      </button>
-    </>
-  )}
-
-  {/* ENABLE / DISABLE */}
-  {p.approvalStatus === "approved" && p.stock.quantity > 0 && (
-    <button
-      onClick={() => toggleStatus(p._id)}
-      className={`px-3 py-1 text-xs rounded text-white ${
-        p.isActive ? "bg-red-600" : "bg-green-600"
-      }`}
-    >
-      {p.isActive ? "Disable" : "Enable"}
-    </button>
-  )}
-
-  {/* DELETE */}
-  <button
-    onClick={() => deleteProduct(p._id)}
-    className="px-3 py-1 bg-black text-white rounded text-xs"
-  >
-    Delete
-  </button>
-</td>
-
+                  {/* DELETE */}
+                  <button
+                    onClick={() => deleteProduct(p._id)}
+                    className="px-3 py-1 bg-black text-white rounded text-xs hover:bg-gray-800"
+                  >
+                    Delete
+                  </button>
+                </td>
               </tr>
             ))}
+
+            {products.length === 0 && (
+              <tr>
+                <td colSpan="7" className="p-6 text-center text-gray-500">
+                  No products found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>

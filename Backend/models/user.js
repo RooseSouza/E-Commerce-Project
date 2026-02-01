@@ -78,6 +78,11 @@ isBlocked: {
   default: false,
 },
 
+approvalStatus: {
+  type: String,
+  enum: ["pending", "approved", "rejected"],
+  default: "pending",
+},
 
   createdAt: {
     type: Date,

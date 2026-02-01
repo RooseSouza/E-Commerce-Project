@@ -176,7 +176,7 @@ const Vendors = () => {
                       >
                         View Products
                       </button>
-
+              
                       <button
                         onClick={() => handleBlock(vendor._id)}
                         className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
