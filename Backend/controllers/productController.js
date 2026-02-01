@@ -226,7 +226,7 @@ exports.updateProduct = async (req, res) => {
     console.log("REQ FILES:", req.files);
 
     if (!mongoose.Types.ObjectId.isValid(req.params.id)) {
-      return res.status(404).json({ message: "product not found (Invalid ID)" });
+      return res.status(404).json({ message: "Product not found (Invalid ID)" });
     }
 
     const updateData = {};
