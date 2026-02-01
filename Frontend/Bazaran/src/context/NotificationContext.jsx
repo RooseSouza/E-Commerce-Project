@@ -32,6 +32,8 @@ export const NotificationProvider = ({ children }) => {
         if (Array.isArray(data)) {
           setNotifications(data);
           setUnreadCount(data.filter((n) => !n.read).length);
+        } else {
+          setNotifications([]);
         }
       }
     } catch (error) {

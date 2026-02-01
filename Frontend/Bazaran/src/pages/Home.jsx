@@ -28,7 +28,7 @@ const Home = () => {
         })
 
         // Fetch Featured Products (Limit 5)
-        const featRes = await fetch(`${API_BASE}/api/products?isFeatured=true&limit=5`)
+        const featRes = await fetch(`${API_BASE}/api/products?limit=4`)
         const featData = await featRes.json()
         
         if (Array.isArray(featData)) {
@@ -63,10 +63,10 @@ const Home = () => {
       {/* Featured Products Section */}
       <section className="py-12 lg:py-16 px-4">
         <div className="max-w-7xl mx-auto">
-          <h2 className="text-2xl font-bold text-gray-900 mb-6">Featured Products</h2>
+       
           {/* Product Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-6">
-            {featuredProducts.slice(0, 5).map((product) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {featuredProducts.slice(0, 4).map((product) => (
               <ItemCard key={product.id} product={product} />
             ))}
           </div>
