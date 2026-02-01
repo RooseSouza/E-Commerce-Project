@@ -1,82 +1,173 @@
-import React, { useState } from 'react'
-import { useParams } from 'react-router-dom'
+import React, { useState, useEffect } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import ItemCard from '../components/itemcard'
 
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
+
 const ProductDetails = () => {
-  const { productId } = useParams()
+  const params = useParams()
+  // Handle both 'productId' and 'id' parameter names to be safe with router config
+  const productId = params.productId || params.id
   const [selectedImage, setSelectedImage] = useState(0)
   const [quantity, setQuantity] = useState(1)
+  const [productState, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [relatedProducts, setRelatedProducts] = useState([])
+  const [error, setError] = useState(null)
 
-  // Sample product data
-  const product = {
-    id: productId || 1,
-    name: 'The Unknown Product',
-    variant: '(Color) (Required Details)',
-    price: 34999,
-    originalPrice: 50000,
-    discount: '30%',
-    rating: 4.5,
-    reviewCount: 45666,
-    mainImage: 'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=600&h=600&fit=crop',
-    images: [
-      'https://images.unsplash.com/photo-1578749556568-bc2c40e68b61?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1590080876-e7de9e7cc9a5?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=400&h=400&fit=crop',
-      'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=400&h=400&fit=crop'
-    ],
-    deliveryDate: 'XY Jan, Randomonday',
-    offers: [
-      'This is a 5% offer on all sale on selected product',
-      'This is a 5% offer on all sale on selected product',
-      'This is a 5% offer on all sale on selected product',
-      'This is a 5% offer on all sale on selected product',
-      'This is a 5% offer on all sale on selected product'
-    ],
-    description: 'Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.',
-    inStock: true
-  }
+  useEffect(() => {
+    const fetchProduct = async () => {
+      try {
+        setLoading(true)
+        setError(null)
 
-  const relatedProducts = [
-    {
-      id: 2,
-      name: 'Similar Product A',
-      price: 1599,
-      originalPrice: 3199,
-      image: 'https://images.unsplash.com/photo-1535632066927-ab7c9ab60908?w=300&h=300&fit=crop'
-    },
-    {
-      id: 3,
-      name: 'Similar Product B',
-      price: 1299,
-      originalPrice: 2599,
-      image: 'https://images.unsplash.com/photo-1595521624623-456be06cc8e0?w=300&h=300&fit=crop'
-    },
-    {
-      id: 4,
-      name: 'Similar Product C',
-      price: 1799,
-      originalPrice: 3599,
-      image: 'https://images.unsplash.com/photo-1610701596007-11502861dcfa?w=300&h=300&fit=crop'
-    },
-    {
-      id: 5,
-      name: 'Similar Product D',
-      price: 1499,
-      originalPrice: 2999,
-      image: 'https://images.unsplash.com/photo-1590080876-e7de9e7cc9a5?w=300&h=300&fit=crop'
+        const response = await fetch(`${API_BASE}/api/products/${productId}`)
+        
+        if (!response.ok) {
+          throw new Error(`Product not found (Status: ${response.status})`)
+        }
+
+        const result = await response.json()
+        // Handle if backend returns { product: {...} } or just {...}
+        const data = result.product || result
+
+        if (!data || (!data.name && !data._id && !data.id)) {
+          throw new Error('Invalid product data received')
+        }
+
+        // Normalize images
+        let images = []
+        if (data?.images && data.images.length > 0) {
+          images = data.images.map((img) => (typeof img === 'string' ? img : img.url))
+        } else {
+          // Fallback to single image logic from goanSaleSection
+          // Handles: object with url, string url, or missing
+          const mainImage = data?.image?.url || data?.image || 'https://via.placeholder.com/300'
+          images = [mainImage]
+        }
+
+        // Handle category safely (Backend uses categoryId)
+        let variant = 'Standard'
+        if (data?.categoryId) {
+          variant = typeof data.categoryId === 'object' ? data.categoryId.name : data.categoryId
+        } else if (data?.category) {
+          variant = typeof data.category === 'object' ? data.category.name : data.category
+        }
+
+        setProduct({
+          id: data._id || data.id,
+          name: data.name,
+          // Handle category safely whether it's populated or just an ID
+          variant: variant || 'Standard',
+          price: data.price || 0,
+          originalPrice: data.originalPrice || Math.round((data.price || 0) * 1.2),
+          discount: data.discount || '30%',
+          rating: data.rating || 4.5,
+          reviewCount: data.numReviews || 0,
+          images: images,
+          deliveryDate: '3-5 Business Days',
+          offers: [
+            'Bank Offer 5% Unlimited Cashback on Axis Bank Credit Card',
+            'Special Price Get extra 20% off (price inclusive of discount)',
+            'Partner Offer Sign up for Flipkart Pay Later and get Flipkart Gift Card worth ₹100'
+          ],
+          description: data.description || 'No description available.',
+          inStock: (data?.stock?.quantity || 0) > 0
+        })
+        setSelectedImage(0)
+      } catch (err) {
+        console.error("Error in ProductDetails:", err)
+        if (err.message === 'Failed to fetch') {
+          setError(`Network error: Verify backend is running on port 5000 and allows CORS.`)
+        } else {
+          setError(err.message)
+        }
+      } finally {
+        setLoading(false)
+      }
     }
-  ]
 
-  const handleAddToCart = () => {
-    console.log(`Added ${quantity} of product ${product.id} to cart`)
+    if (productId) {
+      fetchProduct()
+    }
+  }, [productId])
+
+  // Fallback data if fetch fails so page still renders
+  const product = productState || {
+    id: '0',
+    name: 'Product Details Unavailable',
+    variant: '',
+    price: 0,
+    originalPrice: 0,
+    discount: '0%',
+    rating: 0,
+    reviewCount: 0,
+    images: ['https://via.placeholder.com/500?text=No+Image'],
+    deliveryDate: 'N/A',
+    offers: [],
+    description: 'We could not load the product details at this time.',
+    inStock: false
   }
 
-  const handleBuyNow = () => {
-    console.log(`Buying ${quantity} of product ${product.id}`)
+  useEffect(() => {
+    const fetchRelatedProducts = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/products?limit=20`)
+        const data = await response.json()
+
+        if (Array.isArray(data)) {
+          // Filter out current product
+          const filtered = data.filter((p) => p._id !== productId && p.id !== productId)
+          // Shuffle array to get random products
+          const shuffled = filtered.sort(() => 0.5 - Math.random())
+          // Take first 4
+          const selected = shuffled.slice(0, 4)
+
+          const mapped = selected.map((p) => ({
+            id: p._id,
+            _id: p._id,
+            name: p.name,
+            price: p.price,
+            originalPrice: p.originalPrice || Math.round(p.price * 1.2),
+            image: p.image?.url || p.image || 'https://via.placeholder.com/300'
+          }))
+          setRelatedProducts(mapped)
+        }
+      } catch (error) {
+        console.error('Error fetching related products:', error)
+      }
+    }
+
+    fetchRelatedProducts()
+  }, [productId])
+
+  const handleAddToCart = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login to add items to cart");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: product.id, quantity: quantity }),
+      });
+
+      const data = await response.json();
+      alert(response.ok ? "Item added to cart!" : data.message || "Failed to add to cart");
+    } catch (error) {
+      console.error("Error adding to cart:", error);
+      alert("Something went wrong. Please try again.");
+    }
   }
+
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
@@ -138,18 +229,6 @@ const ProductDetails = () => {
                   {product.variant}
                 </p>
 
-                {/* Rating */}
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="flex items-center gap-1">
-                    <span className="text-yellow-400 text-lg">★★★★☆</span>
-                  </div>
-                  <span className="bg-green-100 text-green-800 px-3 py-1 rounded font-semibold text-sm">
-                    {product.rating}
-                  </span>
-                  <span className="text-gray-600">
-                    {product.reviewCount.toLocaleString()} reviews
-                  </span>
-                </div>
               </div>
 
               {/* Price Section */}
@@ -170,29 +249,6 @@ const ProductDetails = () => {
                 </p>
               </div>
 
-              {/* Delivery */}
-              <div className="bg-green-50 p-4 rounded-lg border border-green-200">
-                <p className="text-gray-700">
-                  <span className="font-semibold">Secure Delivery expected by</span> {product.deliveryDate}
-                </p>
-              </div>
-
-              {/* Offers */}
-              <div className="bg-white p-4 rounded-lg border border-gray-300">
-                <h3 className="font-bold text-gray-900 mb-3">Back and other offers</h3>
-                <ul className="space-y-2">
-                  {product.offers.slice(0, 3).map((offer, index) => (
-                    <li key={index} className="flex items-start gap-2 text-sm text-gray-700">
-                      <span className="text-green-600 mt-1">✓</span>
-                      <span>{offer}</span>
-                      <span className="text-xs text-gray-500 ml-auto">TNC</span>
-                    </li>
-                  ))}
-                </ul>
-                <button className="text-blue-600 hover:text-blue-800 font-semibold text-sm mt-3">
-                  View {product.offers.length - 3} more offers
-                </button>
-              </div>
 
               {/* Quantity Selector */}
               <div className="flex items-center gap-4">
@@ -225,12 +281,7 @@ const ProductDetails = () => {
                   <span>🛒</span>
                   Add to cart
                 </button>
-                <button
-                  onClick={handleBuyNow}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-                >
-                  Buy Now
-                </button>
+                
               </div>
 
               {/* Stock Status */}

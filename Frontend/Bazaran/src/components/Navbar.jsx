@@ -1,15 +1,43 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate} from "react-router-dom";
 import { useContext } from "react";
 import { UserContext } from "../context/userContext";
 import Logo from "../assets/logo1.png";
+import axios from "axios";
+
 
 const Navbar = () => {
   const navigate = useNavigate();
+  const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
   const { user, clearUser } = useContext(UserContext);
   const [searchQuery, setSearchQuery] = useState("");
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [cartCount, setCartCount] = useState(0);
+  useEffect(() => {
+    const fetchCartCount = async () => {
+      try {
+        const token = localStorage.getItem("token");
 
+         console.log("TOKEN:", token);
+
+        const res = await axios.get(
+          `${API_BASE}/api/cart/summary`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
+        console.log("CART SUMMARY:", res.data);
+
+        setCartCount(res.data.totalProducts); // 👈 ONLY unique products
+      } catch (error) {
+        console.error("Cart count error", error);
+      }
+    };
+
+    fetchCartCount();
+  }, [user]);
   const handleSearch = (e) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -31,16 +59,21 @@ const Navbar = () => {
     setShowUserMenu(false);
   };
 
-  const categories = [
-    "Fresh produce",
-    "Spices and Pantry",
-    "Goan Delicacies",
-    "Handicrafts and arts",
-    "Home decors",
-    "Fashion",
-    "Metal and wood",
-    "Wellness and orgaics",
-  ];
+  const [categories, setCategories] = useState([]);
+
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/categories`);
+        const data = await response.json();
+        const categoriesList = Array.isArray(data) ? data : (data.categories || []);
+        setCategories(categoriesList.slice(0, 10));
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+      }
+    };
+    fetchCategories();
+  }, []);
 
   return (
     <>
@@ -50,8 +83,9 @@ const Navbar = () => {
           <div className="w-full px-4">
             <div className="flex items-center h-16">
               {/* Logo */}
-              <img src={Logo} alt="Logo" className="h-12 w-auto" />
-             
+              <Link to="/home">
+                <img src={Logo} alt="Logo" className="h-12 w-auto" />
+              </Link>
 
               {/* Right Side Icons */}
               <div className="flex items-center gap-4 ml-auto">
@@ -123,9 +157,12 @@ const Navbar = () => {
                       d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
                     />
                   </svg>
-                  <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    0
-                  </span>
+
+                  {cartCount > 0 && (
+                    <span className="absolute -top-2 -right-2 bg-orange-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {cartCount}
+                    </span>
+                  )}
                 </Link>
 
                 {/* User Menu */}
@@ -221,32 +258,14 @@ const Navbar = () => {
       <div className="bg-orange-500 shadow">
         <div className="w-full px-4">
           <div className="flex items-center justify-center gap-4 py-2 flex-wrap">
-            {/* Menu Icon */}
-            <button className="flex-shrink-0 text-white hover:bg-orange-600 px-3 py-2 rounded-lg transition flex items-center gap-2 font-semibold">
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M4 6h16M4 12h16M4 18h16"
-                />
-              </svg>
-              <span className="hidden sm:inline">Categories</span>
-            </button>
-
             {/* Category Links */}
-            {categories.map((category, index) => (
+            {categories.map((category) => (
               <Link
-                key={index}
-                to={`/products?category=${category.toLowerCase()}`}
+                key={category._id}
+                to={`/products?category=${encodeURIComponent(category.name.toLowerCase())}&id=${category._id}`}
                 className="flex-shrink-0 text-white hover:bg-orange-600 px-4 py-2 rounded-lg transition font-medium text-sm whitespace-nowrap"
               >
-                {category}
+                {category.name}
               </Link>
             ))}
           </div>
