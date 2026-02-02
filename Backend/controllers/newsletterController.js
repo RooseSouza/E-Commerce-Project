@@ -18,6 +18,9 @@ exports.subscribeNewsletter = async (req, res) => {
 
     await NewsletterSubscriber.create({ email });
 
+    const info = await transporter.sendMail(mailOptions);
+console.log("MAIL SENT RESPONSE:", info);
+
     // 📧 SEND EMAIL (NON-BLOCKING)
     sendEmail({
       to: email,
