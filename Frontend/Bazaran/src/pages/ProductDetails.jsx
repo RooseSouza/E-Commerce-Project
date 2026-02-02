@@ -320,9 +320,7 @@ const ProductDetails = () => {
                   <span>🛒</span>
                   {product.inStock ? "Add to cart" : "Out of Stock"}
                 </button>
-                
-                  Add to cart
-                </button>
+
               </div>
 
               {/* Stock Status */}
