@@ -139,32 +139,42 @@ exports.getAllProductsAdmin = async (req, res) => {
   }
 };
 
-/**
- * 🔁 Toggle Product Active Status
- */
 exports.toggleProductStatusAdmin = async (req, res) => {
-  const product = await Product.findById(req.params.id).populate("vendorId");
+  try {
+    const product = await Product.findById(req.params.id).populate("vendorId");
 
-  if (!product) return res.status(404).json({ message: "Product not found" });
+    if (!product)
+      return res.status(404).json({ message: "Product not found" });
 
-  if (product.stock.quantity === 0) {
-    return res.status(400).json({ message: "Stock is zero" });
+    // ❌ Stock zero → always disabled
+    if (product.stock.quantity === 0) {
+      product.isActive = false;
+      await product.save();
+      return res.status(400).json({ message: "Stock is zero. Product disabled." });
+    }
+
+    // ❌ Vendor not approved or blocked
+    if (!product.vendorId.isApproved || product.vendorId.isBlocked) {
+      product.isActive = false;
+      await product.save();
+      return res
+        .status(400)
+        .json({ message: "Vendor not approved or blocked" });
+    }
+
+    // ✅ ADMIN MANUAL TOGGLE
+    product.isActive = !product.isActive;
+    await product.save();
+
+    res.json({
+      message: "Product status updated",
+      isActive: product.isActive,
+    });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
   }
-
-  if (!product.vendorId.isApproved || product.vendorId.isBlocked) {
-    return res
-      .status(400)
-      .json({ message: "Vendor not approved or blocked" });
-  }
-
-  product.manualDisabled = !product.manualDisabled;
-  await product.save();
-
-  res.json({
-    isActive: product.isActive,
-    manualDisabled: product.manualDisabled,
-  });
 };
+
 
 /**
  * 🗑️ Delete Product (Admin)
@@ -181,38 +191,43 @@ exports.deleteProductAdmin = async (req, res) => {
   }
 };
 
-/**
- * ✅ Approve Vendor
- */
+// ✅ APPROVE VENDOR
 exports.approveVendor = async (req, res) => {
-  const vendor = await User.findById(req.params.id);
-  if (!vendor) return res.status(404).json({ message: "Vendor not found" });
-
-  vendor.isApproved = true;
-  vendor.isBlocked = false;
-
-  await vendor.save();
-  res.json(vendor);
-};
-
-/**
- * ❌ Reject Vendor
- */
-exports.rejectVendor = async (req, res) => {
   try {
     const vendor = await User.findByIdAndUpdate(
       req.params.id,
-      { isApproved: false, isBlocked: false },
+      { isApproved: true },
       { new: true }
-    ).select("-password");
+    );
 
     if (!vendor) {
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    res.json(vendor);
+    res.json({ message: "Vendor approved successfully" });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ message: "Approval failed" });
+  }
+};
+
+// ❌➡️✅ REJECT VENDOR (FIXED)
+exports.rejectVendor = async (req, res) => {
+  try {
+    const vendor = await User.findByIdAndUpdate(
+      req.params.id,
+      { isApproved: false },
+      { new: true }
+    );
+
+    if (!vendor) {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
+
+    res.json({ message: "Vendor rejected successfully" });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Rejection failed" });
   }
 };
 
@@ -220,36 +235,63 @@ exports.rejectVendor = async (req, res) => {
  * 🚫 Block Vendor
  */
 exports.blockVendor = async (req, res) => {
-  const vendor = await User.findById(req.params.id);
-  if (!vendor) return res.status(404).json({ message: "Vendor not found" });
+  try {
+    const vendor = await User.findById(req.params.id);
 
-  vendor.isBlocked = true;
-  vendor.isApproved = false;
+    if (!vendor || vendor.role !== "vendor") {
+      return res.status(404).json({ message: "Vendor not found" });
+    }
 
-  await vendor.save();
-  res.json(vendor);
+    vendor.isBlocked = true;
+    await vendor.save();
+
+    // 🔴 AUTO-DISABLE ALL PRODUCTS OF THIS VENDOR
+    await Product.updateMany(
+      { vendorId: vendor._id },
+      { isActive: false }
+    );
+
+    res.json({
+      message: "Vendor blocked and all products disabled",
+    });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Failed to block vendor" });
+  }
 };
+
 
 /**
  * 🔓 Unblock Vendor
  */
 exports.unblockVendor = async (req, res) => {
   try {
-    const vendor = await User.findByIdAndUpdate(
-      req.params.id,
-      { isBlocked: false },
-      { new: true }
-    ).select("-password");
+    const vendor = await User.findById(req.params.id);
 
-    if (!vendor) {
+    if (!vendor || vendor.role !== "vendor") {
       return res.status(404).json({ message: "Vendor not found" });
     }
 
-    res.json(vendor);
+    vendor.isBlocked = false;
+    await vendor.save();
+
+    if (vendor.isApproved) {
+      await Product.updateMany(
+        { vendorId: vendor._id, approvalStatus: "approved" },
+        { isActive: true }
+      );
+    }
+
+    res.json({
+      message: "Vendor unblocked and approved products enabled",
+    });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error(err);
+    res.status(500).json({ message: "Failed to unblock vendor" });
   }
 };
+
+
 
 /**
  * ✅ / ❌ Approve or Reject Product
@@ -296,4 +338,29 @@ exports.getUserOrders = async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 
+ } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
 };
+
+//user contol admin
+
+exports.blockUser = async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  user.isBlocked = true;
+  await user.save();
+  res.json(user);
+};
+
+exports.unblockUser = async (req, res) => {
+  const user = await User.findById(req.params.id);
+  if (!user) return res.status(404).json({ message: "User not found" });
+
+  user.isBlocked = false;
+  await user.save();
+  res.json(user);
+};
+
+

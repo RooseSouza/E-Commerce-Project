@@ -3,10 +3,7 @@ const dotenv = require("dotenv");
 const connectDB = require("./database/db");
 const cors = require("cors");
 const Category = require("./models/category");
-const adminRoutes = require("./routes/adminRoutes");
-
-
-
+const adminRoutes = require("./routes/AdminRoutes");
 
 
 dotenv.config();

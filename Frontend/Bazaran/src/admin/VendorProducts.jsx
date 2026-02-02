@@ -3,12 +3,13 @@ import { useParams } from "react-router-dom";
 import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
+const PRODUCTS_PER_PAGE = 6;
 
 const VendorProducts = () => {
   const { vendorId } = useParams();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
-
+  const [currentPage, setCurrentPage] = useState(1);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
@@ -29,7 +30,6 @@ const VendorProducts = () => {
     }
   };
 
-  // 🔁 Enable / Disable
   const toggleStatus = async (id) => {
     try {
       await axios.patch(
@@ -43,7 +43,6 @@ const VendorProducts = () => {
     }
   };
 
-  // 🗑 Delete
   const deleteProduct = async (id) => {
     if (!window.confirm("Delete this product permanently?")) return;
     try {
@@ -56,65 +55,80 @@ const VendorProducts = () => {
     }
   };
 
-  const statusBadge = (p) => {
-    if (!p.isActive)
-      return (
-        <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
-          Disabled
-        </span>
-      );
-
-    return (
+  const statusBadge = (p) =>
+    p.isActive ? (
       <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
         Active
       </span>
+    ) : (
+      <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
+        Disabled
+      </span>
     );
-  };
 
-  if (loading) return <p className="p-6">Loading products...</p>;
+  // PAGINATION
+  const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
+  const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
+  const currentProducts = products.slice(
+    startIndex,
+    startIndex + PRODUCTS_PER_PAGE
+  );
+
+  if (loading)
+    return <p className="p-6 text-gray-500">Loading vendor products...</p>;
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Vendor Products</h2>
+    <div className="p-6 bg-white rounded-2xl border shadow-lg">
 
-      <div className="overflow-x-auto bg-white shadow rounded-lg">
-        <table className="w-full text-sm">
-          <thead className="bg-gray-100">
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-2xl font-semibold text-gray-900">Vendor Products</h2>
+        <p className="text-sm text-gray-500">Manage product status and stock</p>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-separate border-spacing-y-2">
+          <thead className="bg-gray-100 text-gray-600">
             <tr>
-              <th className="p-3 text-left">#</th>
-              <th className="p-3 text-left">Product</th>
-              <th className="p-3 text-left">Category</th>
-              <th className="p-3 text-left">Price</th>
-              <th className="p-3 text-left">Stock</th>
-              <th className="p-3 text-left">Status</th>
-              <th className="p-3 text-center">Actions</th>
+              <th className="px-4 py-3 text-left">Sr.No</th>
+              <th className="px-4 py-3 text-left">Product</th>
+              <th className="px-4 py-3 text-left">Category</th>
+              <th className="px-4 py-3 text-left">Price</th>
+              <th className="px-4 py-3 text-left">Stock</th>
+              <th className="px-4 py-3 text-left">Status</th>
+              <th className="px-4 py-3 text-center">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {products.map((p, i) => (
-              <tr key={p._id} className="border-t hover:bg-gray-50">
-                <td className="p-3">{i + 1}</td>
+            {currentProducts.map((p, i) => (
+              <tr
+                key={p._id}
+                className="bg-white rounded-lg shadow-sm hover:shadow-md transition"
+              >
+                <td className="px-4 py-3 font-medium text-gray-700">
+                  {startIndex + i + 1}
+                </td>
 
-                <td className="p-3 flex items-center gap-3">
+                <td className="px-4 py-3 flex items-center gap-3">
                   <img
                     src={p.image?.url}
                     alt={p.name}
                     className="w-10 h-10 rounded object-cover"
                   />
-                  <span className="font-medium">{p.name}</span>
+                  <span className="font-medium text-gray-800">{p.name}</span>
                 </td>
 
-                <td className="p-3">{p.categoryId?.name}</td>
-                <td className="p-3">₹{p.price}</td>
-                <td className="p-3">
+                <td className="px-4 py-3 text-gray-600">{p.categoryId?.name || "-"}</td>
+                <td className="px-4 py-3 font-medium text-gray-700">₹{p.price}</td>
+                <td className="px-4 py-3 text-gray-600">
                   {p.stock.quantity} {p.stock.unit}
                 </td>
 
-                <td className="p-3">{statusBadge(p)}</td>
+                <td className="px-4 py-3">{statusBadge(p)}</td>
 
-                <td className="p-3 flex gap-2 justify-center flex-wrap">
-                  {/* ENABLE / DISABLE */}
+                <td className="px-4 py-3 flex gap-2 justify-center flex-wrap">
                   <button
                     onClick={() => toggleStatus(p._id)}
                     disabled={p.stock.quantity === 0}
@@ -129,7 +143,6 @@ const VendorProducts = () => {
                     {p.isActive ? "Disable" : "Enable"}
                   </button>
 
-                  {/* DELETE */}
                   <button
                     onClick={() => deleteProduct(p._id)}
                     className="px-3 py-1 bg-black text-white rounded text-xs hover:bg-gray-800"
@@ -140,7 +153,7 @@ const VendorProducts = () => {
               </tr>
             ))}
 
-            {products.length === 0 && (
+            {currentProducts.length === 0 && (
               <tr>
                 <td colSpan="7" className="p-6 text-center text-gray-500">
                   No products found
@@ -150,6 +163,33 @@ const VendorProducts = () => {
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {products.length > PRODUCTS_PER_PAGE && (
+        <div className="flex items-center justify-between mt-6">
+          <p className="text-sm text-gray-500">
+            Page {currentPage} of {totalPages}
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage((p) => p - 1)}
+              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              Previous
+            </button>
+
+            <button
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage((p) => p + 1)}
+              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
