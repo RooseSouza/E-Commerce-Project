@@ -103,34 +103,43 @@ const UserProfile = () => {
 
   /* ✅ ADD / EDIT ADDRESS */
   const handleAddAddress = async (addressData) => {
-    try {
-      const token = localStorage.getItem("token");
+  try {
+    const token = localStorage.getItem("token");
 
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-          body: JSON.stringify(addressData), // ✅ IMPORTANT FIX
-        },
-      );
+    const isEditing = editingAddressIndex !== null;
+    const addressId = isEditing ? addresses[editingAddressIndex]._id : null;
 
-      const data = await res.json();
+    const url = isEditing
+      ? `${import.meta.env.VITE_API_BASE}/api/users/me/address/${addressId}`
+      : `${import.meta.env.VITE_API_BASE}/api/users/me/address`;
 
-      if (!res.ok) {
-        return { errors: data.errors || { general: "Failed to add address" } };
-      }
+    const method = isEditing ? "PUT" : "POST";
 
-      setAddresses(data.addresses);
-      setShowAddAddress(false);
-      return null;
-    } catch (err) {
-      return { errors: { general: "Server error" } };
+    const res = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify(addressData),
+    });
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return { errors: data.errors || { general: "Failed to save address" } };
     }
-  };
+
+    setAddresses(data.addresses);
+    setShowAddAddress(false);
+    setEditingAddressIndex(null);
+
+    return null;
+  } catch (err) {
+    return { errors: { general: "Server error" } };
+  }
+};
+
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
