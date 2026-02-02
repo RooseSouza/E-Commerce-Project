@@ -124,12 +124,16 @@ const RootRedirect = () => {
   const token = localStorage.getItem("token");
   const user = JSON.parse(localStorage.getItem("user"));
 
-  if (!token) return <Navigate to="/" />;
+  if (!token || !user) {
+    return <Navigate to="/login" replace />;
+  }
 
-  if (user?.role === "admin") return <Navigate to="/admin" />;
-  if (user?.role === "vendor") return <Navigate to="/vendor-dashboard" />;
+  // 🔑 Role-based redirect
+  if (user.role === "admin") return <Navigate to="/admin" replace />;
+  if (user.role === "vendor") return <Navigate to="/vendor-dashboard" replace />;
 
-  return <Navigate to="/" />;
+  // ✅ Normal user
+  return <Navigate to="/home" replace />;
 };
 
 export default App;
