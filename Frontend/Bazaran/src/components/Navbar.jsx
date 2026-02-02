@@ -4,6 +4,7 @@ import { useContext } from "react";
 import { UserContext } from "../context/userContext";
 import Logo from "../assets/logo1.png";
 import axios from "axios";
+import NotificationBell from "./NotificationBell";
 
 
 const Navbar = () => {
@@ -165,6 +166,9 @@ const Navbar = () => {
                   )}
                 </Link>
 
+                {/* Notification Bell */}
+                <NotificationBell />
+
                 {/* User Menu */}
                 <div className="relative">
                   <button
@@ -212,13 +216,6 @@ const Navbar = () => {
                             onClick={() => setShowUserMenu(false)}
                           >
                             My Orders
-                          </Link>
-                          <Link
-                            to="/wishlist"
-                            className="block px-4 py-2 text-gray-700 hover:bg-gray-100"
-                            onClick={() => setShowUserMenu(false)}
-                          >
-                            Wishlist
                           </Link>
                           <button
                             onClick={handleLogout}

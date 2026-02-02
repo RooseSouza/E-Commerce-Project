@@ -16,15 +16,38 @@ const CTA = () => {
     }))
   }
 
-  const handleSubscribe = (e) => {
-    e.preventDefault()
-    if (formData.email && formData.password) {
-      console.log('Subscribed with:', formData)
-      setSubscribed(true)
-      setFormData({ email: '', password: '' })
-      setTimeout(() => setSubscribed(false), 3000)
+  const handleSubscribe = async (e) => {
+  e.preventDefault()
+
+  if (!formData.email) return
+
+  try {
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE || "http://localhost:5000"}/api/newsletter/subscribe`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email: formData.email }),
+      }
+    )
+
+    if (!res.ok) {
+      throw new Error("Subscription failed")
     }
+
+    console.log("Subscribed with:", formData.email)
+
+    setSubscribed(true)
+    setFormData({ email: '' })
+
+    setTimeout(() => setSubscribed(false), 3000)
+
+  } catch (error) {
+    console.error("Newsletter subscription error:", error)
   }
+}
 
   return (
     <div className="relative w-full h-80 md:h-96 overflow-hidden">

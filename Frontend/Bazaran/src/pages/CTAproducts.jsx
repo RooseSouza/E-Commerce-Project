@@ -13,6 +13,7 @@ const CTAproducts = () => {
     // Helper to map backend data to frontend format
     const mapProductData = (product) => ({
       id: product._id,
+      _id: product._id,
       name: product.name,
       price: product.price,
       originalPrice: product.originalPrice || Math.round(product.price * 1.2),
@@ -22,7 +23,7 @@ const CTAproducts = () => {
     const fetchData = async () => {
       try {
         // Fetch Featured Products
-        const featuredRes = await fetch(`${API_BASE}/api/products?isFeatured='true'&limit=5`)
+        const featuredRes = await fetch(`${API_BASE}/api/products?isFeatured=true&limit=5`)
         const featuredData = await featuredRes.json()
         
         if (Array.isArray(featuredData)) {

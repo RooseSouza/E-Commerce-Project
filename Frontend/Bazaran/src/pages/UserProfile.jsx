@@ -93,7 +93,7 @@ const UserProfile = () => {
         return { error: data.message || "Password update failed" };
       }
 
-       alert("Password updated successfully");
+      alert("Password updated successfully");
 
       return null;
     } catch (err) {
@@ -102,6 +102,7 @@ const UserProfile = () => {
   };
 
   /* ✅ ADD / EDIT ADDRESS */
+<<<<<<< HEAD
   const handleAddAddress = async (addressData) => {
   try {
     const token = localStorage.getItem("token");
@@ -130,6 +131,32 @@ const UserProfile = () => {
       return { errors: data.errors || { general: "Failed to save address" } };
     }
 
+=======
+  const handleSaveAddress = async (addressData) => {
+  try {
+    const token = localStorage.getItem("token");
+
+    // if editing, send _id
+    if (editingAddressIndex !== null) {
+      addressData._id = addresses[editingAddressIndex]._id;
+    }
+
+    const res = await fetch(
+      `${import.meta.env.VITE_API_BASE}/api/users/me/address`,
+      {
+        method: "POST", // ✅ ALWAYS POST
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(addressData),
+      }
+    );
+
+    const data = await res.json();
+    if (!res.ok) return { errors: data.errors };
+
+>>>>>>> 937b6c21b67ffd329945a47768cb40af8d5f158e
     setAddresses(data.addresses);
     setShowAddAddress(false);
     setEditingAddressIndex(null);
@@ -140,6 +167,10 @@ const UserProfile = () => {
   }
 };
 
+<<<<<<< HEAD
+=======
+
+>>>>>>> 937b6c21b67ffd329945a47768cb40af8d5f158e
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
@@ -238,11 +269,12 @@ const UserProfile = () => {
           setShowAddAddress(false);
           setEditingAddressIndex(null);
         }}
-        onSave={handleAddAddress}
+        onSave={handleSaveAddress}
         initialData={
           editingAddressIndex !== null ? addresses[editingAddressIndex] : null
         }
       />
+
       {showOrderModal && (
         <OrderDetailsModal
           order={selectedOrder}
@@ -253,11 +285,11 @@ const UserProfile = () => {
           }}
         />
       )}
-      <UpdatePasswordModal 
-  isOpen={showPasswordModal}
-  onClose={() => setShowPasswordModal(false)}
-  onSave={handleUpdatePassword}
-/>
+      <UpdatePasswordModal
+        isOpen={showPasswordModal}
+        onClose={() => setShowPasswordModal(false)}
+        onSave={handleUpdatePassword}
+      />
 
 
       <Footer />

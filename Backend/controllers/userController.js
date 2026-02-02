@@ -139,20 +139,40 @@ exports.addAddress = async (req, res) => {
 
     const user = req.user;
 
-    user.addresses.push({
-      name,
-      phone,
-      houseNumber,
-      street,
-      city,
-      state,
-      zip: Number(zip), // ✅ schema expects Number
-      country,
-    });
+    const { _id } = req.body;
+
+    if (_id) {
+      // ✏️ EDIT EXISTING ADDRESS
+      const address = user.addresses.id(_id);
+      if (!address) {
+        return res.status(404).json({ errors: { general: "Address not found" } });
+      }
+
+      address.name = name;
+      address.phone = phone;
+      address.houseNumber = houseNumber;
+      address.street = street;
+      address.city = city;
+      address.state = state;
+      address.zip = Number(zip);
+      address.country = country;
+    } else {
+      // ➕ ADD NEW ADDRESS
+      user.addresses.push({
+        name,
+        phone,
+        houseNumber,
+        street,
+        city,
+        state,
+        zip: Number(zip),
+        country,
+      });
+    }
 
     await user.save();
-
     res.json({ addresses: user.addresses });
+    
   } catch (err) {
     console.error("Add address error:", err);
     res.status(500).json({

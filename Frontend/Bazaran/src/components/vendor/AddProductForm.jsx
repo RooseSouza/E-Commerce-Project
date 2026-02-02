@@ -22,7 +22,7 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
 
     const data = new FormData();
     data.append("name", form.name);
-    data.append("description", form.description);
+    if (form.description) data.append("description", form.description); // optional
     data.append("price", form.price);
     data.append(
       "categoryName",
@@ -50,7 +50,7 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
         {/* Product Name */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
-            Product Name
+            Product Name <span className="text-red-500">*</span>
           </label>
           <input
             name="name"
@@ -69,8 +69,8 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
           <textarea
             name="description"
             onChange={handleChange}
-            required
             placeholder="Product description"
+            required
             rows={3}
             className="w-full rounded-lg border px-4 py-2 focus:ring-2 focus:ring-orange-400 focus:outline-none"
           />
@@ -80,7 +80,7 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">
-              Price (₹)
+              Price (₹) <span className="text-red-500">*</span>
             </label>
             <input
               name="price"
@@ -94,7 +94,7 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">
-              Category
+              Category <span className="text-red-500">*</span>
             </label>
             <select
               name="categoryId"
@@ -116,7 +116,7 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
         <div className="grid grid-cols-2 gap-4">
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">
-              Quantity
+              Quantity <span className="text-red-500">*</span>
             </label>
             <input
               name="stockQuantity"
@@ -130,11 +130,12 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
 
           <div>
             <label className="block text-sm font-medium text-gray-600 mb-1">
-              Unit
+              Unit <span className="text-red-500">*</span>
             </label>
             <select
               name="stockUnit"
               onChange={handleChange}
+              required
               className="w-full rounded-lg border px-4 py-2 bg-white focus:ring-2 focus:ring-orange-400 focus:outline-none"
             >
               <option value="piece">Piece</option>
@@ -150,7 +151,7 @@ const AddProductForm = ({ categories, token, fetchProducts, onClose }) => {
         {/* Image Upload */}
         <div>
           <label className="block text-sm font-medium text-gray-600 mb-1">
-            Product Image
+            Product Image <span className="text-red-500">*</span>
           </label>
           <input
             type="file"

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import { Link } from 'react-router-dom'
 import ItemCard from '../components/itemcard'
 import imgBanner from '../assets/img5.jpg'
 import imgBanner2 from '../assets/img6.jpg'
@@ -8,6 +9,7 @@ const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 const GoanSaleSection = () => {
   // Sample product data for top picks
   const [topPicksProducts, setTopPicksProducts] = useState([])
+  const [handicraftLink, setHandicraftLink] = useState("/products")
 
   useEffect(() => {
     const fetchTopPicks = async () => {
@@ -20,6 +22,7 @@ const GoanSaleSection = () => {
           // Map backend data to UI format
           const mappedProducts = data.map((product) => ({
             id: product._id,
+            _id: product._id,
             name: product.name,
             price: product.price,
             // Fallback for original price if not in DB
@@ -32,7 +35,23 @@ const GoanSaleSection = () => {
         console.error('Error fetching top picks:', error)
       }
     }
+
+    const fetchCategories = async () => {
+      try {
+        const response = await fetch(`${API_BASE}/api/categories`)
+        const data = await response.json()
+        const categories = Array.isArray(data) ? data : (data.categories || [])
+        const target = categories.find((c) => c.name === "Handicraft and Arts")
+        if (target) {
+          setHandicraftLink(`/products?category=${encodeURIComponent(target.name.toLowerCase())}&id=${target._id}`)
+        }
+      } catch (error) {
+        console.error('Error fetching categories:', error)
+      }
+    }
+
     fetchTopPicks()
+    fetchCategories()
   }, [])
 
   // Top product categories
@@ -137,7 +156,9 @@ const GoanSaleSection = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-8">Top picks by experts</h2>
               <div className="grid grid-cols-2 gap-6">
                 {topPicksProducts.map((product) => (
-                  <ItemCard key={product.id} product={product} />
+                  <Link key={product.id} to={`/product/${product.id}`}>
+                    <ItemCard product={product} />
+                  </Link>
                 ))}
               </div>
             </div>
@@ -165,9 +186,9 @@ const GoanSaleSection = () => {
                 <p className="text-lg text-gray-200 mb-8">
                   Best handmade and wooden
                 </p>
-                <button className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200 inline-block">
+                <Link to={handicraftLink} className="bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-8 rounded-lg transition-colors duration-200 inline-block">
                   Explore Now
-                </button>
+                </Link>
               </div>
             </div>
           </div>
