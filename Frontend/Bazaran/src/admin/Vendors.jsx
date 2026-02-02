@@ -3,10 +3,12 @@ import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const API_BASE = import.meta.env.VITE_API_BASE;
+const PER_PAGE = 6;
 
 const Vendors = () => {
   const [vendors, setVendors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
   const navigate = useNavigate();
   const token = localStorage.getItem("token");
 
@@ -14,13 +16,12 @@ const Vendors = () => {
     fetchVendors();
   }, []);
 
-  // 🔹 Fetch vendors
   const fetchVendors = async () => {
     try {
       const res = await axios.get(`${API_BASE}/api/admin/vendors`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setVendors(res.data);
+      setVendors(res.data || []);
     } catch (err) {
       console.error(err.response?.data || err.message);
     } finally {
@@ -28,107 +29,108 @@ const Vendors = () => {
     }
   };
 
-  // 🔹 Update vendor from backend response
-  const updateVendorState = (updatedVendor) => {
+  /* ================= SAFE STATE UPDATE ================= */
+  const updateVendorById = (id, changes) => {
     setVendors((prev) =>
-      prev.map((v) => (v._id === updatedVendor._id ? updatedVendor : v))
+      prev.map((v) => (v._id === id ? { ...v, ...changes } : v))
     );
   };
 
-  // ✅ Approve
+  /* ================= ACTIONS ================= */
   const handleApprove = async (id) => {
-    try {
-      const res = await axios.patch(
-        `${API_BASE}/api/admin/vendors/${id}/approve`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      updateVendorState(res.data);
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    }
+    await axios.patch(
+      `${API_BASE}/api/admin/vendors/${id}/approve`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    updateVendorById(id, { isApproved: true, isBlocked: false });
   };
 
-  // ❌ Reject
   const handleReject = async (id) => {
-    try {
-      const res = await axios.patch(
-        `${API_BASE}/api/admin/vendors/${id}/reject`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      updateVendorState(res.data);
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    }
+    await axios.patch(
+      `${API_BASE}/api/admin/vendors/${id}/reject`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    updateVendorById(id, { isApproved: false });
   };
 
-  // 🚫 Block
   const handleBlock = async (id) => {
-    try {
-      const res = await axios.patch(
-        `${API_BASE}/api/admin/vendors/${id}/block`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      updateVendorState(res.data);
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    }
+    await axios.patch(
+      `${API_BASE}/api/admin/vendors/${id}/block`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    updateVendorById(id, { isBlocked: true });
   };
 
-  // 🔓 Unblock
   const handleUnblock = async (id) => {
-    try {
-      const res = await axios.patch(
-        `${API_BASE}/api/admin/vendors/${id}/unblock`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      updateVendorState(res.data);
-    } catch (err) {
-      console.error(err.response?.data || err.message);
-    }
+    await axios.patch(
+      `${API_BASE}/api/admin/vendors/${id}/unblock`,
+      {},
+      { headers: { Authorization: `Bearer ${token}` } }
+    );
+    updateVendorById(id, { isBlocked: false });
   };
 
-  if (loading) {
-    return <p className="p-6">Loading vendors...</p>;
-  }
+  /* ================= PAGINATION ================= */
+  const totalPages = Math.ceil(vendors.length / PER_PAGE);
+  const startIndex = (page - 1) * PER_PAGE;
+  const currentVendors = vendors.slice(startIndex, startIndex + PER_PAGE);
+
+  if (loading) return <p className="p-6 text-gray-500">Loading vendors...</p>;
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-6">Registered Vendors</h2>
+    <div className="bg-white rounded-2xl border shadow-sm p-6">
 
-      <div className="overflow-x-auto bg-white shadow rounded-lg">
-        <table className="w-full text-sm border-collapse">
-          <thead className="bg-gray-100">
+      {/* Header */}
+      <div className="mb-6">
+        <h2 className="text-xl font-semibold text-gray-800">
+          Registered Vendors
+        </h2>
+        <p className="text-sm text-gray-500">
+          Manage vendor approvals and access
+        </p>
+      </div>
+
+      {/* Table */}
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm border-separate border-spacing-y-2">
+          <thead className="text-left text-gray-500">
             <tr>
-              <th className="border px-4 py-2">#</th>
-              <th className="border px-4 py-2">Name</th>
-              <th className="border px-4 py-2">Email</th>
-              <th className="border px-4 py-2">Products</th>
-              <th className="border px-4 py-2">Status</th>
-              <th className="border px-4 py-2">Actions</th>
+              <th className="px-4 py-2">Sr.No</th>
+              <th className="px-4 py-2">Name</th>
+              <th className="px-4 py-2">Email</th>
+              <th className="px-4 py-2 text-center">Products</th>
+              <th className="px-4 py-2 text-center">Status</th>
+              <th className="px-4 py-2 text-center">Actions</th>
             </tr>
           </thead>
 
           <tbody>
-            {vendors.map((vendor, index) => (
-              <tr key={vendor._id} className="hover:bg-gray-50">
-                <td className="border px-4 py-2">{index + 1}</td>
+            {currentVendors.map((vendor, i) => (
+              <tr
+                key={vendor._id}
+                className="bg-white rounded-lg shadow-sm hover:shadow-md transition"
+              >
+                <td className="px-4 py-3 font-medium text-gray-600">
+                  {startIndex + i + 1}
+                </td>
 
-                <td className="border px-4 py-2 font-medium">
+                <td className="px-4 py-3 font-semibold text-gray-800">
                   {vendor.name}
                 </td>
 
-                <td className="border px-4 py-2">{vendor.email}</td>
+                <td className="px-4 py-3 text-gray-600">
+                  {vendor.email}
+                </td>
 
-                <td className="border px-4 py-2">
+                <td className="px-4 py-3 text-center font-medium">
                   {vendor.productCount ?? 0}
                 </td>
 
-                {/* 🔹 STATUS */}
-                <td className="border px-4 py-2">
+                {/* Status */}
+                <td className="px-4 py-3 text-center">
                   {vendor.isBlocked ? (
                     <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
                       Blocked
@@ -144,53 +146,48 @@ const Vendors = () => {
                   )}
                 </td>
 
-                {/* 🔹 ACTIONS */}
-                <td className="border px-4 py-2 text-center space-x-2">
-                  {/* Pending */}
+                {/* Actions */}
+                <td className="px-4 py-3 text-center space-x-2">
                   {!vendor.isApproved && !vendor.isBlocked && (
                     <>
                       <button
                         onClick={() => handleApprove(vendor._id)}
-                        className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700"
+                        className="px-3 py-1 text-xs rounded bg-green-100 text-green-700 hover:bg-green-200"
                       >
                         Approve
                       </button>
-
                       <button
                         onClick={() => handleReject(vendor._id)}
-                        className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                        className="px-3 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200"
                       >
                         Reject
                       </button>
                     </>
                   )}
 
-                  {/* Approved */}
                   {vendor.isApproved && !vendor.isBlocked && (
                     <>
                       <button
                         onClick={() =>
                           navigate(`/admin/vendors/${vendor._id}`)
                         }
-                        className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                        className="px-3 py-1 text-xs rounded bg-blue-100 text-blue-700 hover:bg-blue-200"
                       >
                         View Products
                       </button>
-              
                       <button
                         onClick={() => handleBlock(vendor._id)}
-                        className="px-3 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700"
+                        className="px-3 py-1 text-xs rounded bg-red-100 text-red-700 hover:bg-red-200"
                       >
                         Block
                       </button>
                     </>
                   )}
 
-                  {/* Blocked */}
                   {vendor.isBlocked && (
                     <button
                       onClick={() => handleUnblock(vendor._id)}
-                      className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700"
+                      className="px-3 py-1 text-xs rounded bg-green-100 text-green-700 hover:bg-green-200"
                     >
                       Unblock
                     </button>
@@ -198,9 +195,43 @@ const Vendors = () => {
                 </td>
               </tr>
             ))}
+
+            {currentVendors.length === 0 && (
+              <tr>
+                <td colSpan="6" className="py-8 text-center text-gray-500">
+                  No vendors found
+                </td>
+              </tr>
+            )}
           </tbody>
         </table>
       </div>
+
+      {/* Pagination */}
+      {vendors.length > PER_PAGE && (
+        <div className="flex items-center justify-between mt-6">
+          <p className="text-sm text-gray-500">
+            Page {page} of {totalPages}
+          </p>
+
+          <div className="flex gap-2">
+            <button
+              disabled={page === 1}
+              onClick={() => setPage((p) => p - 1)}
+              className="px-4 py-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+            >
+              Previous
+            </button>
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage((p) => p + 1)}
+              className="px-4 py-1.5 rounded-lg bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50"
+            >
+              Next
+            </button>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
