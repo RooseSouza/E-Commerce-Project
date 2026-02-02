@@ -3,6 +3,7 @@ const Order = require("../models/order");
 const Cart = require("../models/cart");
 const Product = require("../models/product");
 const User = require("../models/user");
+const Notification = require("../models/notification");
 
 /* ================= PLACE ORDER ================= */
 const placeOrder = async (req, res) => {
@@ -86,14 +87,14 @@ const placeOrder = async (req, res) => {
       const deliveryCharge = subtotal >= 499 ? 0 : 40;
       const totalAmount = subtotal + tax + deliveryCharge;
 
-      const order = await Order.create({
+      const order = await Order.create([{
         userId,
         vendorId,
         items: orderItems,
         totalAmount,
         addressId,
         status: "placed",
-      });
+      }], { session });
 
       createdOrders.push(order[0]);
     }
@@ -101,6 +102,22 @@ const placeOrder = async (req, res) => {
     /* ================= CLEAR CART ================= */
     cart.items = [];
     await cart.save({ session });
+
+    /* ================= CREATE NOTIFICATIONS ================= */
+    console.log("🔔 Creating notifications for user:", userId);
+    // Create a notification for each order generated (in case of multiple vendors)
+    for (const order of createdOrders) {
+      if (order && order._id) {
+        console.log(`🔔 Creating notification for Order ID: ${order._id}`);
+        const notification = new Notification({
+          userId: userId,
+          title: "Order Placed",
+          message: `Your order #${order._id.toString().slice(-6)} has been placed successfully.`,
+          orderId: order._id,
+        });
+        await notification.save({ session });
+      }
+    }
 
     await session.commitTransaction();
     session.endSession();
@@ -165,6 +182,14 @@ const updateOrderStatus = async (req, res) => {
 
     order.status = status;
     await order.save();
+
+    // Create Notification for Status Update
+    await Notification.create({
+      userId: order.userId,
+      title: `Order ${status.charAt(0).toUpperCase() + status.slice(1)}`,
+      message: `Your order #${order._id.toString().slice(-6)} has been ${status}.`,
+      orderId: order._id
+    });
 
     res.json({ message: "Status updated", order });
   } catch (err) {
