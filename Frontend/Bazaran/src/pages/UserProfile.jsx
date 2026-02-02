@@ -102,36 +102,6 @@ const UserProfile = () => {
   };
 
   /* ✅ ADD / EDIT ADDRESS */
-<<<<<<< HEAD
-  const handleAddAddress = async (addressData) => {
-  try {
-    const token = localStorage.getItem("token");
-
-    const isEditing = editingAddressIndex !== null;
-    const addressId = isEditing ? addresses[editingAddressIndex]._id : null;
-
-    const url = isEditing
-      ? `${import.meta.env.VITE_API_BASE}/api/users/me/address/${addressId}`
-      : `${import.meta.env.VITE_API_BASE}/api/users/me/address`;
-
-    const method = isEditing ? "PUT" : "POST";
-
-    const res = await fetch(url, {
-      method,
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(addressData),
-    });
-
-    const data = await res.json();
-
-    if (!res.ok) {
-      return { errors: data.errors || { general: "Failed to save address" } };
-    }
-
-=======
   const handleSaveAddress = async (addressData) => {
   try {
     const token = localStorage.getItem("token");
@@ -156,7 +126,6 @@ const UserProfile = () => {
     const data = await res.json();
     if (!res.ok) return { errors: data.errors };
 
->>>>>>> 937b6c21b67ffd329945a47768cb40af8d5f158e
     setAddresses(data.addresses);
     setShowAddAddress(false);
     setEditingAddressIndex(null);
@@ -167,10 +136,6 @@ const UserProfile = () => {
   }
 };
 
-<<<<<<< HEAD
-=======
-
->>>>>>> 937b6c21b67ffd329945a47768cb40af8d5f158e
   const handleViewOrder = (order) => {
     setSelectedOrder(order);
     setShowOrderModal(true);
