@@ -17,7 +17,9 @@ const {
   deleteProductAdmin,
   approveRejectProduct,
   getUserOrders,
-  getVendorOrders
+  getVendorOrders,
+  blockUser,
+  unblockUser,
 } = require("../controllers/AdminController");
 
 // 🔐 All routes ADMIN only
@@ -42,6 +44,10 @@ router.patch("/vendors/:id/approve", approveVendor);
 router.patch("/vendors/:id/reject", rejectVendor);
 router.patch("/vendors/:id/block", blockVendor);
 router.patch("/vendors/:id/unblock", unblockVendor);
+
+
+router.patch("/users/:id/block", blockUser);
+router.patch("/users/:id/unblock", unblockUser);
 
 // User orders (like vendor products)
 router.get("/users/:userId/orders", getUserOrders);

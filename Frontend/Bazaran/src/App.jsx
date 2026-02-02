@@ -22,7 +22,8 @@ import AdminLayout from "./admin/AdminLayout";
 import AdminDashboard from "./admin/AdminDashboard";
 import Vendors from "./admin/Vendors";
 import VendorProducts from "./admin/VendorProducts";
-
+import Users from "./admin/Users";
+import Products from "./admin/Products";
 /* ================= CONTEXT & ROUTES ================= */
 import UserProvider from "./context/userContext";
 import { NotificationProvider } from "./context/NotificationContext";
@@ -96,19 +97,22 @@ const App = () => {
           />
 
           {/* ADMIN (NESTED ROUTES) */}
-          <Route
-            path="/admin"
-            element={
-              <AdminRoute>
-                <AdminLayout />
-              </AdminRoute>
-            }
-          >
-            <Route index element={<AdminDashboard />} />
-            <Route path="dashboard" element={<AdminDashboard />} />
-            <Route path="vendors" element={<Vendors />} />
-            <Route path="vendors/:vendorId" element={<VendorProducts />} />
-          </Route>
+        <Route
+  path="/admin"
+  element={
+    <AdminRoute>
+      <AdminLayout />
+    </AdminRoute>
+  }
+>
+  <Route index element={<AdminDashboard />} />
+  <Route path="dashboard" element={<AdminDashboard />} />
+  <Route path="vendors" element={<Vendors />} />
+  <Route path="vendors/:vendorId" element={<VendorProducts />} />
+  <Route path="users" element={<Users />} />
+  <Route path="products" element={<Products />} />
+</Route>
+
 
           {/* 404 */}
           <Route path="*" element={<Navigate to="/" />} />
