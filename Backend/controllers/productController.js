@@ -6,6 +6,11 @@ const cloudinary = require("../config/cloudinary");
 // Vendor adds product 
 exports.addProduct = async (req, res) => { 
   try { 
+
+    console.log("==== ADD PRODUCT HIT ====");
+    console.log("BODY:", req.body);
+    console.log("FILE:", req.file);
+    console.log("USER:", req.user);
     const { 
       name, 
       description, 
@@ -48,24 +53,25 @@ exports.addProduct = async (req, res) => {
     }
 
     const product = await Product.create({
-      name,
-      description,
-      price,
-      categoryId: category._id,
-      image: {
-      url: req.file.path,        // Cloudinary secure_url
-      public_id: req.file.filename // Cloudinary public_id
-      },
+  name,
+  description,
+  price: Number(price),
+  categoryId: category._id,
+  image: {
+    url: req.file.secure_url || req.file.path,
+    public_id: req.file.public_id
+  },
+  vendorId: req.user._id,
+  stock: {
+    quantity: Number(stockQuantity),
+    unit: stockUnit
+  },
+  tags: processedTags,
+  isTopPick: isTopPick === true || isTopPick === "true",
+  isFeatured: isFeatured === true || isFeatured === "true",
+  isActive: Number(stockQuantity) > 0 // ⭐ auto activate
+});
 
-      vendorId: req.user._id,
-      stock: {
-        quantity: stockQuantity,
-        unit: stockUnit,
-      },
-      tags: processedTags,
-      isTopPick: isTopPick === 'true' || isTopPick === true,
-      isFeatured: isFeatured === 'true' || isFeatured === true,
-    });
 
     const populatedProduct = await Product.findById(product._id)
       .populate("categoryId", "name")
