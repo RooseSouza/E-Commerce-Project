@@ -134,7 +134,10 @@ const ProductDetails = () => {
             name: p.name,
             price: p.price,
             originalPrice: p.originalPrice || Math.round(p.price * 1.2),
-            image: p.image?.url || p.image || 'https://via.placeholder.com/300'
+            image: p.image?.url || p.image || 'https://via.placeholder.com/300',
+            stock: p.stock,
+            inStock: (p?.stock?.quantity ?? p?.countInStock ?? 0) > 0,
+            countInStock: p?.stock?.quantity ?? p?.countInStock ?? 0
           }))
           setRelatedProducts(mapped)
         }
@@ -320,6 +323,7 @@ const ProductDetails = () => {
                   <span>🛒</span>
                   {product.inStock ? "Add to cart" : "Out of Stock"}
                 </button>
+                
 
               </div>
 
@@ -327,7 +331,7 @@ const ProductDetails = () => {
               {product.inStock ? (
                 <p className="text-green-600 font-semibold">✓ In Stock</p>
               ) : (
-                <p className="text-red-600 font-semibold">X Out of Stock</p>
+                <p className="text-red-600 font-semibold"> Out of Stock</p>
               )}
             </div>
           </div>
@@ -349,9 +353,7 @@ const ProductDetails = () => {
             </h2>
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {relatedProducts.map((relatedProduct) => (
-                <Link key={relatedProduct.id} to={`/product/${relatedProduct.id}`}>
-                  <ItemCard product={relatedProduct} />
-                </Link>
+                <ItemCard key={relatedProduct.id} product={relatedProduct} />
               ))}
             </div>
           </div>

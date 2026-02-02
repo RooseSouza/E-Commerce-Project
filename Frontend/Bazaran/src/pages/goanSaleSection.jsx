@@ -19,15 +19,20 @@ const GoanSaleSection = () => {
         const data = await response.json()
 
         if (Array.isArray(data)) {
+          // Filter disabled products
+          const activeProducts = data.filter(p => p.isActive !== false && !p.isDisabled)
           // Map backend data to UI format
-          const mappedProducts = data.map((product) => ({
+          const mappedProducts = activeProducts.map((product) => ({
             id: product._id,
             _id: product._id,
             name: product.name,
             price: product.price,
             // Fallback for original price if not in DB
             originalPrice: product.originalPrice || Math.round(product.price * 1.2),
-            image: product.image?.url || product.image || 'https://via.placeholder.com/300'
+            image: product.image?.url || product.image || 'https://via.placeholder.com/300',
+            stock: product.stock,
+            inStock: (product?.stock?.quantity ?? product?.countInStock ?? 0) > 0,
+            countInStock: product?.stock?.quantity ?? product?.countInStock ?? 0
           }))
           setTopPicksProducts(mappedProducts)
         }
@@ -156,9 +161,7 @@ const GoanSaleSection = () => {
               <h2 className="text-2xl font-bold text-gray-900 mb-8">Top picks by experts</h2>
               <div className="grid grid-cols-2 gap-6">
                 {topPicksProducts.map((product) => (
-                  <Link key={product.id} to={`/product/${product.id}`}>
-                    <ItemCard product={product} />
-                  </Link>
+                  <ItemCard key={product.id} product={product} />
                 ))}
               </div>
             </div>

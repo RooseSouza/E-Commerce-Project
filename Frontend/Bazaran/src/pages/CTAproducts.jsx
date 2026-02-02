@@ -17,7 +17,10 @@ const CTAproducts = () => {
       name: product.name,
       price: product.price,
       originalPrice: product.originalPrice || Math.round(product.price * 1.2),
-      image: product.image?.url || product.image || 'https://via.placeholder.com/300'
+      image: product.image?.url || product.image || 'https://via.placeholder.com/300',
+      stock: product.stock,
+      inStock: (product?.stock?.quantity ?? product?.countInStock ?? 0) > 0,
+      countInStock: product?.stock?.quantity ?? product?.countInStock ?? 0
     })
 
     const fetchData = async () => {
@@ -27,7 +30,8 @@ const CTAproducts = () => {
         const featuredData = await featuredRes.json()
         
         if (Array.isArray(featuredData)) {
-          setFeaturedProducts(featuredData.map(mapProductData))
+          const activeFeatured = featuredData.filter(p => p.isActive !== false && !p.isDisabled)
+          setFeaturedProducts(activeFeatured.map(mapProductData))
         }
 
         // Fetch Just Arrived (Newest products)
@@ -35,7 +39,8 @@ const CTAproducts = () => {
         const arrivedData = await arrivedRes.json()
         
         if (Array.isArray(arrivedData)) {
-          setJustArrivedProducts(arrivedData.map(mapProductData))
+          const activeArrived = arrivedData.filter(p => p.isActive !== false && !p.isDisabled)
+          setJustArrivedProducts(activeArrived.map(mapProductData))
         }
 
       } catch (error) {
