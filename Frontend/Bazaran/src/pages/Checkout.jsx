@@ -3,6 +3,7 @@ import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import AddAddressModal from "../components/AddAddressModal";
 import { useNavigate } from "react-router-dom";
+import { useNotifications } from "../context/NotificationContext";
 
 const Checkout = () => {
   const [cartItems, setCartItems] = useState([]);
@@ -12,6 +13,7 @@ const Checkout = () => {
   const [paymentModalOpen, setPaymentModalOpen] = useState(false);
   const [currentOrderId, setCurrentOrderId] = useState(null);
   const navigate = useNavigate();
+  const { fetchNotifications } = useNotifications();
 
   /* ================= CART ================= */
   const fetchCart = async () => {
@@ -21,7 +23,7 @@ const Checkout = () => {
       },
     });
     const data = await res.json();
-    setCartItems(data.items || []);
+    setCartItems((data.items || []).filter((item) => item.productId));
   };
 
   /* ================= ADDRESSES ================= */
@@ -42,7 +44,7 @@ const Checkout = () => {
 
   /* ================= TOTALS ================= */
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.productId.price * item.quantity,
+    (sum, item) => (item.productId ? sum + item.productId.price * item.quantity : sum),
     0
   );
   const shipping = subtotal >= 499 ? 0 : 40;
@@ -64,7 +66,7 @@ const Checkout = () => {
       },
       body: JSON.stringify({
         address: selectedAddress,
-        items: cartItems.map((item) => ({
+        items: cartItems.filter((item) => item.productId).map((item) => ({
           productId: item.productId._id,
           quantity: item.quantity,
           price: item.productId.price,
@@ -82,6 +84,7 @@ const Checkout = () => {
     // Instead of redirecting, open payment modal
     setCurrentOrderId(data._id || data.order?._id); // save order ID
     alert("Order placed successfully 🎉");
+      fetchNotifications();
       navigate("/home"); // ✅ redirect to homepage
   } catch (err) {
     console.error(err);
@@ -145,7 +148,7 @@ const Checkout = () => {
             <h2 className="text-2xl font-bold mb-4">Order Summary</h2>
 
             <div className="space-y-3 text-sm">
-              {cartItems.map(item => (
+              {cartItems.filter(item => item.productId).map(item => (
                 <div key={item.productId._id} className="flex justify-between">
                   <span>
                     {item.productId.name} × {item.quantity}

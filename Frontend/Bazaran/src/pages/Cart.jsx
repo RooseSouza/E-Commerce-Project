@@ -19,7 +19,7 @@ const Cart = () => {
       },
     });
     const data = await res.json();
-    setCartItems(data.items || []);
+    setCartItems((data.items || []).filter((item) => item.productId));
   };
 
   const updateQuantity = async (productId, quantity) => {
@@ -50,7 +50,7 @@ const Cart = () => {
   };
 
   const subtotal = cartItems.reduce(
-    (sum, item) => sum + item.productId.price * item.quantity,
+    (sum, item) => (item.productId ? sum + item.productId.price * item.quantity : sum),
     0,
   );
 
@@ -81,25 +81,27 @@ const Cart = () => {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Cart Items - Left Side */}
               <div className="lg:col-span-2 space-y-4">
-                {cartItems.map((item) => (
+                {cartItems.filter(item => item.productId).map((item) => (
                   <div
-                    key={item.id}
+                    key={item._id}
                     className="bg-white rounded-lg shadow-md overflow-hidden"
                   >
                     <div className="flex gap-4 p-6">
                       {/* Product Image */}
                       <div className="flex-shrink-0 w-32 h-32">
-                        <img
-                          src={item.productId.image.url}
-                          alt={item.productId.name}
-                          className="w-full h-full object-cover rounded-lg"
-                        />
+                        <Link to={`/product/${item.productId._id || item.productId.id}`}>
+                          <img
+                            src={item.productId.image?.url || item.productId.image}
+                            alt={item.productId.name}
+                            className="w-full h-full object-cover rounded-lg hover:opacity-90 transition"
+                          />
+                        </Link>
                       </div>
 
                       {/* Product Details */}
                       <div className="flex-1">
                         <Link
-                          to={`/product/${item.id}`}
+                          to={`/product/${item.productId._id || item.productId.id}`}
                           className="text-lg font-bold text-gray-900 hover:text-blue-600 mb-2 block"
                         >
                           {item.productId.name}

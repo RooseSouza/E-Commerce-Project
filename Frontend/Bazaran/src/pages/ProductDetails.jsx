@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
+
+
 import Navbar from '../components/Navbar'
 import Footer from '../components/Footer'
 import ItemCard from '../components/itemcard'
@@ -7,6 +9,7 @@ import ItemCard from '../components/itemcard'
 const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const ProductDetails = () => {
+  const navigate = useNavigate()
   const params = useParams()
   // Handle both 'productId' and 'id' parameter names to be safe with router config
   const productId = params.productId || params.id
@@ -74,7 +77,7 @@ const ProductDetails = () => {
             'Partner Offer Sign up for Flipkart Pay Later and get Flipkart Gift Card worth ₹100'
           ],
           description: data.description || 'No description available.',
-          inStock: data?.countInStock > 0
+          inStock: (data?.stock?.quantity ?? data?.countInStock ?? 0) > 0
         })
         setSelectedImage(0)
       } catch (err) {
@@ -144,6 +147,11 @@ const ProductDetails = () => {
   }, [productId])
 
   const handleAddToCart = async () => {
+    if (!product.inStock) {
+      alert("This product is out of stock");
+      return;
+    }
+
     const token = localStorage.getItem("token");
     if (!token) {
       alert("Please login to add items to cart");
@@ -164,6 +172,36 @@ const ProductDetails = () => {
       alert(response.ok ? "Item added to cart!" : data.message || "Failed to add to cart");
     } catch (error) {
       console.error("Error adding to cart:", error);
+      alert("Something went wrong. Please try again.");
+    }
+  }
+
+  const handleBuyNow = async () => {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      alert("Please login to purchase");
+      navigate("/login");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${API_BASE}/api/cart/add`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ productId: product.id, quantity: quantity }),
+      });
+
+      if (response.ok) {
+        navigate("/checkout");
+      } else {
+        const data = await response.json();
+        alert(data.message || "Failed to process request");
+      }
+    } catch (error) {
+      console.error("Error in Buy Now:", error);
       alert("Something went wrong. Please try again.");
     }
   }
@@ -276,24 +314,20 @@ const ProductDetails = () => {
               <div className="flex gap-4">
                 <button
                   onClick={handleAddToCart}
-                  className="flex-1 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2"
+                  disabled={!product.inStock}
+                  className={`flex-1 ${!product.inStock ? "bg-gray-300 cursor-not-allowed" : "bg-yellow-400 hover:bg-yellow-500"} text-gray-900 font-bold py-3 px-4 rounded-lg transition-colors flex items-center justify-center gap-2`}
                 >
                   <span>🛒</span>
-                  Add to cart
+                  {product.inStock ? "Add to cart" : "Out of Stock"}
                 </button>
-                <button
-                  onClick={handleBuyNow}
-                  className="flex-1 bg-red-500 hover:bg-red-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
-                >
-                  Buy Now
-                </button>
+
               </div>
 
               {/* Stock Status */}
               {product.inStock ? (
                 <p className="text-green-600 font-semibold">✓ In Stock</p>
               ) : (
-                <p className="text-red-600 font-semibold">Out of Stock</p>
+                <p className="text-red-600 font-semibold">X Out of Stock</p>
               )}
             </div>
           </div>

@@ -18,8 +18,11 @@ exports.subscribeNewsletter = async (req, res) => {
 
     await NewsletterSubscriber.create({ email });
 
-    // 📧 SEND CONFIRMATION EMAIL
-    await sendEmail({
+    const info = await transporter.sendMail(mailOptions);
+console.log("MAIL SENT RESPONSE:", info);
+
+    // 📧 SEND EMAIL (NON-BLOCKING)
+    sendEmail({
       to: email,
       subject: "Welcome to our Newsletter 🎉",
       html: `
@@ -29,11 +32,17 @@ exports.subscribeNewsletter = async (req, res) => {
         <br/>
         <p>— Team Bazaran</p>
       `,
+    }).catch((err) => {
+      console.error("EMAIL FAILED:", err.message);
     });
 
-    res.json({ message: "Subscribed successfully. Check your email!" });
+    // ✅ RESPOND IMMEDIATELY
+    return res.json({
+      message: "Subscribed successfully. Check your email!",
+    });
+
   } catch (error) {
     console.error("NEWSLETTER ERROR:", error);
-    res.status(500).json({ error: "Something went wrong" });
+    return res.status(500).json({ error: "Something went wrong" });
   }
 };

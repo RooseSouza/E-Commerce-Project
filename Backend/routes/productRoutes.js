@@ -33,18 +33,29 @@ router.get("/my-products", protect, authorize("vendor"), getMyProducts);
 /**
  * Get all products (Public)
  */
-router.get("/", async (req, res, next) => {
-  if (req.query.isTopPick === "true") {
+router.get(
+  "/",
+  async (req, res, next) => {
     try {
-      const limit = parseInt(req.query.limit) || 4;
-      const products = await Product.find({ isTopPick: true }).limit(limit);
-      return res.json(products);
+      const limit = parseInt(req.query.limit) || 10;
+
+      if (req.query.isTopPick === "true") {
+        const products = await Product.find({ isTopPick: true }).limit(limit);
+        return res.json(products);
+      }
+
+      if (req.query.isFeatured === "true") {
+        const products = await Product.find({ isFeatured: true }).limit(limit);
+        return res.json(products);
+      }
+
+      next();
     } catch (error) {
       return res.status(500).json({ message: error.message });
     }
-  }
-  next();
-}, getAllProducts);
+  },
+  getAllProducts
+);
 
 /**
  * User searches for a product
