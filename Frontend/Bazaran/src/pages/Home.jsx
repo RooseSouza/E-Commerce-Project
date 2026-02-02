@@ -24,7 +24,10 @@ const Home = () => {
           name: product.name,
           price: product.price,
           originalPrice: product.originalPrice || Math.round(product.price * 1.2),
-          image: product.image?.url || product.image || 'https://via.placeholder.com/300'
+          image: product.image?.url || product.image || 'https://via.placeholder.com/300',
+          stock: product.stock,
+          inStock: (product?.stock?.quantity ?? product?.countInStock ?? 0) > 0,
+          countInStock: product?.stock?.quantity ?? product?.countInStock ?? 0
         })
 
         // Fetch Featured Products (Limit 5)
@@ -32,7 +35,8 @@ const Home = () => {
         const featData = await featRes.json()
         
         if (Array.isArray(featData)) {
-          setFeaturedProducts(featData.map(mapProduct))
+          const activeFeat = featData.filter(p => p.isActive !== false && !p.isDisabled)
+          setFeaturedProducts(activeFeat.map(mapProduct))
         }
 
         // Fetch Best Sellers (Using Top Picks as proxy, Limit 4)
@@ -40,7 +44,8 @@ const Home = () => {
         const bestData = await bestRes.json()
         
         if (Array.isArray(bestData)) {
-          setBestSellers(bestData.map(mapProduct))
+          const activeBest = bestData.filter(p => p.isActive !== false && !p.isDisabled)
+          setBestSellers(activeBest.map(mapProduct))
         }
 
       } catch (error) {

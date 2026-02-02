@@ -11,7 +11,10 @@ const FeaturesSection = () => {
       try {
         const response = await fetch(`${API_BASE}/api/features`)
         const data = await response.json()
-        setFeatures(data)
+        if (Array.isArray(data)) {
+          const activeFeatures = data.filter(f => f.isActive !== false && !f.isDisabled)
+          setFeatures(activeFeatures)
+        }
       } catch (error) {
         console.error('Error fetching features:', error)
       }
