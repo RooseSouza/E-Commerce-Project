@@ -55,18 +55,7 @@ const VendorProducts = () => {
     }
   };
 
-  const statusBadge = (p) =>
-    p.isActive ? (
-      <span className="px-2 py-1 text-xs bg-green-100 text-green-700 rounded">
-        Active
-      </span>
-    ) : (
-      <span className="px-2 py-1 text-xs bg-red-100 text-red-700 rounded">
-        Disabled
-      </span>
-    );
-
-  // PAGINATION
+  /* ---------------- PAGINATION ---------------- */
   const totalPages = Math.ceil(products.length / PRODUCTS_PER_PAGE);
   const startIndex = (currentPage - 1) * PRODUCTS_PER_PAGE;
   const currentProducts = products.slice(
@@ -78,74 +67,92 @@ const VendorProducts = () => {
     return <p className="p-6 text-gray-500">Loading vendor products...</p>;
 
   return (
-    <div className="p-6 bg-white rounded-2xl border shadow-lg">
+    <div className="bg-white rounded-2xl border shadow-lg p-6">
 
-      {/* Header */}
+      {/* HEADER */}
       <div className="mb-6">
-        <h2 className="text-2xl font-semibold text-gray-900">Vendor Products</h2>
-        <p className="text-sm text-gray-500">Manage product status and stock</p>
+        <h2 className="text-2xl font-bold text-gray-900">Seller Products</h2>
+        <p className="text-sm text-gray-500">
+          Manage product status and stock
+        </p>
       </div>
 
-      {/* Table */}
+      {/* TABLE */}
       <div className="overflow-x-auto">
-        <table className="w-full text-sm border-separate border-spacing-y-2">
-          <thead className="bg-gray-100 text-gray-600">
-            <tr>
+        <table className="w-full text-sm border-collapse">
+          <thead>
+            <tr className="bg-gradient-to-r from-indigo-500 to-purple-500 text-white">
               <th className="px-4 py-3 text-left">Sr.No</th>
-              <th className="px-4 py-3 text-left">Product</th>
-              <th className="px-4 py-3 text-left">Category</th>
+              <th className="px-4 py-3 text-left">Product Name</th>
+              <th className="px-4 py-3 text-left">Category Name</th>
               <th className="px-4 py-3 text-left">Price</th>
-              <th className="px-4 py-3 text-left">Stock</th>
+              <th className="px-4 py-3 text-left">Stock Quantity</th>
               <th className="px-4 py-3 text-left">Status</th>
-              <th className="px-4 py-3 text-center">Actions</th>
+              <th className="px-4 py-3 text-center">Action</th>
             </tr>
           </thead>
 
           <tbody>
             {currentProducts.map((p, i) => (
-              <tr
-                key={p._id}
-                className="bg-white rounded-lg shadow-sm hover:shadow-md transition"
-              >
-                <td className="px-4 py-3 font-medium text-gray-700">
+              <tr key={p._id} className="hover:bg-gray-50 border-b">
+                <td className="px-4 py-3">
                   {startIndex + i + 1}
                 </td>
 
-                <td className="px-4 py-3 flex items-center gap-3">
-                  <img
-                    src={p.image?.url}
-                    alt={p.name}
-                    className="w-10 h-10 rounded object-cover"
-                  />
-                  <span className="font-medium text-gray-800">{p.name}</span>
+                <td className="px-4 py-3 font-semibold flex items-center gap-3">
+                  {p.image?.url && (
+                    <img
+                      src={p.image.url}
+                      alt={p.name}
+                      className="w-10 h-10 rounded object-cover"
+                    />
+                  )}
+                  {p.name}
                 </td>
 
-                <td className="px-4 py-3 text-gray-600">{p.categoryId?.name || "-"}</td>
-                <td className="px-4 py-3 font-medium text-gray-700">₹{p.price}</td>
                 <td className="px-4 py-3 text-gray-600">
-                  {p.stock.quantity} {p.stock.unit}
+                  {p.categoryId?.name || "—"}
                 </td>
 
-                <td className="px-4 py-3">{statusBadge(p)}</td>
+                <td className="px-4 py-3 font-medium">
+                  ₹{p.price}
+                </td>
 
-                <td className="px-4 py-3 flex gap-2 justify-center flex-wrap">
+                <td className="px-4 py-3 text-gray-600">
+                  {p.stock?.quantity} {p.stock?.unit}
+                </td>
+
+                <td className="px-4 py-3">
+                  {p.isActive ? (
+                    <span className="px-2 py-1 text-xs rounded-full bg-green-100 text-green-700 font-semibold">
+                      Active
+                    </span>
+                  ) : (
+                    <span className="px-2 py-1 text-xs rounded-full bg-red-100 text-red-600 font-semibold">
+                      Disabled
+                    </span>
+                  )}
+                </td>
+
+                <td className="px-4 py-3 text-center flex gap-2 justify-center">
                   <button
                     onClick={() => toggleStatus(p._id)}
-                    disabled={p.stock.quantity === 0}
-                    className={`px-3 py-1 text-xs rounded text-white ${
-                      p.stock.quantity === 0
-                        ? "bg-gray-300 cursor-not-allowed"
-                        : p.isActive
-                        ? "bg-red-600 hover:bg-red-700"
-                        : "bg-green-600 hover:bg-green-700"
-                    }`}
+                    disabled={p.stock?.quantity === 0}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold text-white
+                      ${
+                        p.stock?.quantity === 0
+                          ? "bg-gray-300 cursor-not-allowed"
+                          : p.isActive
+                          ? "bg-red-500 hover:bg-red-600"
+                          : "bg-green-500 hover:bg-green-600"
+                      }`}
                   >
                     {p.isActive ? "Disable" : "Enable"}
                   </button>
 
                   <button
                     onClick={() => deleteProduct(p._id)}
-                    className="px-3 py-1 bg-black text-white rounded text-xs hover:bg-gray-800"
+                    className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-black text-white hover:bg-gray-800"
                   >
                     Delete
                   </button>
@@ -155,7 +162,7 @@ const VendorProducts = () => {
 
             {currentProducts.length === 0 && (
               <tr>
-                <td colSpan="7" className="p-6 text-center text-gray-500">
+                <td colSpan="7" className="text-center py-10 text-gray-500">
                   No products found
                 </td>
               </tr>
@@ -164,9 +171,9 @@ const VendorProducts = () => {
         </table>
       </div>
 
-      {/* Pagination */}
+      {/* PAGINATION */}
       {products.length > PRODUCTS_PER_PAGE && (
-        <div className="flex items-center justify-between mt-6">
+        <div className="flex justify-between items-center mt-6">
           <p className="text-sm text-gray-500">
             Page {currentPage} of {totalPages}
           </p>
@@ -175,15 +182,14 @@ const VendorProducts = () => {
             <button
               disabled={currentPage === 1}
               onClick={() => setCurrentPage((p) => p - 1)}
-              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="px-4 py-1.5 bg-gray-100 rounded disabled:opacity-50"
             >
               Previous
             </button>
-
             <button
               disabled={currentPage === totalPages}
               onClick={() => setCurrentPage((p) => p + 1)}
-              className="px-4 py-1.5 rounded-lg text-sm font-medium bg-gray-100 text-gray-700 hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition"
+              className="px-4 py-1.5 bg-gray-100 rounded disabled:opacity-50"
             >
               Next
             </button>

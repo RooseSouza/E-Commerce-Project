@@ -65,8 +65,9 @@ const Users = () => {
           {/* Header */}
           <thead>
             <tr className="bg-gradient-to-r from-bbg-gradient-to-r from-indigo-500 to-purple-500 text-white">
-              <th className="px-4 py-3 text-left font-semibold">Name</th>
-              <th className="px-4 py-3 text-left font-semibold">Email</th>
+              <th className="px-4 py-3 text-left  font-semibold">Sr.No</th>
+              <th className="px-4 py-3 text-left font-semibold">User Name</th>
+              <th className="px-4 py-3 text-left font-semibold">Email ID</th>
               <th className="px-4 py-3 text-left font-semibold">Status</th>
               <th className="px-4 py-3 text-left font-semibold">Action</th>
             </tr>
@@ -74,11 +75,12 @@ const Users = () => {
 
           {/* Body */}
           <tbody>
-            {currentUsers.map((u) => (
+            {currentUsers.map((u,index) => (
               <tr
                 key={u._id}
                 className="border-b last:border-none hover:bg-gray-50 transition"
               >
+                   <td className="px-4 py-3 font-medium text-gray-700">{startIndex + index + 1}</td>
                 <td className="px-4 py-3 font-medium text-gray-800">{u.name}</td>
                 <td className="px-4 py-3 text-gray-600">{u.email}</td>
                 <td className="px-4 py-3">

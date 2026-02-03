@@ -1,95 +1,98 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import AdminDashboardCard from "../components/AdminDashboardCard";
-import {
-  Users,
-  Store,
-  Package,
-  ShoppingCart,
-} from "lucide-react";
 
-const API = import.meta.env.VITE_API_BASE;
+const API_BASE = import.meta.env.VITE_API_BASE;
 
 const AdminDashboard = () => {
+  const [range, setRange] = useState("week");
   const [stats, setStats] = useState(null);
   const token = localStorage.getItem("token");
 
   useEffect(() => {
-    const fetchStats = async () => {
-      try {
-        const res = await axios.get(`${API}/api/admin/stats`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setStats(res.data);
-      } catch (err) {
-        console.error("Failed to load admin stats", err);
-      }
-    };
-
     fetchStats();
-  }, []);
+  }, [range]);
+
+  const fetchStats = async () => {
+    try {
+      const res = await axios.get(
+        `${API_BASE}/api/admin/stats?range=${range}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("ADMIN STATS 👉", res.data);
+      setStats(res.data);
+    } catch (err) {
+      console.error("STATS ERROR ❌", err.response?.data || err.message);
+    }
+  };
+
+  const items = stats
+    ? [
+        { label: "Users", value: stats.users, color: "bg-blue-500" },
+        { label: "Sellers", value: stats.vendors, color: "bg-purple-500" },
+        { label: "Products", value: stats.products, color: "bg-green-500" },
+      ]
+    : [];
 
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
 
-      {/* 🔹 Header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-800">
-          Dashboard Overview
-        </h1>
-        <p className="text-sm text-gray-500">
-          Quick summary of platform activity
-        </p>
+      {/* HEADER */}
+      <div className="flex items-center justify-between">
+        <h1 className="text-xl font-semibold">Dashboard Overview</h1>
+<div className="flex flex-wrap gap-1 bg-white rounded-lg shadow p-1">
+         {["day", "week", "month", "total"].map((r) => (
+            <button
+              key={r}
+              onClick={() => setRange(r)}
+              className={`px-4 py-1.5 text-sm rounded-md transition
+                ${range === r
+                  ? "bg-orange-500 text-white"
+                  : "text-gray-600 hover:bg-gray-100"
+                }`}
+            >
+              {r.toUpperCase()}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* 🔹 Loading State */}
-      {!stats && (
+      {/* CARDS */}
+      {!stats ? (
+        <div className="text-gray-500 text-center py-10">
+          Loading statistics...
+        </div>
+      ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {[1, 2, 3, 4].map((i) => (
+          {items.map((item) => (
             <div
-              key={i}
-              className="bg-white rounded-2xl border p-6 h-24 animate-pulse"
-            />
+              key={item.label}
+              className="bg-white rounded-xl p-5 shadow-sm hover:shadow-md transition"
+            >
+              <div className="text-sm text-gray-500">{item.label}</div>
+
+              <div className="mt-2 text-3xl font-bold">
+                {item.value}
+              </div>
+
+              <div className="mt-4 h-2 bg-gray-100 rounded-full overflow-hidden">
+                <div
+                  className={`${item.color} h-full`}
+                  style={{ width: `${Math.min(item.value * 5, 100)}%` }}
+                />
+              </div>
+
+              <div className="mt-3 text-xs text-green-600 font-medium">
+                Updated this {range}
+              </div>
+            </div>
           ))}
         </div>
       )}
-
-      {/* 🔹 Stats Cards */}
-      {stats && (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <AdminDashboardCard
-            title="Total Users"
-            value={stats.totalUsers || 0}
-            icon={<Users className="text-blue-600" />}
-            bg="bg-blue-100"
-          />
-
-          <AdminDashboardCard
-            title="Total Vendors"
-            value={stats.totalVendors || 0}
-            icon={<Store className="text-orange-600" />}
-            bg="bg-orange-100"
-          />
-
-          <AdminDashboardCard
-            title="Total Products"
-            value={stats.totalProducts || 0}
-            icon={<Package className="text-green-600" />}
-            bg="bg-green-100"
-          />
-
-          <AdminDashboardCard
-            title="Total Orders"
-            value={stats.totalOrders || 0}
-            icon={<ShoppingCart className="text-purple-600" />}
-            bg="bg-purple-100"
-          />
-        </div>
-      )}
-
-      {/* 🔹 Footer Info */}
-      <p className="text-xs text-gray-400">
-      </p>
     </div>
   );
 };

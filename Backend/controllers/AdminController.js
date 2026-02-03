@@ -5,23 +5,56 @@ const Order = require("../models/order");
 /**
  * 📊 Admin Dashboard Stats
  */
+const getDateRange = (range) => {
+  const now = new Date();
+  let start = null;
+
+  if (range === "day") {
+    start = new Date(now.setHours(0, 0, 0, 0));
+  } 
+  else if (range === "week") {
+    start = new Date();
+    start.setDate(start.getDate() - 7);
+  } 
+  else if (range === "month") {
+    start = new Date();
+    start.setMonth(start.getMonth() - 1);
+  }
+
+  return start; // 👈 null means TOTAL
+};
 exports.getAdminStats = async (req, res) => {
   try {
-    const totalUsers = await User.countDocuments({ role: "user" });
-    const totalVendors = await User.countDocuments({ role: "vendor" });
-    const totalProducts = await Product.countDocuments();
-    const totalOrders = await Order.countDocuments();
+    const range = req.query.range || "week";
+    const startDate = getDateRange(range);
+
+    const dateFilter = startDate ? { createdAt: { $gte: startDate } } : {};
+
+    const users = await User.countDocuments({
+      role: "user",
+      ...dateFilter,
+    });
+
+    const vendors = await User.countDocuments({
+      role: "vendor",
+      ...dateFilter,
+    });
+
+    const products = await Product.countDocuments(dateFilter);
+    const orders = await Order.countDocuments(dateFilter);
 
     res.json({
-      totalUsers,
-      totalVendors,
-      totalProducts,
-      totalOrders,
+      range,
+      users,
+      vendors,
+      products,
+      orders,
     });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
+
 
 /**
  * 👥 Get All Vendors
@@ -131,7 +164,7 @@ exports.getAllProductsAdmin = async (req, res) => {
   try {
     const products = await Product.find()
       .populate("categoryId", "name")
-      .populate("vendorId", "name");
+      .populate("vendorId", "name phone");
 
     res.json(products);
   } catch (err) {

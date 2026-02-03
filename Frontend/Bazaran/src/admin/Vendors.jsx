@@ -86,10 +86,10 @@ const Vendors = () => {
       {/* Header */}
       <div className="mb-6">
         <h2 className="text-xl font-semibold text-gray-800">
-          Registered Vendors
+          Registered Seller
         </h2>
         <p className="text-sm text-gray-500">
-          Manage vendor approvals and access
+          Manage Seller approvals and access
         </p>
       </div>
 
@@ -97,11 +97,11 @@ const Vendors = () => {
       <div className="overflow-x-auto">
         <table className="w-full text-sm border-separate border-spacing-y-2">
           <thead className="text-left text-gray-500">
-            <tr>
+            <tr className="bg-gradient-to-r from-bbg-gradient-to-r from-indigo-500 to-purple-500 text-white">
               <th className="px-4 py-2">Sr.No</th>
-              <th className="px-4 py-2">Name</th>
+              <th className="px-4 py-2">Seller Name</th>
               <th className="px-4 py-2">Email</th>
-              <th className="px-4 py-2 text-center">Products</th>
+              <th className="px-4 py-2 text-center">Total Product</th>
               <th className="px-4 py-2 text-center">Status</th>
               <th className="px-4 py-2 text-center">Actions</th>
             </tr>
@@ -199,7 +199,7 @@ const Vendors = () => {
             {currentVendors.length === 0 && (
               <tr>
                 <td colSpan="6" className="py-8 text-center text-gray-500">
-                  No vendors found
+                  No Seller found
                 </td>
               </tr>
             )}

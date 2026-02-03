@@ -310,7 +310,7 @@ const VendorOrders = ({ orderFilter = "all" }) => {
             {/* HEADER */}
             <div className="flex justify-between items-start p-4 border-b">
               <div>
-                <h3 className="font-semibold">Order #{index + 1}</h3>
+                <h3 className="font-semibold">Order {index + 1}</h3>
                 <p className="text-xs text-gray-500">
                   {new Date(order.createdAt).toLocaleString("en-IN", {
                     timeZone: "Asia/Kolkata",
