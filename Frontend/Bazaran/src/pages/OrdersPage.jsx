@@ -1,31 +1,49 @@
 import React, { useEffect, useState } from "react";
+import { useLocation } from "react-router-dom";
 import Navbar from "../components/Navbar";
 import Footer from "../components/Footer";
 import OrderDetailsModal from "../components/OrderDetailsModal";
+
+const API_BASE = import.meta.env.VITE_API_BASE || "http://localhost:5000";
 
 const OrdersPage = () => {
   const [orders, setOrders] = useState([]);
   const [addresses, setAddresses] = useState([]);
   const [selectedOrder, setSelectedOrder] = useState(null);
+  const location = useLocation();
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const token = localStorage.getItem("token");
+      try {
+        const token = localStorage.getItem("token");
+        if (!token) return;
 
-      const res = await fetch(
-        `${import.meta.env.VITE_API_BASE}/api/users/me/profile`,
-        {
+        const res = await fetch(`${API_BASE}/api/users/me/profile`, {
           headers: { Authorization: `Bearer ${token}` },
-        }
-      );
+        });
 
-      const data = await res.json();
-      setOrders(data.orders || []);
-      setAddresses(data.user.addresses || []);
+        if (!res.ok) throw new Error("Failed to fetch orders");
+
+        const data = await res.json();
+        const fetchedOrders = data.orders || [];
+        setOrders(fetchedOrders);
+        setAddresses(data.user?.addresses || []);
+      } catch (error) {
+        console.error("Error fetching orders:", error);
+      }
     };
 
     fetchOrders();
   }, []);
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const orderId = queryParams.get("orderId");
+    if (orderId && orders.length > 0) {
+      const targetOrder = orders.find((o) => o._id === orderId);
+      if (targetOrder) setSelectedOrder(targetOrder);
+    }
+  }, [location.search, orders]);
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
